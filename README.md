@@ -5,6 +5,8 @@ This is a python package to parse Logged NilsPod Binary files
 
 # Installation
 
-Use `pip install . ` for first installation
+Navigate to  the folder which contains "setup.py" and run:
 
-Use `pip install . --upgrade ` to update to lastest Version
+`pip install . ` for first installation
+
+`pip install . --upgrade ` to update to lastest Version
