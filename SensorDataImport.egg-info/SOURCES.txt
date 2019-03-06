@@ -1,0 +1,15 @@
+MANIFEST.in
+setup.py
+SensorDataImport/__init__.py
+SensorDataImport/calibrationData.py
+SensorDataImport/dataset.py
+SensorDataImport/header.py
+SensorDataImport/loadAndroidBin.py
+SensorDataImport/loadBinary.py
+SensorDataImport/loadLightBlueCSV.py
+SensorDataImport/session.py
+SensorDataImport/signalProcessing.py
+SensorDataImport.egg-info/PKG-INFO
+SensorDataImport.egg-info/SOURCES.txt
+SensorDataImport.egg-info/dependency_links.txt
+SensorDataImport.egg-info/top_level.txt
