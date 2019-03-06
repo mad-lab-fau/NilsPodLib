@@ -21,8 +21,8 @@ here = path.abspath(path.dirname(__file__))
 # Fields marked as "Optional" may be commented out.
 
 setup(
-    name='SensorDataImport',  # Required
-    version='1.2.1',  # Required
+    name='NilsPodLib',  # Required
+    version='0.1.0',  # Required
     description='A sample Python project',  # Required
 
     # This is an optional longer description of your project that represents
@@ -133,7 +133,7 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     
-    package_data={'SensorDataImport': ['Calibration/CalibrationFiles/*.pickle']},
+    package_data={'NilsPodLib': ['Calibration/CalibrationFiles/*.pickle']},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:

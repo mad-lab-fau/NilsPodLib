@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from SensorDataImport import session as sensor
+from NilsPodLib import session as sensor
 
 plt.close('all')
 
