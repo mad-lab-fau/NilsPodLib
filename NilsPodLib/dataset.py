@@ -8,6 +8,7 @@ Created on Thu Sep 28 11:32:22 2017
 
 import copy
 import os
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -36,7 +37,7 @@ class Dataset:
 
     def __init__(self, path):
         self.path = path
-        if path.endswith(".bin"):
+        if path.endswith('.bin'):
             accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(path)
             self.acc = DataStream(accData, self.header.samplingRate_Hz)
             self.gyro = DataStream(gyrData, self.header.samplingRate_Hz)
@@ -46,30 +47,32 @@ class Dataset:
             self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
             self.size = len(self.counter)
 
-            # todo: add list of calibration files to repository. Ideal Case: For each existing NilPod at least one calibration file exists!
-            calibrationFileName = os.path.join(os.path.dirname(__file__), "Calibration/CalibrationFiles/")
-            if "84965C0" in self.path:
-                calibrationFileName += "NRF52-84965C0.pickle"
+            # TODO: add list of calibration files to repository.
+            #       Ideal Case: For each existing NilPod at least one calibration file exists!
+            calibrationFileName = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
+            if '84965C0' in self.path:
+                calibrationFileName += 'NRF52-84965C0.pickle'
                 self.calibrationData = CalibrationData(calibrationFileName)
-            if "92338C81" in self.path:
-                calibrationFileName += "NRF52-92338C81.pickle"
+            if '92338C81' in self.path:
+                calibrationFileName += 'NRF52-92338C81.pickle'
                 self.calibrationData = CalibrationData(calibrationFileName)
         else:
-            print("Invalid file tpye")
+            ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
     def calibrate(self):
         try:
             self.acc.data = (self.calibrationData.Ta * self.calibrationData.Ka * (
-                        self.acc.data.T - self.calibrationData.ba)).T
+                    self.acc.data.T - self.calibrationData.ba)).T
             self.acc.data = np.asarray(self.acc.data)
             self.gyro.data = (self.calibrationData.Tg * self.calibrationData.Kg * (
-                        self.gyro.data.T - self.calibrationData.bg)).T
+                    self.gyro.data.T - self.calibrationData.bg)).T
             self.gyro.data = np.asarray(self.gyro.data)
         except:
-            # Todo: Use correct static calibration values according to sensor range (this one is hardcoded for 2000dps and 16G)
+            # Todo: Use correct static calibration values according to sensor range
+            #       (this one is hardcoded for 2000dps and 16G)
             self.acc.data = self.acc.data / 2048.0
             self.gyro.data = self.gyro.data / 16.4
-            print("No Calibration Data found - Using static Datasheet values for calibration!!!")
+            warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
         self.isCalibrated = True
 
     def rotateAxis(self, sensor, x, y, z, sX, sY, sZ):
@@ -104,19 +107,18 @@ class Dataset:
                 self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
                 self.acc.data[:, 1] = self.acc.data[:, 1] * -1
                 self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-            # if('right' in self.Header.sensorPosition):
-            # print "rotating nothing"
             else:
-                print("No Position Definition found - Using Name Fallback")
+                warnings.warn('No Position Definition found - Using Name Fallback')
                 try:
-                    if "92338C81" in self.path:
+                    if '92338C81' in self.path:
                         self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
                         self.acc.data[:, 1] = self.acc.data[:, 1] * -1
                         self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
                 except:
-                    print("Rotation FAILED")
+                    # TODO: Replace base exeption and can the try block even fail?? What is going on here anyway.
+                    Exception('Rotation FAILED')
         else:
-            print('unknown sensor, no rotation possible')
+            ValueError('unknown sensor, no rotation possible')
 
     def downSample(self, q):
         dX = scipy.signal.decimate(self.acc.data[:, 0], q)
@@ -162,6 +164,7 @@ class Dataset:
 
     @staticmethod
     def interpolate3D(array, idx, num):
+        # TODO: Das geht doch sicher auch besser oder?
         xx = ((array[idx + 1, 0] - array[idx, 0]) / (num + 1.0))
         yy = ((array[idx + 1, 1] - array[idx, 1]) / (num + 1.0))
         zz = ((array[idx + 1, 2] - array[idx, 2]) / (num + 1.0))
@@ -203,8 +206,9 @@ class Dataset:
                 pressureTmp = self.interpolate3D(pressureTmp, i - 1, delta - 1)
 
         if c > 0:
-            print(
-                "ATTENTION: Dataset was interpolated due to synchronization Error! " + str(c) + " Samples were added!")
+            warnings.warn(
+                "ATTENTION: Dataset was interpolated due to synchronization Error! {} Samples were added!".format(
+                    str(c)))
 
         dataset.counter = counterTmp
         dataset.gyro.data = gyroTmp
