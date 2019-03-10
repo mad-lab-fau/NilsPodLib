@@ -39,9 +39,9 @@ session = sensor.Session(sensor.Dataset(file_path_leftFoot, header, freeRTOS),
 print("Data Sucessfully Loaded")
 
 # Session.calibrate();
-# Session.rotateAxis('egait');
+# Session.rotate_axis('egait');
 
-# Session.leftFoot = Session.leftFoot.interpolateDataset(Session.leftFoot);
+# Session.leftFoot = Session.leftFoot.interpolate_dataset(Session.leftFoot);
 
 session.synchronize()
 
@@ -104,5 +104,5 @@ axarr[1, 1].plot(session.rightFoot.baro.data)
 # axarr[1, 1].set_title('Axis [1,1]')
 
 
-session.rightFoot.exportCSV(file_name_rightFoot + "_raw.csv")
-session.leftFoot.exportCSV(file_name_leftFoot + "_raw.csv")
+session.rightFoot.export_csv(file_name_rightFoot + "_raw.csv")
+session.leftFoot.export_csv(file_name_leftFoot + "_raw.csv")

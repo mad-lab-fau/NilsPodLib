@@ -31,42 +31,42 @@ class Dataset:
     rtc = None
     sync = None
     header = None
-    calibrationData = None
+    calibration_data = None
     size = 0
-    isCalibrated = False
+    is_calibrated = False
 
     def __init__(self, path):
-        self.path = path
-        if path.endswith('.bin'):
-            accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(path)
-            self.acc = DataStream(accData, self.header.samplingRate_Hz)
-            self.gyro = DataStream(gyrData, self.header.samplingRate_Hz)
-            self.baro = DataStream(baro, self.header.samplingRate_Hz)
-            self.pressure = DataStream(pressure.astype('float'), self.header.samplingRate_Hz)
-            self.battery = DataStream(battery, self.header.samplingRate_Hz)
-            self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
-            self.size = len(self.counter)
-
-            # TODO: add list of calibration files to repository.
-            #       Ideal Case: For each existing NilPod at least one calibration file exists!
-            # TODO: This should be optional and it should be possible to pass a real file
-            calibration_file_name = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
-            if '84965C0' in self.path:
-                calibration_file_name += 'NRF52-84965C0.pickle'
-                self.calibrationData = CalibrationData(calibration_file_name)
-            if '92338C81' in self.path:
-                calibration_file_name += 'NRF52-92338C81.pickle'
-                self.calibrationData = CalibrationData(calibration_file_name)
-        else:
+        if not path.endswith('.bin'):
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
+
+        self.path = path
+        accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
+        self.acc = DataStream(accData, self.header.samplingRate_Hz)
+        self.gyro = DataStream(gyrData, self.header.samplingRate_Hz)
+        self.baro = DataStream(baro, self.header.samplingRate_Hz)
+        self.pressure = DataStream(pressure.astype('float'), self.header.samplingRate_Hz)
+        self.battery = DataStream(battery, self.header.samplingRate_Hz)
+        self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
+        self.size = len(self.counter)
+
+        # TODO: add list of calibration files to repository.
+        #       Ideal Case: For each existing NilPod at least one calibration file exists!
+        # TODO: This should be optional and it should be possible to pass a real file
+        calibration_file_name = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
+        if '84965C0' in self.path:
+            calibration_file_name += 'NRF52-84965C0.pickle'
+            self.calibration_data = CalibrationData(calibration_file_name)
+        if '92338C81' in self.path:
+            calibration_file_name += 'NRF52-92338C81.pickle'
+            self.calibration_data = CalibrationData(calibration_file_name)
 
     def calibrate(self):
         try:
-            self.acc.data = (self.calibrationData.Ta * self.calibrationData.Ka * (
-                    self.acc.data.T - self.calibrationData.ba)).T
+            self.acc.data = (self.calibration_data.Ta * self.calibration_data.Ka * (
+                    self.acc.data.T - self.calibration_data.ba)).T
             self.acc.data = np.asarray(self.acc.data)
-            self.gyro.data = (self.calibrationData.Tg * self.calibrationData.Kg * (
-                    self.gyro.data.T - self.calibrationData.bg)).T
+            self.gyro.data = (self.calibration_data.Tg * self.calibration_data.Kg * (
+                    self.gyro.data.T - self.calibration_data.bg)).T
             self.gyro.data = np.asarray(self.gyro.data)
         except:
             # Todo: Use correct static calibration values according to sensor range
@@ -74,9 +74,9 @@ class Dataset:
             self.acc.data = self.acc.data / 2048.0
             self.gyro.data = self.gyro.data / 16.4
             warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
-        self.isCalibrated = True
+        self.is_calibrated = True
 
-    def rotateAxis(self, sensor, x, y, z, sX, sY, sZ):
+    def rotate_axis(self, sensor, x, y, z, sX, sY, sZ):
         if sensor == 'gyro':
             tmp = np.copy(self.gyro.data)
             dX = tmp[:, 0]
@@ -121,7 +121,7 @@ class Dataset:
         else:
             ValueError('unknown sensor, no rotation possible')
 
-    def downSample(self, q):
+    def down_sample(self, q):
         dX = scipy.signal.decimate(self.acc.data[:, 0], q)
         dY = scipy.signal.decimate(self.acc.data[:, 1], q)
         dZ = scipy.signal.decimate(self.acc.data[:, 2], q)
@@ -131,12 +131,12 @@ class Dataset:
         dZ = scipy.signal.decimate(self.gyro.data[:, 2], q)
         self.gyro.data = np.column_stack((dX, dY, dZ))
 
-    def filterData(self, data, order, fc, fType='lowpass'):
+    def filter_data(self, data, order, fc, fType='lowpass'):
         fn = fc / (self.header.samplingRate_Hz / 2.0)
         b, a = signal.butter(order, fn, btype=fType)
         return signal.filtfilt(b, a, data.T, padlen=150).T
 
-    def cutDataset(self, start, stop):
+    def cut_dataset(self, start, stop):
         s = copy.copy(self)
         s.sync = s.sync[start:stop]
         s.counter = s.counter[start:stop]
@@ -152,8 +152,8 @@ class Dataset:
     def norm(self, data):
         return np.apply_along_axis(np.linalg.norm, 1, data)
 
-    def exportCSV(self, path):
-        if self.isCalibrated:
+    def export_csv(self, path):
+        if self.is_calibrated:
             accFrame = pd.DataFrame(self.acc.data, columns=['AX [g]', 'AY [g]', 'AZ [g]'])
             gyroFrame = pd.DataFrame(self.gyro.data, columns=['GX [dps]', 'GY [dps]', 'GZ [dps]'])
         else:
@@ -164,7 +164,7 @@ class Dataset:
         frame.to_csv(path, index=False, sep=';')
 
     @staticmethod
-    def interpolate3D(array, idx, num):
+    def interpolate_3d(array, idx, num):
         # TODO: Das geht doch sicher auch besser oder?
         xx = ((array[idx + 1, 0] - array[idx, 0]) / (num + 1.0))
         yy = ((array[idx + 1, 1] - array[idx, 1]) / (num + 1.0))
@@ -178,14 +178,14 @@ class Dataset:
         return array
 
     @staticmethod
-    def interpolate1D(array, idx, num):
+    def interpolate_1D(array, idx, num):
         xx = ((array[idx + 1] - array[idx]) / (num + 1.0))
         for i in range(1, num + 1):
             a = (xx * i) + array[idx]
             array = np.insert(array, idx + i, a)
         return array
 
-    def interpolateDataset(self, dataset):
+    def interpolate_dataset(self, dataset):
         counterTmp = np.copy(dataset.counter)
         accTmp = np.copy(dataset.acc.data)
         gyroTmp = np.copy(dataset.gyro.data)
@@ -199,12 +199,12 @@ class Dataset:
             delta = counterTmp[i] - counterTmp[i - 1]
             if 1 < delta < 30000:
                 c = c + 1
-                counterTmp = self.interpolate1D(counterTmp, i - 1, delta - 1)
-                baroTmp = self.interpolate1D(baroTmp, i - 1, delta - 1)
-                batteryTmp = self.interpolate1D(batteryTmp, i - 1, delta - 1)
-                accTmp = self.interpolate3D(accTmp, i - 1, delta - 1)
-                gyroTmp = self.interpolate3D(gyroTmp, i - 1, delta - 1)
-                pressureTmp = self.interpolate3D(pressureTmp, i - 1, delta - 1)
+                counterTmp = self.interpolate_1D(counterTmp, i - 1, delta - 1)
+                baroTmp = self.interpolate_1D(baroTmp, i - 1, delta - 1)
+                batteryTmp = self.interpolate_1D(batteryTmp, i - 1, delta - 1)
+                accTmp = self.interpolate_3d(accTmp, i - 1, delta - 1)
+                gyroTmp = self.interpolate_3d(gyroTmp, i - 1, delta - 1)
+                pressureTmp = self.interpolate_3d(pressureTmp, i - 1, delta - 1)
 
         if c > 0:
             warnings.warn(

@@ -69,11 +69,11 @@ class Session:
     def synchronizeFallback(self):
         # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
         inSync = (np.argwhere(self.leftFoot.sync > 0)[0])[0]
-        self.leftFoot = self.leftFoot.cutDataset(inSync, len(self.leftFoot.counter))
+        self.leftFoot = self.leftFoot.cut_dataset(inSync, len(self.leftFoot.counter))
 
         # cut away all sample at the beginning until both data streams are synchronized (MASTER)
         inSync = (np.argwhere(self.rightFoot.counter >= self.leftFoot.counter[0])[0])[0]
-        self.rightFoot = self.rightFoot.cutDataset(inSync, len(self.rightFoot.counter))
+        self.rightFoot = self.rightFoot.cut_dataset(inSync, len(self.rightFoot.counter))
 
         # cut both streams to the same lenght
         if len(self.rightFoot.counter) >= len(self.leftFoot.counter):
@@ -81,8 +81,8 @@ class Session:
         else:
             length = len(self.rightFoot.counter) - 1
 
-        self.leftFoot = self.leftFoot.cutDataset(0, length)
-        self.rightFoot = self.rightFoot.cutDataset(0, length)
+        self.leftFoot = self.leftFoot.cut_dataset(0, length)
+        self.rightFoot = self.rightFoot.cut_dataset(0, length)
 
     def synchronize(self):
         if self.leftFoot.header.syncRole == 'disabled' or self.rightFoot.header.syncRole == 'disabled':
@@ -109,11 +109,11 @@ class Session:
 
             # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
             inSync = (np.argwhere(slave.sync > 0)[0])[0]
-            slave = slave.cutDataset(inSync, len(slave.counter))
+            slave = slave.cut_dataset(inSync, len(slave.counter))
 
             # cut away all sample at the beginning until both data streams are synchronized (MASTER)
             inSync = (np.argwhere(master.counter >= slave.counter[0])[0])[0]
-            master = master.cutDataset(inSync, len(master.counter))
+            master = master.cut_dataset(inSync, len(master.counter))
 
             # cut both streams to the same lenght
             if len(master.counter) >= len(slave.counter):
@@ -121,8 +121,8 @@ class Session:
             else:
                 length = len(master.counter) - 1
 
-            slave = slave.cutDataset(0, length)
-            master = master.cutDataset(0, length)
+            slave = slave.cut_dataset(0, length)
+            master = master.cut_dataset(0, length)
 
             if self.rightFoot.header.syncRole == 'master':
                 self.rightFoot = master
@@ -146,22 +146,22 @@ class Session:
 
     def rotateAxis(self, system):
         if system == 'egait':
-            self.leftFoot.rotateAxis('gyro', 2, 0, 1, -1, -1, 1)  # swap axis Z,X,Y, change sign -X-Y+Z
-            self.leftFoot.rotateAxis('acc', 2, 0, 1, -1, -1, 1)
-            self.rightFoot.rotateAxis('gyro', 2, 0, 1, 1, 1, -1)
-            self.rightFoot.rotateAxis('acc', 2, 0, 1, 1, -1, -1)
-            self.leftFoot.rotateAxis('pressure', 0, 0, 0, 0, 0, 0)
-            self.rightFoot.rotateAxis('pressure', 0, 0, 0, 0, 0, 0)
+            self.leftFoot.rotate_axis('gyro', 2, 0, 1, -1, -1, 1)  # swap axis Z,X,Y, change sign -X-Y+Z
+            self.leftFoot.rotate_axis('acc', 2, 0, 1, -1, -1, 1)
+            self.rightFoot.rotate_axis('gyro', 2, 0, 1, 1, 1, -1)
+            self.rightFoot.rotate_axis('acc', 2, 0, 1, 1, -1, -1)
+            self.leftFoot.rotate_axis('pressure', 0, 0, 0, 0, 0, 0)
+            self.rightFoot.rotate_axis('pressure', 0, 0, 0, 0, 0, 0)
         elif system == 'default':
-            self.rightFoot.rotateAxis('default', 0, 0, 0, 0, 0, 0)
-            self.leftFoot.rotateAxis('default', 0, 0, 0, 0, 0, 0)
+            self.rightFoot.rotate_axis('default', 0, 0, 0, 0, 0, 0)
+            self.leftFoot.rotate_axis('default', 0, 0, 0, 0, 0, 0)
         else:
             print('unknown system, you need to handle axis rotation per foot yourself!')
 
     def cutData(self, start, stop):
         session = copy.copy(self)
-        session.leftFoot = session.leftFoot.cutDataset(start, stop)
-        session.rightFoot = session.rightFoot.cutDataset(start, stop)
+        session.leftFoot = session.leftFoot.cut_dataset(start, stop)
+        session.rightFoot = session.rightFoot.cut_dataset(start, stop)
         return session
 
     def convertToDataFrame(self, session):
