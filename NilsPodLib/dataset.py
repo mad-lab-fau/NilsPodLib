@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 28 11:32:22 2017
@@ -6,17 +6,17 @@ Created on Thu Sep 28 11:32:22 2017
 @author: nils
 """
 
-import numpy as np
-from NilsPodLib.parseBinary import parseBinary
-from NilsPodLib.calibrationData import calibrationData
-from NilsPodLib.dataStream import dataStream
-import pickle
-from scipy import signal
-import matplotlib.pyplot as plt
 import copy
+import os
+
+import numpy as np
 import pandas as pd
 import scipy
-import os
+from scipy import signal
+
+from NilsPodLib.calibrationData import calibrationData
+from NilsPodLib.dataStream import dataStream
+from NilsPodLib.parseBinary import parseBinary
 
 
 class dataset:

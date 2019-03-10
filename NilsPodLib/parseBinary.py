@@ -1,24 +1,28 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from NilsPodLib.header import header
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 import struct
+
+import numpy as np
+
+from NilsPodLib.header import header
 
 
 def int16_t(b, a):
-    num = long(b) + (long(a) << 8)
+    num = int(b) + (int(a) << 8)
     if num >= 0x8000:
         num -= 0xFFFF
     return num
 
 
 def uint16_t(a, b):
-    num = long(b) + (long(a) << 8)
+    num = int(b) + (int(a) << 8)
     # num = int('{:08b}'.format(num)[::-1], 2)
     return num
 
 
 def uint32_t(a, b, c, d):
-    num = long(a) + (long(b) << 8) + (long(c) << 16) + (long(d) << 24)
+    num = int(a) + (int(b) << 8) + (int(c) << 16) + (int(d) << 24)
     # num = int('{:08b}'.format(num)[::-1], 2)
     return num
 
