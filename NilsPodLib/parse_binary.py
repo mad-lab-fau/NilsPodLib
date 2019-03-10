@@ -54,13 +54,13 @@ def parse_binary(path):
     header_bytes = np.asarray(struct.unpack(str(HEADER_SIZE) + 'b', data[0:HEADER_SIZE]), dtype=np.uint8)
     session_header = Header(header_bytes[1:HEADER_SIZE])
 
-    PACKET_SIZE = session_header.packetSize
+    PACKET_SIZE = session_header.packet_size
 
     data = read_binary_file_uint8(path, PACKET_SIZE, HEADER_SIZE)
     data = data.astype(np.uint32)
 
     idx = 0
-    if session_header.gyroEnabled and session_header.accEnabled:
+    if session_header.gyro_enabled and session_header.acc_enabled:
         gyr_data = np.zeros((len(data), 3))
         gyr_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
         gyr_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
@@ -71,14 +71,14 @@ def parse_binary(path):
         acc_data[:, 1] = ((data[:, 8]) + (data[:, 9] << 8)).astype(np.int16)
         acc_data[:, 2] = ((data[:, 10]) + (data[:, 11] << 8)).astype(np.int16)
         idx = idx + 6
-    elif session_header.accEnabled:
+    elif session_header.acc_enabled:
         acc_data = np.zeros((len(data), 3))
         acc_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
         acc_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
         acc_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(np.int16)
         idx = idx + 6
         gyr_data = np.zeros(len(data))
-    elif session_header.gyroEnabled:
+    elif session_header.gyro_enabled:
         gyr_data = np.zeros((len(data), 3))
         gyr_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
         gyr_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
@@ -89,20 +89,20 @@ def parse_binary(path):
         gyr_data = np.zeros(len(data))
         acc_data = np.zeros(len(data))
 
-    if session_header.baroEnabled:
+    if session_header.baro_enabled:
         baro = (data[:, idx] + (data[:, idx + 1] << 8)).astype(np.int16)
         baro = (baro + 101325) / 100.0
         idx = idx + 2
     else:
         baro = np.zeros(len(data))
 
-    if session_header.pressureEnabled:
+    if session_header.pressure_enabled:
         pressure = data[:, idx:idx + 3].astype(np.uint8)
         idx = idx + 3
     else:
         pressure = np.zeros(len(data))
 
-    if session_header.batteryEnabled:
+    if session_header.battery_enabled:
         battery = (data[:, 17] * 2.0) / 100.0
         idx = idx + 1
     else:
@@ -124,7 +124,7 @@ def parse_binary(path):
         sync = np.bitwise_and(sync, 0x80000000)
         sync = np.right_shift(sync, 23)
 
-    if "V2.1" in session_header.versionFW:
+    if "V2.1" in session_header.version_firmware:
         print("Firmware Version 2.1.x found") # TODO: Move to logging
         counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16) + (data[:, -4] << 24)
         sync = np.copy(counter)
