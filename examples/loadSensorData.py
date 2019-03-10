@@ -18,8 +18,8 @@ dataset = sensor.Dataset(file_path)
 seconds = dataset.header.unixTime_stop - dataset.header.unixTime_start
 n = len(dataset.counter)
 if seconds > 0:
-    print("Start: " + str(dataset.header.convertUnixTimeToDateTime(dataset.header.unixTime_start)))
-    print("Stop: " + str(dataset.header.convertUnixTimeToDateTime(dataset.header.unixTime_stop)))
+    print("Start: " + str(dataset.header.datetime_start))
+    print("Stop: " + str(dataset.header.datetime_stop))
     print("Sampling Frequency calculated: " + str(1 / (seconds / n)) + "Hz")
 else:
     print("Timestamp Error")
