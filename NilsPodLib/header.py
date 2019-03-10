@@ -31,8 +31,8 @@ class Header:
     metaData = None
     numSamples = None
 
-    def __init__(self, headerPacket=None):
-        if headerPacket is None:
+    def __init__(self, header_packet=None):
+        if header_packet is None:
             # default Session Header
             self.syncRole = 'disabled'
             self.samplingRate_Hz = 200
@@ -56,8 +56,8 @@ class Header:
             self.numSamples = 0
         else:
 
-            self.packetSize = headerPacket[0]
-            sensors = headerPacket[1]
+            self.packetSize = header_packet[0]
+            sensors = header_packet[1]
             if sensors & 0x01:
                 self.gyroEnabled = True
             else:
@@ -78,7 +78,7 @@ class Header:
             else:
                 self.batteryEnabled = False
 
-            sr = headerPacket[2] & 0x0F
+            sr = header_packet[2] & 0x0F
 
             if sr == 10:
                 self.samplingRate_Hz = 102.4
@@ -91,52 +91,52 @@ class Header:
             elif sr == 1:
                 self.samplingRate_Hz = 1024.0
 
-            if headerPacket[2] & 0x80:
+            if header_packet[2] & 0x80:
                 self.lowVoltageTermination = True
             else:
                 self.lowVoltageTermination = False
 
             self.samplingTime_ms = (1.0 / self.samplingRate_Hz) * 1000.0
 
-            if headerPacket[3] == 2:
+            if header_packet[3] == 2:
                 self.syncRole = 'master'
-            elif headerPacket[3] == 1:
+            elif header_packet[3] == 1:
                 self.syncRole = 'slave'
             else:
                 self.syncRole = 'disabled'
 
-            self.syncDistance_ms = headerPacket[4] * 100.0
+            self.syncDistance_ms = header_packet[4] * 100.0
 
-            self.accRange_G = headerPacket[6]
+            self.accRange_G = header_packet[6]
 
-            self.gyroRange_dps = headerPacket[7] * 125
+            self.gyroRange_dps = header_packet[7] * 125
 
-            if headerPacket[8] == 1:
+            if header_packet[8] == 1:
                 self.sensorPosition = 'left foot'
-            elif headerPacket[8] == 2:
+            elif header_packet[8] == 2:
                 self.sensorPosition = 'right foot'
-            elif headerPacket[8] == 3:
+            elif header_packet[8] == 3:
                 self.sensorPosition = 'hip'
             else:
                 self.sensorPosition = 'not defined'
 
-            self.metaData = headerPacket[9:13]
+            self.metaData = header_packet[9:13]
 
-            packedDateTime = int(headerPacket[13]) | (int(headerPacket[14]) << 8) | (int(headerPacket[15]) << 16) | (
-                        int(headerPacket[16]) << 24)
+            packedDateTime = int(header_packet[13]) | (int(header_packet[14]) << 8) | (int(header_packet[15]) << 16) | (
+                    int(header_packet[16]) << 24)
             self.unixTime_start = packedDateTime
             self.datetime_start = datetime.datetime.fromtimestamp(self.unixTime_start)
 
-            packedDateTime = int(headerPacket[17]) | (int(headerPacket[18]) << 8) | (int(headerPacket[19]) << 16) | (
-                        int(headerPacket[20]) << 24)
+            packedDateTime = int(header_packet[17]) | (int(header_packet[18]) << 8) | (int(header_packet[19]) << 16) | (
+                    int(header_packet[20]) << 24)
             self.unixTime_stop = packedDateTime
             self.datetime_stop = datetime.datetime.fromtimestamp(self.unixTime_stop)
 
-            self.numSamples = int(headerPacket[21]) | (int(headerPacket[22]) << 8) | (int(headerPacket[23]) << 16) | (
-                        int(headerPacket[24]) << 24)
+            self.numSamples = int(header_packet[21]) | (int(header_packet[22]) << 8) | (int(header_packet[23]) << 16) | (
+                    int(header_packet[24]) << 24)
 
-            self.versionFW = "V" + str(int(headerPacket[-3])) + "." + str(int(headerPacket[-2])) + "." + str(
-                int(headerPacket[-1]))
+            self.versionFW = "V" + str(int(header_packet[-3])) + "." + str(int(header_packet[-2])) + "." + str(
+                int(header_packet[-1]))
 
     def convertUnixTimeToDateTime(self, unixTimeStamp):
         return datetime.datetime.fromtimestamp(unixTimeStamp)

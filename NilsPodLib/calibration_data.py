@@ -17,6 +17,6 @@ class CalibrationData:
     Kg = None
     bg = None
 
-    def __init__(self, calibrationFilePath):
-        with open(calibrationFilePath, 'rb') as f:
-            self.Ta, self.Ka, self.ba, self.Tg, self.Kg, self.bg = pickle.load(f, encoding="bytes")
+    def __init__(self, calibration_file_path):
+        with open(calibration_file_path, 'rb') as f:
+            self.Ta, self.Ka, self.ba, self.Tg, self.Kg, self.bg = pickle.load(f, encoding='bytes')

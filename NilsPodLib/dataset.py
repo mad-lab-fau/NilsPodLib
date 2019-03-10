@@ -49,13 +49,14 @@ class Dataset:
 
             # TODO: add list of calibration files to repository.
             #       Ideal Case: For each existing NilPod at least one calibration file exists!
-            calibrationFileName = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
+            # TODO: This should be optional and it should be possible to pass a real file
+            calibration_file_name = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
             if '84965C0' in self.path:
-                calibrationFileName += 'NRF52-84965C0.pickle'
-                self.calibrationData = CalibrationData(calibrationFileName)
+                calibration_file_name += 'NRF52-84965C0.pickle'
+                self.calibrationData = CalibrationData(calibration_file_name)
             if '92338C81' in self.path:
-                calibrationFileName += 'NRF52-92338C81.pickle'
-                self.calibrationData = CalibrationData(calibrationFileName)
+                calibration_file_name += 'NRF52-92338C81.pickle'
+                self.calibrationData = CalibrationData(calibration_file_name)
         else:
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
