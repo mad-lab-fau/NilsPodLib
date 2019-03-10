@@ -12,8 +12,8 @@ root = tk.Tk()
 root.withdraw()
 file_path = filedialog.askopenfilename()
 
-dataset = sensor.dataset(file_path)
-# dataset.calibrate();
+dataset = sensor.Dataset(file_path)
+# Dataset.calibrate();
 
 seconds = dataset.header.unixTime_stop - dataset.header.unixTime_start
 n = len(dataset.counter)
@@ -42,7 +42,7 @@ if dataset.header.pressureEnabled:
 
 plt.figure()
 plt.plot(dataset.counter)
-# plt.plot(dataset.sync*np.max(dataset.counter))
+# plt.plot(Dataset.sync*np.max(Dataset.counter))
 plt.title('Counter')
 
 plt.figure()

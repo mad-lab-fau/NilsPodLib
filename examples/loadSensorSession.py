@@ -28,20 +28,20 @@ root.withdraw()
 file_path_rightFoot = filedialog.askopenfilename()
 file_name_rightFoot = path_leaf(file_path_rightFoot)
 
-# since firmware verison V0.2.0 a header is included within each binary data file (=> header flag has to be enabled/disabled accordingly)
+# since firmware verison V0.2.0 a Header is included within each binary data file (=> Header flag has to be enabled/disabled accordingly)
 header = 1
 freeRTOS = 1
 print("Reading in Data...")
-# session = sensor.session.from_folderPath(folder_path,header);
-# session = sensor.session.from_filePaths(file_path_leftFoot,file_path_rightFoot,header);
-session = sensor.session(sensor.dataset(file_path_leftFoot, header, freeRTOS),
-                         sensor.dataset(file_path_rightFoot, header, freeRTOS))
+# Session = sensor.Session.from_folderPath(folder_path,Header);
+# Session = sensor.Session.from_filePaths(file_path_leftFoot,file_path_rightFoot,Header);
+session = sensor.Session(sensor.Dataset(file_path_leftFoot, header, freeRTOS),
+                         sensor.Dataset(file_path_rightFoot, header, freeRTOS))
 print("Data Sucessfully Loaded")
 
-# session.calibrate();
-# session.rotateAxis('egait');
+# Session.calibrate();
+# Session.rotateAxis('egait');
 
-# session.leftFoot = session.leftFoot.interpolateDataset(session.leftFoot);
+# Session.leftFoot = Session.leftFoot.interpolateDataset(Session.leftFoot);
 
 session.synchronize()
 

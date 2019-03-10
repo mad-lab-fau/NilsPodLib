@@ -11,7 +11,7 @@ import datetime
 import numpy as np
 
 
-class header:
+class Header:
     syncRole = None
     samplingRate_Hz = None
     accRange_G = None
@@ -33,7 +33,7 @@ class header:
 
     def __init__(self, headerPacket=None):
         if headerPacket is None:
-            # default session header
+            # default Session Header
             self.syncRole = 'disabled'
             self.samplingRate_Hz = 200
             self.accRange_G = 16

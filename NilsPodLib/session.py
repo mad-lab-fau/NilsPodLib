@@ -12,8 +12,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from NilsPodLib.dataset import dataset
-from NilsPodLib.header import header
+from NilsPodLib.dataset import Dataset
+from NilsPodLib.header import Header
 
 leftFootFileNames = ["NRF52-92", "Left"]
 rightFootFileNames = ["NRF52-84", "Right"]
@@ -43,7 +43,7 @@ def getFilesNamesPerFoot(path):
     return [leftFootPath, rightFootPath]
 
 
-class session:
+class Session:
     leftFoot = None
     rightFoot = None
 
@@ -53,16 +53,16 @@ class session:
 
     @classmethod
     def from_filePaths(cls, leftFootPath, rightFootPath):
-        leftFoot = dataset(leftFootPath, header, freeRTOS)
-        rightFoot = dataset(rightFootPath, header, freeRTOS)
+        leftFoot = Dataset(leftFootPath, Header, freeRTOS)
+        rightFoot = Dataset(rightFootPath, Header, freeRTOS)
         session = cls(leftFoot, rightFoot)
         return session
 
     @classmethod
     def from_folderPath(cls, folderPath):
         [leftFootPath, rightFootPath] = getFilesNamesPerFoot(folderPath)
-        leftFoot = dataset(leftFootPath)
-        rightFoot = dataset(rightFootPath)
+        leftFoot = Dataset(leftFootPath)
+        rightFoot = Dataset(rightFootPath)
         session = cls(leftFoot, rightFoot)
         return session
 
@@ -86,7 +86,7 @@ class session:
 
     def synchronize(self):
         if self.leftFoot.header.syncRole == 'disabled' or self.rightFoot.header.syncRole == 'disabled':
-            print("No header information found using fallback sync")
+            print("No Header information found using fallback sync")
             self.synchronizeFallback()
             return
         try:

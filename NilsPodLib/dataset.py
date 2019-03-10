@@ -14,12 +14,12 @@ import pandas as pd
 import scipy
 from scipy import signal
 
-from NilsPodLib.calibrationData import calibrationData
-from NilsPodLib.dataStream import dataStream
-from NilsPodLib.parseBinary import parseBinary
+from NilsPodLib.calibration_data import CalibrationData
+from NilsPodLib.data_stream import DataStream
+from NilsPodLib.parse_binary import parse_binary
 
 
-class dataset:
+class Dataset:
     path = ""
     acc = None
     gyro = None
@@ -37,12 +37,12 @@ class dataset:
     def __init__(self, path):
         self.path = path
         if path.endswith(".bin"):
-            [accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header] = parseBinary(path)
-            self.acc = dataStream(accData, self.header.samplingRate_Hz)
-            self.gyro = dataStream(gyrData, self.header.samplingRate_Hz)
-            self.baro = dataStream(baro, self.header.samplingRate_Hz)
-            self.pressure = dataStream(pressure.astype('float'), self.header.samplingRate_Hz)
-            self.battery = dataStream(battery, self.header.samplingRate_Hz)
+            accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(path)
+            self.acc = DataStream(accData, self.header.samplingRate_Hz)
+            self.gyro = DataStream(gyrData, self.header.samplingRate_Hz)
+            self.baro = DataStream(baro, self.header.samplingRate_Hz)
+            self.pressure = DataStream(pressure.astype('float'), self.header.samplingRate_Hz)
+            self.battery = DataStream(battery, self.header.samplingRate_Hz)
             self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
             self.size = len(self.counter)
 
@@ -50,10 +50,10 @@ class dataset:
             calibrationFileName = os.path.join(os.path.dirname(__file__), "Calibration/CalibrationFiles/")
             if "84965C0" in self.path:
                 calibrationFileName += "NRF52-84965C0.pickle"
-                self.calibrationData = calibrationData(calibrationFileName)
+                self.calibrationData = CalibrationData(calibrationFileName)
             if "92338C81" in self.path:
                 calibrationFileName += "NRF52-92338C81.pickle"
-                self.calibrationData = calibrationData(calibrationFileName)
+                self.calibrationData = CalibrationData(calibrationFileName)
         else:
             print("Invalid file tpye")
 
@@ -104,7 +104,7 @@ class dataset:
                 self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
                 self.acc.data[:, 1] = self.acc.data[:, 1] * -1
                 self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-            # if('right' in self.header.sensorPosition):
+            # if('right' in self.Header.sensorPosition):
             # print "rotating nothing"
             else:
                 print("No Position Definition found - Using Name Fallback")

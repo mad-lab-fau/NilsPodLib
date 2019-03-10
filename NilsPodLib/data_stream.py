@@ -11,7 +11,7 @@ import numpy as np
 from scipy import signal
 
 
-class dataStream:
+class DataStream:
     data = None
     samplingRate_Hz = None
 
