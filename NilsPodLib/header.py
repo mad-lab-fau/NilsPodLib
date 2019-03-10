@@ -73,7 +73,7 @@ class Header:
 
             self.lowVoltageTermination = bool(header_packet[2] & 0x80)
 
-            self.syncRole = self.SYNC_ROLE.get(header_packet[3], 'disabled')
+            self.syncRole = self.SYNC_ROLE.get(header_packet[3], self.syncRole)
 
             self.syncDistance_ms = header_packet[4] * 100.0
 
@@ -81,7 +81,7 @@ class Header:
 
             self.gyroRange_dps = header_packet[7] * 125
 
-            self.sensorPosition = self.SENSOR_POS.get(header_packet[8], 'not defined')
+            self.sensorPosition = self.SENSOR_POS.get(header_packet[8], self.sensorPosition)
 
             self.metaData = header_packet[9:13]
 
