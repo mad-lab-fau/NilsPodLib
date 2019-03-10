@@ -2,7 +2,6 @@
 
 import matplotlib.pyplot as plt
 from NilsPodLib import session as sensor
-import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 
@@ -15,7 +14,7 @@ file_path = filedialog.askopenfilename()
 dataset = sensor.Dataset(file_path)
 # Dataset.calibrate();
 
-seconds = dataset.header.unixTime_stop - dataset.header.unixTime_start
+seconds = dataset.header.unixTime_stop - dataset.header.unix_time_start
 n = len(dataset.counter)
 if seconds > 0:
     print("Start: " + str(dataset.header.datetime_start))
@@ -24,18 +23,18 @@ if seconds > 0:
 else:
     print("Timestamp Error")
 
-if dataset.header.batteryEnabled:
+if dataset.header.battery_enabled:
     plt.figure()
     ax1 = plt.plot(dataset.battery.data)
     plt.ylim(0, 5)
     plt.title('Battery')
 
-if dataset.header.baroEnabled:
+if dataset.header.baro_enabled:
     plt.figure()
     plt.plot(dataset.baro.data)
     plt.title('Baro')
 
-if dataset.header.pressureEnabled:
+if dataset.header.pressure_enabled:
     plt.figure()
     plt.plot(dataset.pressure.data)
     plt.title('Pressure')
