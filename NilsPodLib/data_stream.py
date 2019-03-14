@@ -37,8 +37,9 @@ class DataStream:
         b, a = signal.butter(order, fn, btype=filterType)
         return signal.filtfilt(b, a, self.data.T, padlen=150).T
 
-    def data_as_df(self) -> pd.DataFrame:
+    def data_as_df(self, index_as_time: bool = True) -> pd.DataFrame:
         df = pd.DataFrame(self.data, columns=self.legend)
-        df.index /= self.sampling_rate_hz
-        df.index.name = 't'
+        if index_as_time:
+            df.index /= self.sampling_rate_hz
+            df.index.name = 't'
         return df

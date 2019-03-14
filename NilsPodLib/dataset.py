@@ -9,6 +9,7 @@ Created on Thu Sep 28 11:32:22 2017
 import copy
 import os
 import warnings
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -220,3 +221,9 @@ class Dataset:
         dataset.baro.data = baroTmp
         dataset.battery.data = batteryTmp
         return dataset
+
+    def imu_data_as_df(self):
+        acc_df = self.acc.data_as_df()
+        gyro_df = self.gyro.data_as_df()
+        return pd.concat([acc_df, gyro_df], axis=1)
+
