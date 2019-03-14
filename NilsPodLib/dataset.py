@@ -41,11 +41,11 @@ class Dataset:
 
         self.path = path
         accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
-        self.acc = DataStream(accData, self.header.samplingRate_Hz)
-        self.gyro = DataStream(gyrData, self.header.samplingRate_Hz)
-        self.baro = DataStream(baro, self.header.samplingRate_Hz)
-        self.pressure = DataStream(pressure.astype('float'), self.header.samplingRate_Hz)
-        self.battery = DataStream(battery, self.header.samplingRate_Hz)
+        self.acc = DataStream(accData, self.header.sampling_rate_hz)
+        self.gyro = DataStream(gyrData, self.header.sampling_rate_hz)
+        self.baro = DataStream(baro, self.header.sampling_rate_hz)
+        self.pressure = DataStream(pressure.astype('float'), self.header.sampling_rate_hz)
+        self.battery = DataStream(battery, self.header.sampling_rate_hz)
         self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
         self.size = len(self.counter)
 
@@ -132,7 +132,7 @@ class Dataset:
         self.gyro.data = np.column_stack((dX, dY, dZ))
 
     def filter_data(self, data, order, fc, fType='lowpass'):
-        fn = fc / (self.header.samplingRate_Hz / 2.0)
+        fn = fc / (self.header.sampling_rate_hz / 2.0)
         b, a = signal.butter(order, fn, btype=fType)
         return signal.filtfilt(b, a, data.T, padlen=150).T
 
