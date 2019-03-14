@@ -19,6 +19,9 @@ from NilsPodLib.calibration_data import CalibrationData
 from NilsPodLib.data_stream import DataStream
 from NilsPodLib.parse_binary import parse_binary
 
+ACC = ('acc_' + x for x in 'xyz')
+GYR = ('gyr_' + x for x in 'xyz')
+
 
 class Dataset:
     path = ""
@@ -41,8 +44,8 @@ class Dataset:
 
         self.path = path
         accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
-        self.acc = DataStream(accData, self.header.sampling_rate_hz)
-        self.gyro = DataStream(gyrData, self.header.sampling_rate_hz)
+        self.acc = DataStream(accData, self.header.sampling_rate_hz, legend=ACC)
+        self.gyro = DataStream(gyrData, self.header.sampling_rate_hz, legend=GYR)
         self.baro = DataStream(baro, self.header.sampling_rate_hz)
         self.pressure = DataStream(pressure.astype('float'), self.header.sampling_rate_hz)
         self.battery = DataStream(battery, self.header.sampling_rate_hz)
