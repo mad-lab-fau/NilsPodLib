@@ -46,7 +46,7 @@ class Dataset:
         self.baro = DataStream(baro, self.header.sampling_rate_hz)
         self.pressure = DataStream(pressure.astype('float'), self.header.sampling_rate_hz)
         self.battery = DataStream(battery, self.header.sampling_rate_hz)
-        self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
+        self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
         self.size = len(self.counter)
 
         # TODO: add list of calibration files to repository.
@@ -100,11 +100,11 @@ class Dataset:
             self.acc.data[:, 1] = self.acc.data[:, 1] * np.sign(sY)
             self.acc.data[:, 2] = self.acc.data[:, 2] * np.sign(sZ)
         elif sensor == 'pressure':
-            if 'left' in self.header.sensorPosition:
+            if 'left' in self.header.sensor_position:
                 print('switching pressure sensors')
                 self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
         elif sensor == 'default':
-            if 'left' in self.header.sensorPosition:
+            if 'left' in self.header.sensor_position:
                 self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
                 self.acc.data[:, 1] = self.acc.data[:, 1] * -1
                 self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1

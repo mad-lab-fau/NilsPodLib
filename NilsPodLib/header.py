@@ -13,15 +13,15 @@ import numpy as np
 
 class Header:
     # default Session Header
-    gyro_enabled = True
-    acc_enabled = True
-    pressure_enabled = True
-    baro_enabled = True
-    battery_enabled = True
+    gyro_enabled: bool = True
+    acc_enabled: bool = True
+    pressure_enabled: bool = True
+    baro_enabled: bool = True
+    battery_enabled: bool = True
 
-    sampling_rate_hz = 200
-    acc_range_g = 16
-    gyro_range_dps = 2000
+    sampling_rate_hz: float = 200.
+    acc_range_g: float = 16.
+    gyro_range_dps: float = 2000.
 
     sync_role = 'disabled'
     sync_distance_ms = 0

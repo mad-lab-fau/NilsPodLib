@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import struct
+from typing import TypeVar, Tuple
 
 import numpy as np
+from pathlib import Path
 
 from NilsPodLib.header import Header
+
+
+path_t = TypeVar('path_t', str, Path)
 
 
 def int16_t(b, a):
@@ -43,7 +48,14 @@ def read_binary_file_int16(path, packet_size, skipHeaderBytes):
     return data
 
 
-def parse_binary(path):
+def parse_binary(path: path_t) -> Tuple[np.ndarray,
+                                        np.ndarray,
+                                        np.ndarray,
+                                        np.ndarray,
+                                        np.ndarray,
+                                        np.ndarray,
+                                        np.ndarray,
+                                        Header]:
     with open(path, 'rb') as f:
         data = f.read()
 
@@ -133,4 +145,4 @@ def parse_binary(path):
         sync = np.bitwise_and(sync, 0x80000000)
         sync = np.right_shift(sync, 31)
 
-    return [acc_data, gyr_data, baro, pressure, battery, counter, sync, session_header]
+    return acc_data, gyr_data, baro, pressure, battery, counter, sync, session_header

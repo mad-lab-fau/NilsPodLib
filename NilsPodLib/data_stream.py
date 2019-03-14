@@ -6,6 +6,7 @@ Created on Thu Sep 28 11:32:22 2017
 
 @author: nils
 """
+from typing import Optional
 
 import numpy as np
 from scipy import signal
@@ -15,7 +16,7 @@ class DataStream:
     data = None
     sampling_rate_hz = None
 
-    def __init__(self, data, sampling_rate=None):
+    def __init__(self, data, sampling_rate: Optional[float] = None):
         self.data = data
         self.sampling_rate_hz = sampling_rate
 
