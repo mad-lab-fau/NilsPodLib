@@ -30,11 +30,7 @@ class DataStream:
         return np.linalg.norm(self.data, axis=1)
 
     def normalize(self):
-        tmp = np.copy(self.data)
-        # TODO: Do this without loop
-        for i in range(0, tmp.shape[1]):
-            tmp[:, i] = tmp[:, i] / np.max(tmp[:, i])
-        return tmp
+        return self.data / self.data.max(axis=0)
 
     def filter_butterworth(self, fc, order, filterType='low'):
         fn = fc / (self.sampling_rate_hz / 2.0)
