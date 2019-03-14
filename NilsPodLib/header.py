@@ -67,7 +67,7 @@ class Header:
     }
 
     def __init__(self, header_packet=None):
-        if header_packet:
+        if header_packet is not None:
             self.packet_size = header_packet[0]
             sensors = header_packet[1]
 
