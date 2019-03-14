@@ -13,32 +13,32 @@ import numpy as np
 
 class Header:
     # default Session Header
-    gyro_enabled: bool = True
+    gyro_enabled: bool
     acc_enabled: bool = True
-    pressure_enabled: bool = True
-    baro_enabled: bool = True
-    battery_enabled: bool = True
+    pressure_enabled: bool
+    baro_enabled: bool
+    battery_enabled: bool
 
-    sampling_rate_hz: float = 200.
-    acc_range_g: float = 16.
-    gyro_range_dps: float = 2000.
+    sampling_rate_hz: float
+    acc_range_g: float
+    gyro_range_dps: float
 
     sync_role = 'disabled'
-    sync_distance_ms = 0
+    sync_distance_ms: float
 
     sensor_position = 'undefined'
 
-    datetime_start = 0
-    datetime_stop = 0
+    datetime_start: datetime.datetime
+    datetime_stop: datetime.datetime
     unix_time_start = 0
     unix_time_stop = 0
 
-    version_firmware = 0
-    packet_size = 20
-    low_voltage_termination = False
+    version_firmware: str
+    packet_size: int
+    low_voltage_termination: bool
 
     meta_data = np.zeros(4)
-    num_samples = 0
+    num_samples: int
 
     _SENSOR_FLAGS = {
         'gyro_enabled': 0x01,
