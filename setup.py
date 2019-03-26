@@ -24,8 +24,5 @@ setup(
 
     packages=find_packages(),  # Required
 
-    install_requires=['scipy', 'matplotlib', 'pandas', 'numpy'],  # Optional
-
-    package_data={'NilsPodLib': ['Calibration/CalibrationFiles/*.pickle']},
-    include_package_data=True
+    install_requires=['scipy', 'matplotlib', 'pandas', 'numpy']
 )
