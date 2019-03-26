@@ -7,16 +7,13 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import copy
-import os
 import warnings
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import scipy
 from scipy import signal
 
-from NilsPodLib.calibration_data import CalibrationData
 from NilsPodLib.data_stream import DataStream
 from NilsPodLib.parse_binary import parse_binary
 
@@ -63,12 +60,20 @@ class Dataset:
             self.gyro.data = (self.calibration_data.Tg * self.calibration_data.Kg * (
                     self.gyro.data.T - self.calibration_data.bg)).T
             self.gyro.data = np.asarray(self.gyro.data)
+            self.is_calibrated = True
         except:
-            # Todo: Use correct static calibration values according to sensor range
-            #       (this one is hardcoded for 2000dps and 16G)
-            self.acc.data = self.acc.data / 2048.0
-            self.gyro.data = self.gyro.data / 16.4
+            self.factory_calibration()
             warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
+
+    def factory_calibration(self):
+        """Perform a factory calibration based values extracted from the sensors datasheet.
+
+        Note: It is highly recommended to perform a real calibration to use the sensordata in any meaningful context
+        """
+        # Todo: Use correct static calibration values according to sensor range
+        #       (this one is hardcoded for 2000dps and 16G)
+        self.acc.data = self.acc.data / 2048.0
+        self.gyro.data = self.gyro.data / 16.4
         self.is_calibrated = True
 
     def rotate_axis(self, sensor, x, y, z, sX, sY, sZ):
