@@ -20,24 +20,24 @@ from NilsPodLib.calibration_data import CalibrationData
 from NilsPodLib.data_stream import DataStream
 from NilsPodLib.parse_binary import parse_binary
 
-ACC = ('acc_' + x for x in 'xyz')
-GYR = ('gyr_' + x for x in 'xyz')
+ACC = tuple('acc_' + x for x in 'xyz')
+GYR = tuple('gyr_' + x for x in 'xyz')
 
 
 class Dataset:
     path = ""
-    acc = None
-    gyro = None
-    baro = None
-    pressure = None
-    battery = None
-    counter = None
-    rtc = None
+    acc: DataStream
+    gyro: DataStream
+    baro: DataStream
+    pressure: DataStream
+    battery: DataStream
+    counter: np.ndarray
+    rtc : np.ndarray
     sync = None
     header = None
     calibration_data = None
-    size = 0
-    is_calibrated = False
+    size: int
+    is_calibrated: bool = False
 
     def __init__(self, path):
         if not path.endswith('.bin'):
