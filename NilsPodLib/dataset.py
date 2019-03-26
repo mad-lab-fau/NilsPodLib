@@ -53,17 +53,6 @@ class Dataset:
         self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
         self.size = len(self.counter)
 
-        # TODO: add list of calibration files to repository.
-        #       Ideal Case: For each existing NilPod at least one calibration file exists!
-        # TODO: This should be optional and it should be possible to pass a real file
-        calibration_file_name = os.path.join(os.path.dirname(__file__), 'Calibration/CalibrationFiles/')
-        if '84965C0' in self.path:
-            calibration_file_name += 'NRF52-84965C0.pickle'
-            self.calibration_data = CalibrationData(calibration_file_name)
-        if '92338C81' in self.path:
-            calibration_file_name += 'NRF52-92338C81.pickle'
-            self.calibration_data = CalibrationData(calibration_file_name)
-
     def calibrate(self):
         try:
             self.acc.data = (self.calibration_data.Ta * self.calibration_data.Ka * (
