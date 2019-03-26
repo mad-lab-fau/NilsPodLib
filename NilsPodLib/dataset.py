@@ -32,7 +32,8 @@ class Dataset:
     pressure: DataStream
     battery: DataStream
     counter: np.ndarray
-    rtc : np.ndarray
+    rtc: np.ndarray
+    sampling_rate_hz: float
     sync = None
     header = None
     calibration_data = None
@@ -52,6 +53,7 @@ class Dataset:
         self.battery = DataStream(battery, self.header.sampling_rate_hz)
         self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
         self.size = len(self.counter)
+        self.sampling_rate_hz = self.header.sampling_rate_hz
 
     def calibrate(self):
         try:
