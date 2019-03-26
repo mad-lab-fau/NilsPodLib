@@ -54,6 +54,7 @@ class Dataset:
 
     def calibrate(self):
         try:
+            # TODO: Make use of new calibration lib
             self.acc.data = (self.calibration_data.Ta * self.calibration_data.Ka * (
                     self.acc.data.T - self.calibration_data.ba)).T
             self.acc.data = np.asarray(self.acc.data)
@@ -76,51 +77,6 @@ class Dataset:
         self.gyro.data = self.gyro.data / 16.4
         self.is_calibrated = True
 
-    def rotate_axis(self, sensor, x, y, z, sX, sY, sZ):
-        if sensor == 'gyro':
-            tmp = np.copy(self.gyro.data)
-            dX = tmp[:, 0]
-            dY = tmp[:, 1]
-            dZ = tmp[:, 2]
-            self.gyro.data[:, x] = dX
-            self.gyro.data[:, y] = dY
-            self.gyro.data[:, z] = dZ
-            self.gyro.data[:, 0] = self.gyro.data[:, 0] * np.sign(sX)
-            self.gyro.data[:, 1] = self.gyro.data[:, 1] * np.sign(sY)
-            self.gyro.data[:, 2] = self.gyro.data[:, 2] * np.sign(sZ)
-        elif sensor == 'acc':
-            tmp = np.copy(self.acc.data)
-            dX = tmp[:, 0]
-            dY = tmp[:, 1]
-            dZ = tmp[:, 2]
-            self.acc.data[:, x] = dX
-            self.acc.data[:, y] = dY
-            self.acc.data[:, z] = dZ
-            self.acc.data[:, 0] = self.acc.data[:, 0] * np.sign(sX)
-            self.acc.data[:, 1] = self.acc.data[:, 1] * np.sign(sY)
-            self.acc.data[:, 2] = self.acc.data[:, 2] * np.sign(sZ)
-        elif sensor == 'pressure':
-            if 'left' in self.header.sensor_position:
-                print('switching pressure sensors')
-                self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-        elif sensor == 'default':
-            if 'left' in self.header.sensor_position:
-                self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-                self.acc.data[:, 1] = self.acc.data[:, 1] * -1
-                self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-            else:
-                warnings.warn('No Position Definition found - Using Name Fallback')
-                try:
-                    if '92338C81' in self.path:
-                        self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-                        self.acc.data[:, 1] = self.acc.data[:, 1] * -1
-                        self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-                except:
-                    # TODO: Replace base exeption and can the try block even fail?? What is going on here anyway.
-                    Exception('Rotation FAILED')
-        else:
-            ValueError('unknown sensor, no rotation possible')
-
     def down_sample(self, q):
         dX = scipy.signal.decimate(self.acc.data[:, 0], q)
         dY = scipy.signal.decimate(self.acc.data[:, 1], q)
@@ -131,13 +87,8 @@ class Dataset:
         dZ = scipy.signal.decimate(self.gyro.data[:, 2], q)
         self.gyro.data = np.column_stack((dX, dY, dZ))
 
-    def filter_data(self, data, order, fc, fType='lowpass'):
-        fn = fc / (self.header.sampling_rate_hz / 2.0)
-        b, a = signal.butter(order, fn, btype=fType)
-        return signal.filtfilt(b, a, data.T, padlen=150).T
-
-    def cut_dataset(self, start, stop):
-        s = copy.copy(self)
+    def cut_dataset(self, start, stop) -> 'Dataset':
+        s = copy.deepcopy(self)
         s.sync = s.sync[start:stop]
         s.counter = s.counter[start:stop]
         s.acc.data = s.acc.data[start:stop]
@@ -148,42 +99,6 @@ class Dataset:
         s.rtc = s.rtc[start:stop]
         s.size = len(s.counter)
         return s
-
-    def norm(self, data):
-        return np.apply_along_axis(np.linalg.norm, 1, data)
-
-    def export_csv(self, path):
-        if self.is_calibrated:
-            accFrame = pd.DataFrame(self.acc.data, columns=['AX [g]', 'AY [g]', 'AZ [g]'])
-            gyroFrame = pd.DataFrame(self.gyro.data, columns=['GX [dps]', 'GY [dps]', 'GZ [dps]'])
-        else:
-            accFrame = pd.DataFrame(self.acc.data, columns=['AX [no unit]', 'AY [no unit]]', 'AZ [no unit]'])
-            gyroFrame = pd.DataFrame(self.gyro.data, columns=['GX [no unit]', 'GY [no unit]', 'GZ [no unit]'])
-
-        frame = pd.concat([accFrame, gyroFrame], axis=1)
-        frame.to_csv(path, index=False, sep=';')
-
-    @staticmethod
-    def interpolate_3d(array, idx, num):
-        # TODO: Das geht doch sicher auch besser oder?
-        xx = ((array[idx + 1, 0] - array[idx, 0]) / (num + 1.0))
-        yy = ((array[idx + 1, 1] - array[idx, 1]) / (num + 1.0))
-        zz = ((array[idx + 1, 2] - array[idx, 2]) / (num + 1.0))
-        for i in range(1, num + 1):
-            x = (xx * i) + array[idx, 0]
-            y = (yy * i) + array[idx, 1]
-            z = (zz * i) + array[idx, 2]
-            a = [x, y, z]
-            array = np.insert(array, idx + i, a, axis=0)
-        return array
-
-    @staticmethod
-    def interpolate_1D(array, idx, num):
-        xx = ((array[idx + 1] - array[idx]) / (num + 1.0))
-        for i in range(1, num + 1):
-            a = (xx * i) + array[idx]
-            array = np.insert(array, idx + i, a)
-        return array
 
     def interpolate_dataset(self, dataset):
         counterTmp = np.copy(dataset.counter)
@@ -218,8 +133,11 @@ class Dataset:
         dataset.battery.data = batteryTmp
         return dataset
 
-    def imu_data_as_df(self):
+    def imu_data_as_df(self) -> pd.DataFrame:
         acc_df = self.acc.data_as_df()
         gyro_df = self.gyro.data_as_df()
         return pd.concat([acc_df, gyro_df], axis=1)
+
+    def imu_data_as_csv(self, path):
+        self.imu_data_as_df().to_csv(path, index=False)
 
