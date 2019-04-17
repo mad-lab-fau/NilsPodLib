@@ -6,6 +6,7 @@ Created on Thu Sep 28 11:32:22 2017
 
 @author: nils
 """
+import copy
 from typing import Optional, Iterable, List
 
 import numpy as np
@@ -31,6 +32,12 @@ class Datastream:
 
     def normalize(self):
         return self.data / self.data.max(axis=0)
+
+    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None):
+        ds = copy.deepcopy(self)
+        sl = slice(start, stop, step)
+        ds.data = ds.data[sl]
+        return ds
 
     def filter_butterworth(self, fc, order, filterType='low'):
         fn = fc / (self.sampling_rate_hz / 2.0)
