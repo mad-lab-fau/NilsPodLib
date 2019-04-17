@@ -34,25 +34,25 @@ class Dataset:
     sync = None
     header = None
     calibration_data = None
-    size: int
     is_calibrated: bool = False
+
+    _SENSORS = ('acc', 'gyro', 'baro', 'pressure', 'battery')
 
     def __init__(self, path):
         if not path.endswith('.bin'):
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
         self.path = path
-        accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
-        self.acc = DataStream(accData, self.header.sampling_rate_hz, legend=ACC)
-        self.gyro = DataStream(gyrData, self.header.sampling_rate_hz, legend=GYR)
+        acc, gyr, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
+        self.acc = DataStream(acc, self.header.sampling_rate_hz, legend=ACC)
+        self.gyro = DataStream(gyr, self.header.sampling_rate_hz, legend=GYR)
         self.baro = DataStream(baro, self.header.sampling_rate_hz)
         self.pressure = DataStream(pressure.astype('float'), self.header.sampling_rate_hz)
         self.battery = DataStream(battery, self.header.sampling_rate_hz)
         self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
-        self.size = len(self.counter)
         self.sampling_rate_hz = self.header.sampling_rate_hz
 
-    def calibrate(self):
+    def calibrate(self, inplace=False):
         try:
             # TODO: Make use of new calibration lib
             self.acc.data = (self.calibration_data.Ta * self.calibration_data.Ka * (
@@ -66,6 +66,18 @@ class Dataset:
             self.factory_calibration()
             warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
 
+    @property
+    def size(self) -> int:
+        return len(self.counter)
+
+    @property
+    def _DATASTREAMS(self):
+        """Iterate through all available datastreams, if they exist."""
+        for i in self._SENSORS:
+            tmp = getattr(self, i)
+            if tmp.data is not None:
+                yield i, tmp
+
     def factory_calibration(self):
         """Perform a factory calibration based values extracted from the sensors datasheet.
 
@@ -77,30 +89,30 @@ class Dataset:
         self.gyro.data = self.gyro.data / 16.4
         self.is_calibrated = True
 
-    def down_sample(self, q):
-        dX = scipy.signal.decimate(self.acc.data[:, 0], q)
-        dY = scipy.signal.decimate(self.acc.data[:, 1], q)
-        dZ = scipy.signal.decimate(self.acc.data[:, 2], q)
-        self.acc.data = np.column_stack((dX, dY, dZ))
-        dX = scipy.signal.decimate(self.gyro.data[:, 0], q)
-        dY = scipy.signal.decimate(self.gyro.data[:, 1], q)
-        dZ = scipy.signal.decimate(self.gyro.data[:, 2], q)
-        self.gyro.data = np.column_stack((dX, dY, dZ))
-
-    def cut_dataset(self, start, stop) -> 'Dataset':
+    def downsample(self, factor, inplace=False) -> 'Dataset':
+        """Downsample all datastreams by a factor."""
         s = copy.deepcopy(self)
-        s.sync = s.sync[start:stop]
-        s.counter = s.counter[start:stop]
-        s.acc.data = s.acc.data[start:stop]
-        s.gyro.data = s.gyro.data[start:stop]
-        s.baro.data = s.baro.data[start:stop]
-        s.pressure.data = s.pressure.data[start:stop]
-        s.battery.data = s.battery.data[start:stop]
-        s.rtc = s.rtc[start:stop]
-        s.size = len(s.counter)
+        if inplace is True:
+            s = self
+        for key, val in s._DATASTREAMS:
+            val.data = scipy.signal.decimate(val.data, factor, axis=0)
+            val.sampling_rate_hz /= factor
+            setattr(s, key, val)
         return s
 
-    def interpolate_dataset(self, dataset):
+    def cut_dataset(self, start, stop, inplace=False) -> 'Dataset':
+        s = copy.deepcopy(self)
+        if inplace is True:
+            s = self
+        for key, val in s._DATASTREAMS:
+            val.data = val.data[start:stop]
+            setattr(s, key, val)
+        s.sync = s.sync[start:stop]
+        s.counter = s.counter[start:stop]
+        s.rtc = s.rtc[start:stop]
+        return s
+
+    def interpolate_dataset(self, dataset, inplace=False):
         counterTmp = np.copy(dataset.counter)
         accTmp = np.copy(dataset.acc.data)
         gyroTmp = np.copy(dataset.gyro.data)
