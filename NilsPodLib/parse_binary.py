@@ -60,7 +60,6 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
         data = f.read()
 
     HEADER_SIZE = data[0]
-    print('Header Size = ' + str(HEADER_SIZE)) # TODO: Move to logging
 
     data = bytearray(data)
     header_bytes = np.asarray(struct.unpack(str(HEADER_SIZE) + 'b', data[0:HEADER_SIZE]), dtype=np.uint8)
@@ -72,44 +71,30 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
     data = data.astype(np.uint32)
 
     idx = 0
-    if session_header.gyro_enabled and session_header.acc_enabled:
+    gyr_data = np.zeros(len(data))
+    acc_data = np.zeros(len(data))
+    if session_header.gyro_enabled:
         gyr_data = np.zeros((len(data), 3))
-        gyr_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
-        gyr_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
-        gyr_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(np.int16)
-        idx = idx + 6
-        acc_data = np.zeros((len(data), 3))
-        acc_data[:, 0] = ((data[:, 6]) + (data[:, 7] << 8)).astype(np.int16)
-        acc_data[:, 1] = ((data[:, 8]) + (data[:, 9] << 8)).astype(np.int16)
-        acc_data[:, 2] = ((data[:, 10]) + (data[:, 11] << 8)).astype(np.int16)
+        gyr_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(float)
+        gyr_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(float)
+        gyr_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(float)
         idx = idx + 6
     elif session_header.acc_enabled:
         acc_data = np.zeros((len(data), 3))
-        acc_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
-        acc_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
-        acc_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(np.int16)
+        acc_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(float)
+        acc_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(float)
+        acc_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(float)
         idx = idx + 6
-        gyr_data = np.zeros(len(data))
-    elif session_header.gyro_enabled:
-        gyr_data = np.zeros((len(data), 3))
-        gyr_data[:, 0] = ((data[:, 0]) + (data[:, 1] << 8)).astype(np.int16)
-        gyr_data[:, 1] = ((data[:, 2]) + (data[:, 3] << 8)).astype(np.int16)
-        gyr_data[:, 2] = ((data[:, 4]) + (data[:, 5] << 8)).astype(np.int16)
-        idx = idx + 6
-        acc_data = np.zeros(len(data))
-    else:
-        gyr_data = np.zeros(len(data))
-        acc_data = np.zeros(len(data))
 
     if session_header.baro_enabled:
-        baro = (data[:, idx] + (data[:, idx + 1] << 8)).astype(np.int16)
+        baro = (data[:, idx] + (data[:, idx + 1] << 8)).astype(float)
         baro = (baro + 101325) / 100.0
         idx = idx + 2
     else:
         baro = np.zeros(len(data))
 
     if session_header.pressure_enabled:
-        pressure = data[:, idx:idx + 3].astype(np.uint8)
+        pressure = data[:, idx:idx + 3].astype(float)
         idx = idx + 3
     else:
         pressure = np.zeros(len(data))
@@ -135,14 +120,5 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
 
         sync = np.bitwise_and(sync, 0x80000000)
         sync = np.right_shift(sync, 23)
-
-    if "V2.1" in session_header.version_firmware:
-        print("Firmware Version 2.1.x found") # TODO: Move to logging
-        counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16) + (data[:, -4] << 24)
-        sync = np.copy(counter)
-        counter = np.bitwise_and(counter, 0x7FFFFFFF)
-
-        sync = np.bitwise_and(sync, 0x80000000)
-        sync = np.right_shift(sync, 31)
 
     return acc_data, gyr_data, baro, pressure, battery, counter, sync, session_header
