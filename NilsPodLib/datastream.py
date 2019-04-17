@@ -28,6 +28,9 @@ class Datastream:
         else:
             self.columns = list(range(data.shape[-1]))
 
+    def __len__(self):
+        return len(self.data)
+
     def norm(self) -> np.ndarray:
         return np.linalg.norm(self.data, axis=1)
 

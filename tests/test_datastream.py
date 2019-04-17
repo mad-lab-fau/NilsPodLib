@@ -50,3 +50,7 @@ def test_downsample(simple_ds, factor):
     d = simple_ds.downsample(factor)
     assert len(d.data) == len(simple_ds.data) / factor
     assert d.sampling_rate_hz == simple_ds.sampling_rate_hz / factor
+
+
+def test_len(simple_ds):
+    assert len(simple_ds) == len(simple_ds.data)
