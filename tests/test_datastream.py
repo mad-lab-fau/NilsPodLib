@@ -35,6 +35,7 @@ def test_normalize(simple_ds):
     simple_ds.data *= 2
     assert np.array_equal(simple_ds.normalize(), np.ones((len(simple_ds.data), 3)))
 
+
 def test_cut(simple_ds):
     simple_ds.data = np.arange(100.)
     c = simple_ds.cut(10, 90, 2)
@@ -42,3 +43,10 @@ def test_cut(simple_ds):
     assert c.data[1] == 12.
     assert c.data[-1] == 88
 
+
+@pytest.mark.parametrize('factor', [2, 4, 5])
+def test_downsample(simple_ds, factor):
+    simple_ds.data = np.arange(100.)
+    d = simple_ds.downsample(factor)
+    assert len(d.data) == len(simple_ds.data) / factor
+    assert d.sampling_rate_hz == simple_ds.sampling_rate_hz / factor

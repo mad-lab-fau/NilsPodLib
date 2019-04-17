@@ -12,6 +12,7 @@ from typing import Optional, Iterable, List
 import numpy as np
 import pandas as pd
 from scipy import signal
+from scipy.signal import decimate
 
 
 class Datastream:
@@ -38,6 +39,13 @@ class Datastream:
         sl = slice(start, stop, step)
         ds.data = ds.data[sl]
         return ds
+
+    def downsample(self, factor: int) -> 'Datastream':
+        """Downsample all datastreams by a factor using a iir filter."""
+        s = copy.deepcopy(self)
+        s.data = decimate(s.data, factor, axis=0)
+        s.sampling_rate_hz /= factor
+        return s
 
     def filter_butterworth(self, fc, order, filterType='low'):
         fn = fc / (self.sampling_rate_hz / 2.0)
