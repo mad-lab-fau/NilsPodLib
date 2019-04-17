@@ -33,7 +33,7 @@ def test_norm(simple_ds):
 
 def test_normalize(simple_ds):
     simple_ds.data *= 2
-    assert np.array_equal(simple_ds.normalize(), np.ones((len(simple_ds.data), 3)))
+    assert np.array_equal(simple_ds.normalize().data, np.ones((len(simple_ds.data), 3)))
 
 
 def test_cut(simple_ds):

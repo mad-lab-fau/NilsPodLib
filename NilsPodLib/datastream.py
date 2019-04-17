@@ -4,7 +4,7 @@
 """
 Created on Thu Sep 28 11:32:22 2017
 
-@author: nils
+@author: nils, arne
 """
 import copy
 from typing import Optional, Iterable, List
@@ -19,6 +19,7 @@ class Datastream:
     data: np.ndarray
     sampling_rate_hz: float
     columns: List
+    # TODO: Representatation
 
     def __init__(self, data: np.ndarray, sampling_rate: Optional[float] = 1., columns: Optional[Iterable] = None):
         self.data = data
@@ -34,10 +35,12 @@ class Datastream:
     def norm(self) -> np.ndarray:
         return np.linalg.norm(self.data, axis=1)
 
-    def normalize(self):
-        return self.data / self.data.max(axis=0)
+    def normalize(self) -> 'Datastream':
+        ds = copy.deepcopy(self)
+        ds.data /= ds.data.max(axis=0)
+        return ds
 
-    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None):
+    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None) -> 'Datastream':
         ds = copy.deepcopy(self)
         sl = slice(start, stop, step)
         ds.data = ds.data[sl]
