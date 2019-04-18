@@ -8,13 +8,15 @@ Created on Thu Sep 28 11:32:22 2017
 
 import copy
 import warnings
+from typing import Union, Iterable, Optional
+
+from imucal import FerrarisCalibrationInfo, CalibrationInfo
 
 import numpy as np
 import pandas as pd
-import scipy
-from scipy import signal
+from pathlib import Path
 
-from NilsPodLib.data_stream import DataStream
+from NilsPodLib.datastream import Datastream
 from NilsPodLib.parse_binary import parse_binary
 
 ACC = tuple('acc_' + x for x in 'xyz')
@@ -23,11 +25,11 @@ GYR = tuple('gyr_' + x for x in 'xyz')
 
 class Dataset:
     path = ""
-    acc: DataStream
-    gyro: DataStream
-    baro: DataStream
-    pressure: DataStream
-    battery: DataStream
+    acc: Datastream
+    gyro: Datastream
+    baro: Datastream
+    pressure: Datastream
+    battery: Datastream
     counter: np.ndarray
     rtc: np.ndarray
     sampling_rate_hz: float
@@ -38,40 +40,56 @@ class Dataset:
 
     _SENSORS = ('acc', 'gyro', 'baro', 'pressure', 'battery')
 
-    def __init__(self, path):
-        if not path.endswith('.bin'):
+    # TODO: Add alternative consturctorsg
+
+    def __init__(self, path: Union[Path, str]):
+        path = Path(path)
+        if not path.suffix == '.bin':
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
         self.path = path
         acc, gyr, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
-        self.acc = DataStream(acc, self.header.sampling_rate_hz, legend=ACC)
-        self.gyro = DataStream(gyr, self.header.sampling_rate_hz, legend=GYR)
-        self.baro = DataStream(baro, self.header.sampling_rate_hz)
-        self.pressure = DataStream(pressure.astype('float'), self.header.sampling_rate_hz)
-        self.battery = DataStream(battery, self.header.sampling_rate_hz)
+        self.acc = Datastream(acc, self.header.sampling_rate_hz, columns=ACC)
+        self.gyro = Datastream(gyr, self.header.sampling_rate_hz, columns=GYR)
+        self.baro = Datastream(baro, self.header.sampling_rate_hz)
+        self.pressure = Datastream(pressure, self.header.sampling_rate_hz)
+        self.battery = Datastream(battery, self.header.sampling_rate_hz)
+        # TODO: Does this work when we have dropped packages? Whats the point of this anyway
         self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
         self.sampling_rate_hz = self.header.sampling_rate_hz
 
-    def calibrate(self, inplace=False):
-        try:
-            # TODO: Make use of new calibration lib
-            self.acc.data = (self.calibration_data.Ta * self.calibration_data.Ka * (
-                    self.acc.data.T - self.calibration_data.ba)).T
-            self.acc.data = np.asarray(self.acc.data)
-            self.gyro.data = (self.calibration_data.Tg * self.calibration_data.Kg * (
-                    self.gyro.data.T - self.calibration_data.bg)).T
-            self.gyro.data = np.asarray(self.gyro.data)
-            self.is_calibrated = True
-        except:
-            self.factory_calibration()
-            warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
+    def calibrate(self, calibration: Optional[CalibrationInfo, Path, str] = None,
+                  inplace: bool = False, supress_warning=False) -> 'Dataset':
+        """Apply a calibration to the Dataset.
+
+        The calibration can either be provided directly or loaded from a calibration '.json' file.
+        If no calibration info is provided, factory calibration is applied.
+        """
+        s = copy.deepcopy(self)
+        if inplace is True:
+            s = self
+
+        if calibration is None:
+            s.factory_calibration()
+            if supress_warning is not True:
+                warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
+            return s
+        elif isinstance(calibration, (Path, str)):
+            calibration = CalibrationInfo.from_json_file(calibration)
+
+        acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
+        s.acc.data = acc
+        s.gyro.data = gyro
+        s.is_calibrated = True
+
+        return s
 
     @property
     def size(self) -> int:
         return len(self.counter)
 
     @property
-    def _DATASTREAMS(self):
+    def _DATASTREAMS(self) -> Iterable[Datastream]:
         """Iterate through all available datastreams, if they exist."""
         for i in self._SENSORS:
             tmp = getattr(self, i)
@@ -85,8 +103,8 @@ class Dataset:
         """
         # Todo: Use correct static calibration values according to sensor range
         #       (this one is hardcoded for 2000dps and 16G)
-        self.acc.data = self.acc.data / 2048.0
-        self.gyro.data = self.gyro.data / 16.4
+        self.acc.data /= 2048.0
+        self.gyro.data /= 16.4
         self.is_calibrated = True
 
     def downsample(self, factor, inplace=False) -> 'Dataset':
@@ -95,21 +113,19 @@ class Dataset:
         if inplace is True:
             s = self
         for key, val in s._DATASTREAMS:
-            val.data = scipy.signal.decimate(val.data, factor, axis=0)
-            val.sampling_rate_hz /= factor
-            setattr(s, key, val)
+            setattr(s, key, val.downsample(factor))
         return s
 
-    def cut_dataset(self, start, stop, inplace=False) -> 'Dataset':
+    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> 'Dataset':
         s = copy.deepcopy(self)
         if inplace is True:
             s = self
         for key, val in s._DATASTREAMS:
-            val.data = val.data[start:stop]
-            setattr(s, key, val)
-        s.sync = s.sync[start:stop]
-        s.counter = s.counter[start:stop]
-        s.rtc = s.rtc[start:stop]
+            setattr(s, key, val.cut(start, stop, step))
+        s.sync = s.sync[start:stop: step]
+        s.counter = s.counter[start:stop:step]
+        s.rtc = s.rtc[start:stop:step]
         return s
 
     def interpolate_dataset(self, dataset, inplace=False):
@@ -152,4 +168,3 @@ class Dataset:
 
     def imu_data_as_csv(self, path):
         self.imu_data_as_df().to_csv(path, index=False)
-
