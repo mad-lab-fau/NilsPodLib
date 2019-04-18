@@ -54,7 +54,6 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
                                         np.ndarray,
                                         np.ndarray,
                                         np.ndarray,
-                                        np.ndarray,
                                         Header]:
     with open(path, 'rb') as f:
         data = f.read()
@@ -105,20 +104,6 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
     else:
         battery = np.zeros(len(acc_data))
 
-    if (header_bytes[-3] == 1) and (header_bytes[-2] == 1):
-        counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16) + (data[:, -4] << 24)
-        sync = np.copy(counter)
-        counter = np.bitwise_and(counter, 0x7FFFFFFF)
+    counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16) + (data[:, -4] << 24)
 
-        sync = np.bitwise_and(sync, 0x80000000)
-        sync = np.right_shift(sync, 31)
-
-    else:
-        counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16)
-        sync = np.copy(counter)
-        counter = np.bitwise_and(counter, 0x7FFFFFFF)
-
-        sync = np.bitwise_and(sync, 0x80000000)
-        sync = np.right_shift(sync, 23)
-
-    return acc_data, gyr_data, baro, pressure, battery, counter, sync, session_header
+    return acc_data, gyr_data, baro, pressure, battery, counter, session_header
