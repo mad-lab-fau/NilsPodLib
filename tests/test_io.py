@@ -64,3 +64,18 @@ def test_load_simple():
     assert info.dock_mode_enabled is False
     assert info.motion_interrupt_enabled is False
     assert np.array_equal(info.custom_meta_data, np.zeros(3))
+
+
+def test_sync_info():
+    path = TEST_DATA / 'simple_synced_slave.bin'
+    dataset = Dataset(path=path)
+    info = dataset.info
+
+    assert info.sync_role == 'slave'
+    assert info.is_synchronised is True
+    assert info.sync_group == 9  # Should be same as master (see test above)
+    assert info.sync_index_start == 489
+    assert info.sync_index_stop == 6636
+    assert info.sync_address == '9f2be06f7c'  # Should be same as master (see test above)
+    assert info.sync_channel == 43  # Should be same as master (see test above)
+
