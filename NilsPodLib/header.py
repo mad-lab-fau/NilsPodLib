@@ -12,7 +12,7 @@ import numpy as np
 
 from NilsPodLib.utils import convert_little_endian
 
-
+# TODO: Put all Metainfos about the sensors into one object
 class Header:
     acc_enabled: bool
     gyro_enabled: bool
@@ -73,6 +73,11 @@ class Header:
         'ppg': (None, None),  # Needs to be implement
         'battery': (1, 1)
 
+    }
+
+    _SENSOR_LEGENDS = {
+        'acc': tuple('acc_' + x for x in 'xyz'),
+        'gyro': tuple('gyr_' + x for x in 'xyz')
     }
 
     _OPERATION_MODES = {
