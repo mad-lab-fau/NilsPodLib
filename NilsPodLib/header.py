@@ -53,14 +53,14 @@ class Header:
     num_samples: int
 
     _SENSOR_FLAGS = {
-        'acc_enabled': 0x01,
-        'gyro_enabled': 0x02,
-        'mag_enabled': 0x04,
-        'baro_enabled': 0x08,
-        'analog_enabled': 0x10,
-        'ecg_enabled': 0x20,
-        'ppg_enabled': 0x40,
-        'battery_enabled': 0x80
+        'acc': 0x01,
+        'gyro': 0x02,
+        'mag': 0x04,
+        'baro': 0x08,
+        'analog': 0x10,
+        'ecg': 0x20,
+        'ppg': 0x40,
+        'battery': 0x80
     }
 
     _SENSOR_SAMPLE_LENGTH = {
@@ -120,7 +120,7 @@ class Header:
 
             sensors = header_packet[1]
             for para, val in self._SENSOR_FLAGS.items():
-                setattr(self, para, bool(sensors & val))
+                setattr(self, para + '_enabled', bool(sensors & val))
 
             self.sampling_rate_hz = self._SAMPLING_RATES[header_packet[2] & 0x0F]
             self.samplingTime_ms = (1.0 / self.sampling_rate_hz) * 1000.0
