@@ -10,6 +10,9 @@ import copy
 import warnings
 from typing import Union, Iterable, Optional
 
+from NilsPodLib.header import Header
+from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning
 from imucal import FerrarisCalibrationInfo, CalibrationInfo
 
 import numpy as np
@@ -168,3 +171,45 @@ class Dataset:
 
     def imu_data_as_csv(self, path):
         self.imu_data_as_df().to_csv(path, index=False)
+
+
+def parse_binary(path: path_t) -> Tuple[Dict[np.ndarray],
+                                        np.ndarray,
+                                        Header]:
+    with open(path, 'rb') as f:
+        data = f.read()
+
+    header_size = data[0]
+
+    data = bytearray(data)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
+    session_header = Header(header_bytes[1:header_size])
+
+    sample_size = session_header.sample_size
+
+    data = read_binary_file_uint8(path, sample_size, header_size)
+    sensor_data = dict()
+
+    idx = 0
+    for sensor in session_header._SENSOR_FLAGS:
+        if getattr(session_header, sensor + '_enabled') is True:
+            bits, channel = session_header._SENSOR_SAMPLE_LENGTH[sensor]
+            bits_per_channel = bits // channel
+            tmp = np.full((len(data), channel), np.nan)
+            for i in range(channel):
+                tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
+                                                  dtype=np.uint32).astype(float)
+                idx += bits_per_channel
+            sensor_data[sensor] = tmp
+
+    # Sanity Check:
+    if idx + 4 != data.shape[-1]:
+        expected_cols = idx
+        all_cols = data.shape[-1] - 4
+        raise InvalidInputFileError(
+            'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
+                expected_cols, all_cols))
+
+    counter = convert_little_endian(data[-4:], dtype=np.uint32).astype(float)
+
+    return sensor_data, counter, session_header
