@@ -16,7 +16,7 @@ from NilsPodLib.utils import convert_little_endian
 class Header:
     acc_enabled: bool
     gyro_enabled: bool
-    magnetometer_enabled: bool
+    mag_enabled: bool
     baro_enabled: bool
     analog_enabled: bool
     ecg_enabled: bool
@@ -55,12 +55,24 @@ class Header:
     _SENSOR_FLAGS = {
         'acc_enabled': 0x01,
         'gyro_enabled': 0x02,
-        'magnetometer_enabled': 0x04,
+        'mag_enabled': 0x04,
         'baro_enabled': 0x08,
         'analog_enabled': 0x10,
         'ecg_enabled': 0x20,
         'ppg_enabled': 0x40,
         'battery_enabled': 0x80
+    }
+
+    _SENSOR_SAMPLE_LENGTH = {
+        'acc': (6, 3),
+        'gyro': (6, 3),
+        'mag': (6, 3),
+        'baro': (2, 1),
+        'analog': (3, 1),
+        'ecg': (None, None),  # Needs to be implement
+        'ppg': (None, None),  # Needs to be implement
+        'battery': (1, 1)
+
     }
 
     _OPERATION_MODES = {
