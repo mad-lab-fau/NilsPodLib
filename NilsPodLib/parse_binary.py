@@ -64,7 +64,7 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
     header_bytes = np.asarray(struct.unpack(str(HEADER_SIZE) + 'b', data[0:HEADER_SIZE]), dtype=np.uint8)
     session_header = Header(header_bytes[1:HEADER_SIZE])
 
-    PACKET_SIZE = session_header.packet_size
+    PACKET_SIZE = session_header.sample_size
 
     data = read_binary_file_uint8(path, PACKET_SIZE, HEADER_SIZE)
     data = data.astype(np.uint32)
@@ -92,11 +92,11 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
     else:
         baro = np.zeros(len(data))
 
-    if session_header.pressure_enabled:
-        pressure = data[:, idx:idx + 3].astype(float)
+    if session_header.analog_enabled:
+        analog = data[:, idx:idx + 3].astype(float)
         idx = idx + 3
     else:
-        pressure = np.zeros(len(data))
+        analog = np.zeros(len(data))
 
     if session_header.battery_enabled:
         battery = (data[:, 17] * 2.0) / 100.0
@@ -106,4 +106,4 @@ def parse_binary(path: path_t) -> Tuple[np.ndarray,
 
     counter = data[:, -1] + (data[:, -2] << 8) + (data[:, -3] << 16) + (data[:, -4] << 24)
 
-    return acc_data, gyr_data, baro, pressure, battery, counter, session_header
+    return acc_data, gyr_data, baro, analog, battery, counter, session_header
