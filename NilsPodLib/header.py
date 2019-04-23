@@ -12,6 +12,7 @@ import numpy as np
 
 
 # TODO: Index start stop sync
+from NilsPodLib.utils import convert_little_endian
 
 
 class Header:
@@ -130,7 +131,8 @@ class Header:
 
             # self.sensor_position = self._SENSOR_POS.get(header_packet[8], self.sensor_position)
 
-            self.sensor_position = header_packet[9]
+            sensor_position = header_packet[9]
+            self.sensor_position = self._SENSOR_POS.get(sensor_position, sensor_position)
 
             operation_mode = header_packet[10]
             for para, val in self._OPERATION_MODES.items():
@@ -138,16 +140,16 @@ class Header:
 
             self.custom_meta_data = header_packet[11:14]
 
-            self.unix_time_start = self._convert_little_endian(header_packet[14:18])
+            self.unix_time_start = convert_little_endian(header_packet[14:18])
             self.datetime_start = datetime.datetime.fromtimestamp(self.unix_time_start)
 
-            self.unix_time_stop = self._convert_little_endian(header_packet[18:22])
+            self.unix_time_stop = convert_little_endian(header_packet[18:22])
             self.datetime_stop = datetime.datetime.fromtimestamp(self.unix_time_stop)
 
-            self.num_samples = self._convert_little_endian(header_packet[22:26])
+            self.num_samples = convert_little_endian(header_packet[22:26])
 
-            self.sync_index_start = self._convert_little_endian(header_packet[26:30])
-            self.sync_index_stop = self._convert_little_endian(header_packet[30:34])
+            self.sync_index_start = convert_little_endian(header_packet[26:30])
+            self.sync_index_stop = convert_little_endian(header_packet[30:34])
 
             self.mac_address = ':'.join([hex(int(x))[-2:] for x in header_packet[34:40]][::-1])
 
@@ -168,8 +170,3 @@ class Header:
     def has_position_info(self) -> bool:
         return not self.sensor_position == 'undefined'
 
-    @staticmethod
-    def _convert_little_endian(byte_list):
-        number = int(byte_list[0]) | (int(byte_list[1]) << 8) | (
-                int(byte_list[2]) << 16) | (int(byte_list[3]) << 24)
-        return number
