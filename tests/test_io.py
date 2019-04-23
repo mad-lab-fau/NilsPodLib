@@ -15,12 +15,13 @@ def test_load_simple():
 
     # Toplevel Stuff
     assert dataset.path == path
-    assert dataset.is_calibrated is False
-    assert isinstance(dataset.baro, Datastream)
+    assert dataset.imu_is_calibrated is False
     assert isinstance(dataset.acc, Datastream)
     assert isinstance(dataset.gyro, Datastream)
-    assert isinstance(dataset.battery, Datastream)
-    assert isinstance(dataset.pressure, Datastream)
+    assert dataset.baro is None
+    assert dataset.battery is None
+    assert dataset.analog is None
+    assert dataset.ACTIVE_SENSORS == ('acc', 'gyro')
 
     # Header
     info = dataset.info

@@ -6,44 +6,46 @@ Created on Thu Sep 28 11:32:22 2017
 @author: nils
 """
 
-import copy
+import struct
 import warnings
-from typing import Union, Iterable, Optional
-
-from NilsPodLib.header import Header
-from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning
-from imucal import FerrarisCalibrationInfo, CalibrationInfo
+from pathlib import Path
+from typing import Union, Iterable, Optional, Tuple, Dict
 
 import numpy as np
 import pandas as pd
-from pathlib import Path
-
 from NilsPodLib.datastream import Datastream
-from NilsPodLib.parse_binary import parse_binary
-
-ACC = tuple('acc_' + x for x in 'xyz')
-GYR = tuple('gyr_' + x for x in 'xyz')
+from NilsPodLib.header import Header
+from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning
+from imucal import CalibrationInfo
 
 
 class Dataset:
-    path = ""
-    acc: Datastream
-    gyro: Datastream
-    baro: Datastream
-    pressure: Datastream
-    battery: Datastream
+    path: path_t
+    acc: Optional[Datastream]
+    gyro: Optional[Datastream]
+    baro: Optional[Datastream]
+    analog: Optional[Datastream]
+    ecg: Optional[Datastream]
+    ppg: Optional[Datastream]
+    battery: Optional[Datastream]
     counter: np.ndarray
     rtc: np.ndarray
-    sampling_rate_hz: float
-    sync = None
-    header = None
-    calibration_data = None
-    is_calibrated: bool = False
+    info: Header
 
-    _SENSORS = ('acc', 'gyro', 'baro', 'pressure', 'battery')
+    imu_is_calibrated: bool = False
+    baro_is_calibrated: bool = False
+    battery_is_calibrated: bool = False
+
+    ACTIVE_SENSORS: tuple
 
     # TODO: Add alternative consturctorsg
+    # TODO: Spalte mit Unix timestamp
+    # TODO: Potential warning if samplingrate does not fit to rtc
+    # TODO: Warning non monotounus counter
+    # TODO: Warning if access to not calibrated datastreams
+    # TODO: Make datastream itself aware of calibration state
+    # TODO: Test calibration
 
     def __init__(self, path: Union[Path, str]):
         path = Path(path)
@@ -51,41 +53,14 @@ class Dataset:
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
         self.path = path
-        acc, gyr, baro, pressure, battery, self.counter, self.sync, self.header = parse_binary(self.path)
-        self.acc = Datastream(acc, self.header.sampling_rate_hz, columns=ACC)
-        self.gyro = Datastream(gyr, self.header.sampling_rate_hz, columns=GYR)
-        self.baro = Datastream(baro, self.header.sampling_rate_hz)
-        self.pressure = Datastream(pressure, self.header.sampling_rate_hz)
-        self.battery = Datastream(battery, self.header.sampling_rate_hz)
-        # TODO: Does this work when we have dropped packages? Whats the point of this anyway
-        self.rtc = np.linspace(self.header.unix_time_start, self.header.unix_time_stop, len(self.counter))
-        self.sampling_rate_hz = self.header.sampling_rate_hz
-
-    def calibrate(self, calibration: Optional[CalibrationInfo, Path, str] = None,
-                  inplace: bool = False, supress_warning=False) -> 'Dataset':
-        """Apply a calibration to the Dataset.
-
-        The calibration can either be provided directly or loaded from a calibration '.json' file.
-        If no calibration info is provided, factory calibration is applied.
-        """
-        s = copy.deepcopy(self)
-        if inplace is True:
-            s = self
-
-        if calibration is None:
-            s.factory_calibration()
-            if supress_warning is not True:
-                warnings.warn('No Calibration Data found - Using static Datasheet values for calibration!')
-            return s
-        elif isinstance(calibration, (Path, str)):
-            calibration = CalibrationInfo.from_json_file(calibration)
-
-        acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
-        s.acc.data = acc
-        s.gyro.data = gyro
-        s.is_calibrated = True
-
-        return s
+        sensor_data, self.counter, self.info = parse_binary(self.path)
+        active_sensors = []
+        for k, v in sensor_data.items():
+            if v is not None:
+                active_sensors.append(k)
+                v = Datastream(v, self.info.sampling_rate_hz, self.info._SENSOR_LEGENDS.get(k, None))
+            setattr(self, k, v)
+        self.ACTIVE_SENSORS = tuple(active_sensors)
 
     @property
     def size(self) -> int:
@@ -93,13 +68,36 @@ class Dataset:
 
     @property
     def _DATASTREAMS(self) -> Iterable[Datastream]:
-        """Iterate through all available datastreams, if they exist."""
-        for i in self._SENSORS:
-            tmp = getattr(self, i)
-            if tmp.data is not None:
-                yield i, tmp
+        """Iterate through all available datastreams."""
+        for i in self.ACTIVE_SENSORS:
+            yield i, getattr(self, i)
 
-    def factory_calibration(self):
+    def calibrate_imu(self, calibration: Optional[Union[CalibrationInfo, path_t]] = None,
+                      inplace: bool = False, supress_warning=False) -> 'Dataset':
+        """Apply a calibration to the Dataset.
+
+        The calibration can either be provided directly or loaded from a calibration '.json' file.
+        If no calibration info is provided, factory calibration is applied.
+        """
+        s = inplace_or_copy(self, inplace)
+
+        if calibration is None:
+            s.factory_calibrate_imu()
+            if supress_warning is not True:
+                warnings.warn('No Calibration Data provided - Using static Datasheet values for calibration!')
+            return s
+        elif isinstance(calibration, (Path, str)):
+            calibration = CalibrationInfo.from_json_file(calibration)
+
+        # TODO: Handle cases were either Acc or gyro are disabled
+        acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
+        s.acc.data = acc
+        s.gyro.data = gyro
+        s.imu_is_calibrated = True
+
+        return s
+
+    def factory_calibrate_imu(self):
         """Perform a factory calibration based values extracted from the sensors datasheet.
 
         Note: It is highly recommended to perform a real calibration to use the sensordata in any meaningful context
@@ -108,22 +106,53 @@ class Dataset:
         #       (this one is hardcoded for 2000dps and 16G)
         self.acc.data /= 2048.0
         self.gyro.data /= 16.4
-        self.is_calibrated = True
+        self.imu_is_calibrated = True
+
+    def factory_calibrate_baro(self, inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+
+        if s.baro.is_calibrated is True:
+            raise RepeatedCalibrationError('baro')
+
+        return s._factory_calibrate_baro(s)
+
+    def factory_calibrate_battery(self, inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+
+        if s.battery.is_calibrated is True:
+            raise RepeatedCalibrationError('battery')
+
+        return s._factory_calibrate_battery(s)
+
+    @staticmethod
+    def _factory_calibrate_baro(dataset: 'Dataset') -> 'Dataset':
+        if dataset.baro is not None:
+            dataset.baro = (dataset.baro + 101325) / 100.0
+            dataset.baro.is_calibrated = True
+        else:
+            datastream_does_not_exist_warning('baro', 'calibration')
+        return dataset
+
+    @staticmethod
+    def _factory_calibrate_battery(dataset: 'Dataset'):
+        if dataset.battery is not None:
+            dataset.battery = (dataset.battery * 2.0) / 100.0
+            dataset.battery.is_calibrated = True
+        else:
+            datastream_does_not_exist_warning('battery', 'calibration')
+        return dataset
 
     def downsample(self, factor, inplace=False) -> 'Dataset':
         """Downsample all datastreams by a factor."""
-        s = copy.deepcopy(self)
-        if inplace is True:
-            s = self
+        s = inplace_or_copy(self, inplace)
         for key, val in s._DATASTREAMS:
             setattr(s, key, val.downsample(factor))
         return s
 
     def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> 'Dataset':
-        s = copy.deepcopy(self)
-        if inplace is True:
-            s = self
+        s = inplace_or_copy(self, inplace)
+
         for key, val in s._DATASTREAMS:
             setattr(s, key, val.cut(start, stop, step))
         s.sync = s.sync[start:stop: step]
@@ -132,6 +161,7 @@ class Dataset:
         return s
 
     def interpolate_dataset(self, dataset, inplace=False):
+        # Todo: fix
         counterTmp = np.copy(dataset.counter)
         accTmp = np.copy(dataset.acc.data)
         gyroTmp = np.copy(dataset.gyro.data)
@@ -173,10 +203,11 @@ class Dataset:
         self.imu_data_as_df().to_csv(path, index=False)
 
 
-def parse_binary(path: path_t) -> Tuple[Dict[np.ndarray],
+def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                                         np.ndarray,
                                         Header]:
     with open(path, 'rb') as f:
+        # TODO: Don't read the full file here, but only the header to improve performance
         data = f.read()
 
     header_size = data[0]
@@ -206,6 +237,7 @@ def parse_binary(path: path_t) -> Tuple[Dict[np.ndarray],
 
     # Sanity Check:
     if idx + 4 != data.shape[-1]:
+        # TODO: Test if this works as expected
         expected_cols = idx
         all_cols = data.shape[-1] - 4
         raise InvalidInputFileError(

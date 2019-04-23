@@ -19,15 +19,26 @@ class Datastream:
     data: np.ndarray
     sampling_rate_hz: float
     columns: List
+    is_calibrated: bool = False
+    _unit: str
     # TODO: Representatation
+    # TODO: Implement inplace vs copy
+    # TODO: implement the concept of units
 
-    def __init__(self, data: np.ndarray, sampling_rate: Optional[float] = 1., columns: Optional[Iterable] = None):
+    def __init__(self, data: np.ndarray, sampling_rate: Optional[float] = 1., columns: Optional[Iterable] = None, unit: Optional[str] = None):
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
+        self._unit = unit
         if columns:
             self.columns = list(columns)
         else:
             self.columns = list(range(data.shape[-1]))
+
+    @property
+    def unit(self):
+        if self.is_calibrated is True:
+            return self._unit
+        return 'a.u.'
 
     def __len__(self):
         return len(self.data)
