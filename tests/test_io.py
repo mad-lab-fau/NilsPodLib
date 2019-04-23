@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+import numpy as np
 
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.dataset import Dataset
@@ -50,3 +51,10 @@ def test_load_simple():
     assert info.mac_address == 'a9:db:22:ac:f7:29'
     assert info.sync_address == '19efbeadde'
     assert info.sync_channel == 27
+
+    # System Info
+    assert info.sensor_position == 'undefined'
+    assert info.has_position_info is False
+    assert info.dock_mode_enabled is False
+    assert info.motion_interrupt_enabled is False
+    assert np.array_equal(info.custom_meta_data, np.zeros(3))

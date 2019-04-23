@@ -25,6 +25,8 @@ class Header:
     ppg_enabled: bool
     battery_enabled: bool
 
+    motion_interrupt_enabled: bool
+    dock_mode_enabled: bool
     sensor_position: str
     session_termination: int
     sample_size: int
@@ -49,7 +51,7 @@ class Header:
     version_firmware: str
     mac_address: str
 
-    system_settings = np.zeros(4)
+    custom_meta_data = np.zeros(4)
     num_samples: int
 
     _SENSOR_FLAGS = {
@@ -61,6 +63,11 @@ class Header:
         'ecg_enabled': 0x20,
         'ppg_enabled': 0x40,
         'battery_enabled': 0x80
+    }
+
+    _OPERATION_MODES = {
+        'motion_interrupt_enabled': 0x80,
+        'dock_mode_enabled': 0x40,
     }
 
     _SAMPLING_RATES = {
@@ -85,9 +92,13 @@ class Header:
     }
 
     _SENSOR_POS = {
+        0: 'undefined',
         1: 'left foot',
         2: 'right foot',
-        3: 'hip'
+        3: 'hip',
+        4: 'left wrist',
+        5: 'right wrist',
+        6: 'chest'
     }
 
     def __init__(self, header_packet=None):
@@ -119,7 +130,13 @@ class Header:
 
             # self.sensor_position = self._SENSOR_POS.get(header_packet[8], self.sensor_position)
 
-            self.system_settings = header_packet[9:14]
+            self.sensor_position = header_packet[9]
+
+            operation_mode = header_packet[10]
+            for para, val in self._OPERATION_MODES.items():
+                setattr(self, para, bool(operation_mode & val))
+
+            self.custom_meta_data = header_packet[11:14]
 
             self.unix_time_start = self._convert_little_endian(header_packet[14:18])
             self.datetime_start = datetime.datetime.fromtimestamp(self.unix_time_start)
@@ -146,6 +163,10 @@ class Header:
     @property
     def is_synchronised(self) -> bool:
         return not self.sync_role == 'disabled'
+
+    @property
+    def has_position_info(self) -> bool:
+        return not self.sensor_position == 'undefined'
 
     @staticmethod
     def _convert_little_endian(byte_list):
