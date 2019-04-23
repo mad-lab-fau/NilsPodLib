@@ -200,7 +200,9 @@ def parse_binary(path: path_t) -> Tuple[Dict[np.ndarray],
                 tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
                                                   dtype=np.uint32).astype(float)
                 idx += bits_per_channel
-            sensor_data[sensor] = tmp
+        else:
+            tmp = None
+        sensor_data[sensor] = tmp
 
     # Sanity Check:
     if idx + 4 != data.shape[-1]:
