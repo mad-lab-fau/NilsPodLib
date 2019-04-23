@@ -24,6 +24,7 @@ class Dataset:
     path: path_t
     acc: Optional[Datastream]
     gyro: Optional[Datastream]
+    mag: Optional[Datastream]
     baro: Optional[Datastream]
     analog: Optional[Datastream]
     ecg: Optional[Datastream]
@@ -44,7 +45,6 @@ class Dataset:
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter
     # TODO: Warning if access to not calibrated datastreams
-    # TODO: Make datastream itself aware of calibration state
     # TODO: Test calibration
 
     def __init__(self, path: Union[Path, str]):
@@ -244,6 +244,6 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
             'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
                 expected_cols, all_cols))
 
-    counter = convert_little_endian(data[-4:], dtype=np.uint32).astype(float)
+    counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=np.uint32).astype(float)
 
     return sensor_data, counter, session_header
