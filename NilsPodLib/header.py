@@ -10,13 +10,10 @@ Created on Thu Sep 28 11:32:22 2017
 import datetime
 import numpy as np
 
-
-# TODO: Index start stop sync
 from NilsPodLib.utils import convert_little_endian
 
 
 class Header:
-    # default Session Header
     acc_enabled: bool
     gyro_enabled: bool
     magnetometer_enabled: bool
@@ -169,4 +166,8 @@ class Header:
     @property
     def has_position_info(self) -> bool:
         return not self.sensor_position == 'undefined'
+
+    @property
+    def sensor_id(self) -> str:
+        return ''.join(self.mac_address[-5:].split(':'))
 

@@ -49,6 +49,7 @@ def test_load_simple():
     assert info.sync_index_start == 0  # not synced
     assert info.sync_index_stop == 0  # not synced
     assert info.mac_address == 'a9:db:22:ac:f7:29'
+    assert info.sensor_id == 'f729'
     assert info.sync_address == '19efbeadde'
     assert info.sync_channel == 27
 
