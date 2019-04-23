@@ -33,3 +33,15 @@ def read_binary_file_int16(path, packet_size, skipHeaderBytes):
     data = data[0:(int(len(data) / int(packet_size / 2)) * int(packet_size / 2))]
     data = np.reshape(data, (int(len(data) / (packet_size / 2)), int(packet_size / 2)))
     return data
+
+
+class InvalidInputFileError(Exception):
+    pass
+
+
+class RepeatedCalibrationError(Exception):
+    MESSAGE = 'The sensor "{}" is already calibrated. Repeated calibration will lead to wrong values.'
+
+    def __init__(self, sensor_name):
+        message = self.MESSAGE.format(sensor_name)
+        super().__init__(message)
