@@ -9,10 +9,11 @@ from pathlib import Path
 path_t = TypeVar('path_t', str, Path)
 
 
-def convert_little_endian(byte_list):
-    number = 0
-    for i, v in enumerate(byte_list):
-        number |= int(v) << int(8*i)
+def convert_little_endian(byte_list, dtype=int):
+    byte_list = np.array(byte_list).astype(dtype)
+    number = byte_list[0]
+    for i, v in enumerate(byte_list[1:]):
+        number |= v << int(8*(i+1))
     return number
 
 
