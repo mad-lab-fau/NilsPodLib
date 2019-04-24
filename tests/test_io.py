@@ -42,9 +42,9 @@ def test_load_simple():
     assert info.acc_range_g == 16
     assert info.gyro_range_dps == 2000
     assert info.unix_time_start == 1556025376
-    assert info.datetime_start == datetime.datetime(2019, 4, 23, 15, 16, 16)
+    assert info.datetime_start == datetime.datetime(2019, 4, 23, 13, 16, 16)
     assert info.unix_time_stop == 1556025420
-    assert info.datetime_stop == datetime.datetime(2019, 4, 23, 15, 17, 00)
+    assert info.datetime_stop == datetime.datetime(2019, 4, 23, 13, 17, 00)
     assert info.duration_s == 44
     assert info.num_samples == 9146
     assert info.version_firmware == 'v0.12.0'

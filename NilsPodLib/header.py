@@ -14,6 +14,12 @@ from NilsPodLib.utils import convert_little_endian
 
 # TODO: Put all Metainfos about the sensors into one object
 class Header:
+    """Additional Infos of recording.
+
+    Note:
+        - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
+            any local conversions
+    """
     acc_enabled: bool
     gyro_enabled: bool
     mag_enabled: bool
@@ -154,11 +160,12 @@ class Header:
 
             self.custom_meta_data = header_packet[11:14]
 
+            # Note: We ignore timezones and provide just the time info, which was stored in the sensor
             self.unix_time_start = convert_little_endian(header_packet[14:18])
-            self.datetime_start = datetime.datetime.fromtimestamp(self.unix_time_start)
+            self.datetime_start = datetime.datetime.utcfromtimestamp(self.unix_time_start)
 
             self.unix_time_stop = convert_little_endian(header_packet[18:22])
-            self.datetime_stop = datetime.datetime.fromtimestamp(self.unix_time_stop)
+            self.datetime_stop = datetime.datetime.utcfromtimestamp(self.unix_time_stop)
 
             self.num_samples = convert_little_endian(header_packet[22:26])
 
