@@ -194,12 +194,20 @@ class Dataset:
         dataset.battery.data = batteryTmp
         return dataset
 
+    def data_as_df(self) -> pd.DataFrame:
+        dfs = [s.data_as_df() for s in self._DATASTREAMS]
+        return pd.concat(dfs, axis=1)
+
+    def data_as_csv(self, path: path_t):
+        self.data_as_df().to_csv(path, index=False)
+
     def imu_data_as_df(self) -> pd.DataFrame:
+        # Handle cases were one of the two sensors is not active
         acc_df = self.acc.data_as_df()
         gyro_df = self.gyro.data_as_df()
         return pd.concat([acc_df, gyro_df], axis=1)
 
-    def imu_data_as_csv(self, path):
+    def imu_data_as_csv(self, path: path_t):
         self.imu_data_as_df().to_csv(path, index=False)
 
 
