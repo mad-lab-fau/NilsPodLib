@@ -34,10 +34,6 @@ class Dataset:
     rtc: np.ndarray
     info: Header
 
-    imu_is_calibrated: bool = False
-    baro_is_calibrated: bool = False
-    battery_is_calibrated: bool = False
-
     ACTIVE_SENSORS: tuple
 
     # TODO: Add alternative consturctorsg
@@ -93,20 +89,30 @@ class Dataset:
         acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
         s.acc.data = acc
         s.gyro.data = gyro
-        s.imu_is_calibrated = True
+        s.acc.is_calibrated = True
+        s.gyro.is_calibrated = True
 
         return s
 
-    def factory_calibrate_imu(self):
-        """Perform a factory calibration based values extracted from the sensors datasheet.
+    def factory_calibrate_imu(self, inplace: bool = False) -> 'Dataset':
+        s = self.factory_calibrate_acc(inplace=inplace)
+        s = s.factory_calibrate_gyro(inplace=True)
 
-        Note: It is highly recommended to perform a real calibration to use the sensordata in any meaningful context
-        """
-        # Todo: Use correct static calibration values according to sensor range
-        #       (this one is hardcoded for 2000dps and 16G)
-        self.acc.data /= 2048.0
-        self.gyro.data /= 16.4
-        self.imu_is_calibrated = True
+        return s
+
+    def factory_calibrate_gyro(self, inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+        if s.gyro.is_calibrated is True:
+            raise RepeatedCalibrationError('gyro')
+
+        return s._factory_calibrate_acc(s)
+
+    def factory_calibrate_acc(self, inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+        if s.acc.is_calibrated is True:
+            raise RepeatedCalibrationError('acc')
+
+        return s._factory_calibrate_acc(s)
 
     def factory_calibrate_baro(self, inplace: bool = False) -> 'Dataset':
         s = inplace_or_copy(self, inplace)
@@ -123,6 +129,28 @@ class Dataset:
             raise RepeatedCalibrationError('battery')
 
         return s._factory_calibrate_battery(s)
+
+    @staticmethod
+    def _factory_calibrate_acc(dataset: 'Dataset') -> 'Dataset':
+        # Todo: Use correct static calibration values according to sensor range
+        #       (this one is hardcoded for 2000dps and 16G)
+        if dataset.acc is not None:
+            dataset.acc /= 2048.0
+            dataset.acc.is_calibrated = True
+        else:
+            datastream_does_not_exist_warning('acc', 'calibration')
+        return dataset
+
+    @staticmethod
+    def _factory_calibrate_gyro(dataset: 'Dataset') -> 'Dataset':
+        # Todo: Use correct static calibration values according to sensor range
+        #       (this one is hardcoded for 2000dps and 16G)
+        if dataset.gyro is not None:
+            dataset.gyro /= 16.4
+            dataset.gyro.is_calibrated = True
+        else:
+            datastream_does_not_exist_warning('gyro', 'calibration')
+        return dataset
 
     @staticmethod
     def _factory_calibrate_baro(dataset: 'Dataset') -> 'Dataset':
@@ -244,7 +272,7 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
         sensor_data[sensor] = tmp
 
     # Sanity Check:
-    if idx + 4 != data.shape[-1]:
+    if not idx + 4 == data.shape[-1]:
         # TODO: Test if this works as expected
         expected_cols = idx
         all_cols = data.shape[-1] - 4
