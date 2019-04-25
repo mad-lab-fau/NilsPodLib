@@ -7,7 +7,6 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import struct
-import warnings
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict
 
@@ -31,7 +30,6 @@ class Dataset:
     ppg: Optional[Datastream] = None
     battery: Optional[Datastream] = None
     counter: np.ndarray
-    rtc: np.ndarray
     info: Header
 
     # TODO: Spalte mit Unix timestamp
@@ -79,15 +77,27 @@ class Dataset:
 
         The calibration can either be provided directly or loaded from a calibration '.json' file.
         """
-        s = inplace_or_copy(self, inplace)
         calibration = load_and_check_cal_info(calibration)
-        # TODO: Handle cases were either Acc or gyro are disabled
-        acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
-        s.acc.data = acc
-        s.gyro.data = gyro
-        s.acc.is_calibrated = True
-        s.gyro.is_calibrated = True
+        s = self.calibrate_acc(calibration, inplace)
+        s = s.calibrate_gyro(calibration, inplace=True)
+        return s
 
+    def calibrate_acc(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.acc, 'acc') is True:
+            calibration = load_and_check_cal_info(calibration)
+            acc = calibration.calibrate_acc(s.acc.data)
+            s.acc.data = acc
+            s.acc.is_calibrated = True
+        return s
+
+    def calibrate_gyro(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.gyro, 'gyro') is True:
+            calibration = load_and_check_cal_info(calibration)
+            gyro = calibration.calibrate_gyro(s.gyro.data)
+            s.gyro.data = gyro
+            s.gyro.is_calibrated = True
         return s
 
     def factory_calibrate_imu(self, inplace: bool = False) -> 'Dataset':
@@ -97,78 +107,50 @@ class Dataset:
         return s
 
     def factory_calibrate_gyro(self, inplace: bool = False) -> 'Dataset':
+        # Todo: Use correct static calibration values according to sensor range
+        #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
-        if s.gyro.is_calibrated is True:
-            raise RepeatedCalibrationError('gyro')
-
-        return s._factory_calibrate_acc(s)
+        if self._check_calibration(s.gyro, 'gyro') is True:
+            s.gyro /= 16.4
+            s.gyro.is_calibrated = True
+        return s
 
     def factory_calibrate_acc(self, inplace: bool = False) -> 'Dataset':
+        # Todo: Use correct static calibration values according to sensor range
+        #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
-        if s.acc.is_calibrated is True:
-            raise RepeatedCalibrationError('acc')
-
-        return s._factory_calibrate_acc(s)
+        if self._check_calibration(s.acc, 'acc') is True:
+            s.acc.data /= 2048.0
+            s.acc.is_calibrated = True
+        return s
 
     def factory_calibrate_baro(self, inplace: bool = False) -> 'Dataset':
         s = inplace_or_copy(self, inplace)
-
-        if s.baro.is_calibrated is True:
-            raise RepeatedCalibrationError('baro')
-
-        return s._factory_calibrate_baro(s)
+        if self._check_calibration(s.baro, 'baro') is True:
+            s.baro.data = (s.baro.data + 101325) / 100.0
+            s.baro.is_calibrated = True
+        return s
 
     def factory_calibrate_battery(self, inplace: bool = False) -> 'Dataset':
         s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.battery, 'battery') is True:
+            s.battery.data = (s.battery.data * 2.0) / 100.0
+            s.battery.is_calibrated = True
+        return s
 
-        if s.battery.is_calibrated is True:
-            raise RepeatedCalibrationError('battery')
-
-        return s._factory_calibrate_battery(s)
+    @staticmethod
+    def _check_calibration(ds: Datastream, name: str):
+        if ds is not None:
+            if ds.is_calibrated is True:
+                raise RepeatedCalibrationError(name)
+            return True
+        else:
+            datastream_does_not_exist_warning(name, 'calibration')
+            return False
 
     @property
     def ACTIVE_SENSORS(self):
         return tuple(self.info.enabled_sensors)
-
-    @staticmethod
-    def _factory_calibrate_acc(dataset: 'Dataset') -> 'Dataset':
-        # Todo: Use correct static calibration values according to sensor range
-        #       (this one is hardcoded for 2000dps and 16G)
-        if dataset.acc is not None:
-            dataset.acc /= 2048.0
-            dataset.acc.is_calibrated = True
-        else:
-            datastream_does_not_exist_warning('acc', 'calibration')
-        return dataset
-
-    @staticmethod
-    def _factory_calibrate_gyro(dataset: 'Dataset') -> 'Dataset':
-        # Todo: Use correct static calibration values according to sensor range
-        #       (this one is hardcoded for 2000dps and 16G)
-        if dataset.gyro is not None:
-            dataset.gyro /= 16.4
-            dataset.gyro.is_calibrated = True
-        else:
-            datastream_does_not_exist_warning('gyro', 'calibration')
-        return dataset
-
-    @staticmethod
-    def _factory_calibrate_baro(dataset: 'Dataset') -> 'Dataset':
-        if dataset.baro is not None:
-            dataset.baro = (dataset.baro + 101325) / 100.0
-            dataset.baro.is_calibrated = True
-        else:
-            datastream_does_not_exist_warning('baro', 'calibration')
-        return dataset
-
-    @staticmethod
-    def _factory_calibrate_battery(dataset: 'Dataset'):
-        if dataset.battery is not None:
-            dataset.battery = (dataset.battery * 2.0) / 100.0
-            dataset.battery.is_calibrated = True
-        else:
-            datastream_does_not_exist_warning('battery', 'calibration')
-        return dataset
 
     def downsample(self, factor, inplace=False) -> 'Dataset':
         """Downsample all datastreams by a factor."""
