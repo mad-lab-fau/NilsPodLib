@@ -60,7 +60,7 @@ class Dataset:
 
     @classmethod
     def from_csv_file(cls, path: path_t):
-        raise NotImplementedError('CSV importer comming soon')
+        raise NotImplementedError('CSV importer coming soon')
 
     @property
     def size(self) -> int:
@@ -111,7 +111,7 @@ class Dataset:
         #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
-            s.gyro /= 16.4
+            s.gyro.data /= 16.4
             s.gyro.is_calibrated = True
         return s
 
@@ -173,12 +173,12 @@ class Dataset:
     def interpolate_dataset(self, dataset, inplace=False):
         raise NotImplementedError('This is currently not working')
         # Todo: fix
-        # counterTmp = np.copy(dataset.counter)
-        # accTmp = np.copy(dataset.acc.data)
-        # gyroTmp = np.copy(dataset.gyro.data)
-        # baroTmp = np.copy(dataset.baro.data)
-        # pressureTmp = np.copy(dataset.pressure.data)
-        # batteryTmp = np.copy(dataset.battery.data)
+        # counterTmp = np.copy(dataset_master_simple.counter)
+        # accTmp = np.copy(dataset_master_simple.acc.data)
+        # gyroTmp = np.copy(dataset_master_simple.gyro.data)
+        # baroTmp = np.copy(dataset_master_simple.baro.data)
+        # pressureTmp = np.copy(dataset_master_simple.pressure.data)
+        # batteryTmp = np.copy(dataset_master_simple.battery.data)
         #
         # c = 0
         #
@@ -198,12 +198,12 @@ class Dataset:
         #         "ATTENTION: Dataset was interpolated due to synchronization Error! {} Samples were added!".format(
         #             str(c)))
         #
-        # dataset.counter = counterTmp
-        # dataset.gyro.data = gyroTmp
-        # dataset.pressure.data = pressureTmp
-        # dataset.baro.data = baroTmp
-        # dataset.battery.data = batteryTmp
-        # return dataset
+        # dataset_master_simple.counter = counterTmp
+        # dataset_master_simple.gyro.data = gyroTmp
+        # dataset_master_simple.pressure.data = pressureTmp
+        # dataset_master_simple.baro.data = baroTmp
+        # dataset_master_simple.battery.data = batteryTmp
+        # return dataset_master_simple
 
     def data_as_df(self) -> pd.DataFrame:
         dfs = [s.data_as_df() for s in self._DATASTREAMS]
