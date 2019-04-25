@@ -12,7 +12,9 @@ import numpy as np
 
 from NilsPodLib.utils import convert_little_endian
 
+
 # TODO: Put all Metainfos about the sensors into one object
+# TODO: Add method that can output all the header info as json
 class Header:
     """Additional Infos of recording.
 
@@ -20,14 +22,7 @@ class Header:
         - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
             any local conversions
     """
-    acc_enabled: bool
-    gyro_enabled: bool
-    mag_enabled: bool
-    baro_enabled: bool
-    analog_enabled: bool
-    ecg_enabled: bool
-    ppg_enabled: bool
-    battery_enabled: bool
+    enabled_sensors: tuple
 
     motion_interrupt_enabled: bool
     dock_mode_enabled: bool
@@ -47,8 +42,6 @@ class Header:
     sync_index_start: int
     sync_index_stop: int
 
-    datetime_start: datetime.datetime
-    datetime_stop: datetime.datetime
     unix_time_start: int
     unix_time_stop: int
 
@@ -122,66 +115,92 @@ class Header:
         6: 'chest'
     }
 
-    def __init__(self, header_packet=None):
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            # TODO this is not very explicit and can cause problems
+            setattr(self, k, v)
 
+    @classmethod
+    def from_bin_array(cls, bin_array: np.ndarray):
+        header_dict = cls.parse_header_package(bin_array)
+        return cls(**header_dict)
+
+    @classmethod
+    def parse_header_package(cls, bin_array: np.ndarray):
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation
-        if header_packet is not None:
-            self.sample_size = header_packet[0]
+        header_dict = dict()
 
-            sensors = header_packet[1]
-            for para, val in self._SENSOR_FLAGS.items():
-                setattr(self, para + '_enabled', bool(sensors & val))
+        header_dict['sample_size'] = bin_array[0]
 
-            self.sampling_rate_hz = self._SAMPLING_RATES[header_packet[2] & 0x0F]
-            self.samplingTime_ms = (1.0 / self.sampling_rate_hz) * 1000.0
+        sensors = bin_array[1]
+        enabled_sensors = list()
+        for para, val in cls._SENSOR_FLAGS.items():
+            if bool(sensors & val) is True:
+                enabled_sensors.append(para)
+        header_dict['enabled_sensors'] = tuple(enabled_sensors)
 
-            self.session_termination = next(
-                k for k, v in self._SESSION_TERMINATION.items() if bool(header_packet[3] & v) is True)
+        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[2] & 0x0F]
 
-            self.sync_role = self._SYNC_ROLE[header_packet[4]]
+        header_dict['session_termination'] = next(
+            k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[3] & v) is True)
 
-            self.sync_distance_ms = header_packet[5] * 100.0
+        header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[4]]
 
-            self.sync_group = header_packet[6]
+        header_dict['sync_distance_ms'] = bin_array[5] * 100.0
 
-            self.acc_range_g = header_packet[7]
+        header_dict['sync_group'] = bin_array[6]
 
-            self.gyro_range_dps = header_packet[8] * 125
+        header_dict['acc_range_g'] = bin_array[7]
 
-            # self.sensor_position = self._SENSOR_POS.get(header_packet[8], self.sensor_position)
+        header_dict['gyro_range_dps'] = bin_array[8] * 125
 
-            sensor_position = header_packet[9]
-            self.sensor_position = self._SENSOR_POS.get(sensor_position, sensor_position)
+        sensor_position = bin_array[9]
+        header_dict['sensor_position'] = cls._SENSOR_POS.get(sensor_position, sensor_position)
 
-            operation_mode = header_packet[10]
-            for para, val in self._OPERATION_MODES.items():
-                setattr(self, para, bool(operation_mode & val))
+        operation_mode = bin_array[10]
+        for para, val in cls._OPERATION_MODES.items():
+            header_dict[para] = bool(operation_mode & val)
 
-            self.custom_meta_data = header_packet[11:14]
+        header_dict['custom_meta_data'] = bin_array[11:14]
 
-            # Note: We ignore timezones and provide just the time info, which was stored in the sensor
-            self.unix_time_start = convert_little_endian(header_packet[14:18])
-            self.datetime_start = datetime.datetime.utcfromtimestamp(self.unix_time_start)
+        # Note: We ignore timezones and provide just the time info, which was stored in the sensor
+        header_dict['unix_time_start'] = convert_little_endian(bin_array[14:18])
+        header_dict['unix_time_stop'] = convert_little_endian(bin_array[18:22])
 
-            self.unix_time_stop = convert_little_endian(header_packet[18:22])
-            self.datetime_stop = datetime.datetime.utcfromtimestamp(self.unix_time_stop)
+        header_dict['num_samples'] = convert_little_endian(bin_array[22:26])
 
-            self.num_samples = convert_little_endian(header_packet[22:26])
+        header_dict['sync_index_start'] = convert_little_endian(bin_array[26:30])
+        header_dict['sync_index_stop'] = convert_little_endian(bin_array[30:34])
 
-            self.sync_index_start = convert_little_endian(header_packet[26:30])
-            self.sync_index_stop = convert_little_endian(header_packet[30:34])
+        header_dict['mac_address'] = ':'.join([hex(int(x))[-2:] for x in bin_array[34:40]][::-1])
 
-            self.mac_address = ':'.join([hex(int(x))[-2:] for x in header_packet[34:40]][::-1])
+        header_dict['sync_address'] = ''.join([hex(int(x))[-2:] for x in bin_array[40:45]][::-1])
+        header_dict['sync_channel'] = bin_array[45]
 
-            self.sync_address = ''.join([hex(int(x))[-2:] for x in header_packet[40:45]][::-1])
-            self.sync_channel = header_packet[45]
+        header_dict['version_firmware'] = 'v{}.{}.{}'.format(*(int(x) for x in bin_array[-3:]))
 
-            self.version_firmware = 'v{}.{}.{}'.format(*(int(x) for x in header_packet[-3:]))
+        return header_dict
 
     @property
     def duration_s(self) -> int:
         return self.unix_time_stop - self.unix_time_start
+
+    @property
+    def utc_datetime_start(self) -> datetime.datetime:
+        return datetime.datetime.utcfromtimestamp(self.unix_time_start)
+
+    @property
+    def utc_datetime_stop(self) -> datetime.datetime:
+        return datetime.datetime.utcfromtimestamp(self.unix_time_stop)
+
+    @property
+    def datetime_start(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.unix_time_start)
+
+    @property
+    def datetime_stop(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.unix_time_stop)
 
     @property
     def is_synchronised(self) -> bool:
@@ -194,4 +213,3 @@ class Header:
     @property
     def sensor_id(self) -> str:
         return ''.join(self.mac_address[-5:].split(':'))
-

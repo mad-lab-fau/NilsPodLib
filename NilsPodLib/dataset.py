@@ -22,36 +22,31 @@ from imucal import CalibrationInfo
 
 class Dataset:
     path: path_t
-    acc: Optional[Datastream]
-    gyro: Optional[Datastream]
-    mag: Optional[Datastream]
-    baro: Optional[Datastream]
-    analog: Optional[Datastream]
-    ecg: Optional[Datastream]
-    ppg: Optional[Datastream]
-    battery: Optional[Datastream]
+    acc: Optional[Datastream] = None
+    gyro: Optional[Datastream] = None
+    mag: Optional[Datastream] = None
+    baro: Optional[Datastream] = None
+    analog: Optional[Datastream] = None
+    ecg: Optional[Datastream] = None
+    ppg: Optional[Datastream] = None
+    battery: Optional[Datastream] = None
     counter: np.ndarray
     rtc: np.ndarray
     info: Header
-
-    ACTIVE_SENSORS: tuple
 
     # TODO: Spalte mit Unix timestamp
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
+    # TODO: Docu all the things
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
         self.info = info
-        active_sensors = []
         for k, v in sensor_data.items():
-            if v is not None:
-                active_sensors.append(k)
-                v = Datastream(v, self.info.sampling_rate_hz, self.info._SENSOR_LEGENDS.get(k, None))
+            v = Datastream(v, self.info.sampling_rate_hz, self.info._SENSOR_LEGENDS.get(k, None))
             setattr(self, k, v)
-        self.ACTIVE_SENSORS = tuple(active_sensors)
 
     @classmethod
     def from_bin_file(cls, path: path_t):
@@ -131,6 +126,10 @@ class Dataset:
 
         return s._factory_calibrate_battery(s)
 
+    @property
+    def ACTIVE_SENSORS(self):
+        return tuple(self.info.enabled_sensors)
+
     @staticmethod
     def _factory_calibrate_acc(dataset: 'Dataset') -> 'Dataset':
         # Todo: Use correct static calibration values according to sensor range
@@ -190,38 +189,39 @@ class Dataset:
         return s
 
     def interpolate_dataset(self, dataset, inplace=False):
+        raise NotImplementedError('This is currently not working')
         # Todo: fix
-        counterTmp = np.copy(dataset.counter)
-        accTmp = np.copy(dataset.acc.data)
-        gyroTmp = np.copy(dataset.gyro.data)
-        baroTmp = np.copy(dataset.baro.data)
-        pressureTmp = np.copy(dataset.pressure.data)
-        batteryTmp = np.copy(dataset.battery.data)
-
-        c = 0
-
-        for i in range(1, len(counterTmp)):
-            delta = counterTmp[i] - counterTmp[i - 1]
-            if 1 < delta < 30000:
-                c = c + 1
-                counterTmp = self.interpolate_1D(counterTmp, i - 1, delta - 1)
-                baroTmp = self.interpolate_1D(baroTmp, i - 1, delta - 1)
-                batteryTmp = self.interpolate_1D(batteryTmp, i - 1, delta - 1)
-                accTmp = self.interpolate_3d(accTmp, i - 1, delta - 1)
-                gyroTmp = self.interpolate_3d(gyroTmp, i - 1, delta - 1)
-                pressureTmp = self.interpolate_3d(pressureTmp, i - 1, delta - 1)
-
-        if c > 0:
-            warnings.warn(
-                "ATTENTION: Dataset was interpolated due to synchronization Error! {} Samples were added!".format(
-                    str(c)))
-
-        dataset.counter = counterTmp
-        dataset.gyro.data = gyroTmp
-        dataset.pressure.data = pressureTmp
-        dataset.baro.data = baroTmp
-        dataset.battery.data = batteryTmp
-        return dataset
+        # counterTmp = np.copy(dataset.counter)
+        # accTmp = np.copy(dataset.acc.data)
+        # gyroTmp = np.copy(dataset.gyro.data)
+        # baroTmp = np.copy(dataset.baro.data)
+        # pressureTmp = np.copy(dataset.pressure.data)
+        # batteryTmp = np.copy(dataset.battery.data)
+        #
+        # c = 0
+        #
+        # for i in range(1, len(counterTmp)):
+        #     delta = counterTmp[i] - counterTmp[i - 1]
+        #     if 1 < delta < 30000:
+        #         c = c + 1
+        #         counterTmp = self.interpolate_1D(counterTmp, i - 1, delta - 1)
+        #         baroTmp = self.interpolate_1D(baroTmp, i - 1, delta - 1)
+        #         batteryTmp = self.interpolate_1D(batteryTmp, i - 1, delta - 1)
+        #         accTmp = self.interpolate_3d(accTmp, i - 1, delta - 1)
+        #         gyroTmp = self.interpolate_3d(gyroTmp, i - 1, delta - 1)
+        #         pressureTmp = self.interpolate_3d(pressureTmp, i - 1, delta - 1)
+        #
+        # if c > 0:
+        #     warnings.warn(
+        #         "ATTENTION: Dataset was interpolated due to synchronization Error! {} Samples were added!".format(
+        #             str(c)))
+        #
+        # dataset.counter = counterTmp
+        # dataset.gyro.data = gyroTmp
+        # dataset.pressure.data = pressureTmp
+        # dataset.baro.data = baroTmp
+        # dataset.battery.data = batteryTmp
+        # return dataset
 
     def data_as_df(self) -> pd.DataFrame:
         dfs = [s.data_as_df() for s in self._DATASTREAMS]
@@ -251,7 +251,7 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
 
     data = bytearray(data)
     header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
-    session_header = Header(header_bytes[1:header_size])
+    session_header = Header.from_bin_array(header_bytes[1:header_size])
 
     sample_size = session_header.sample_size
 
@@ -259,17 +259,14 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
     sensor_data = dict()
 
     idx = 0
-    for sensor in session_header._SENSOR_FLAGS:
-        if getattr(session_header, sensor + '_enabled') is True:
-            bits, channel = session_header._SENSOR_SAMPLE_LENGTH[sensor]
-            bits_per_channel = bits // channel
-            tmp = np.full((len(data), channel), np.nan)
-            for i in range(channel):
-                tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
-                                                  dtype=np.uint32).astype(float)
-                idx += bits_per_channel
-        else:
-            tmp = None
+    for sensor in session_header.enabled_sensors:
+        bits, channel = session_header._SENSOR_SAMPLE_LENGTH[sensor]
+        bits_per_channel = bits // channel
+        tmp = np.full((len(data), channel), np.nan)
+        for i in range(channel):
+            tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
+                                              dtype=np.uint32).astype(float)
+            idx += bits_per_channel
         sensor_data[sensor] = tmp
 
     # Sanity Check:

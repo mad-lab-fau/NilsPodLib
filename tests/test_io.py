@@ -29,22 +29,17 @@ def test_load_simple():
     # Header
     info = dataset.info
     assert info.sample_size == 10
-    assert info.acc_enabled is True
-    assert info.mag_enabled is False
-    assert info.gyro_enabled is False
-    assert info.baro_enabled is False
-    assert info.analog_enabled is False
-    assert info.ecg_enabled is False
-    assert info.ppg_enabled is False
-    assert info.battery_enabled is False
+    assert info.enabled_sensors == ('acc',)
     assert info.sampling_rate_hz == 204.8
     assert info.session_termination == 'BLE'
     assert info.acc_range_g == 16
     assert info.gyro_range_dps == 2000
     assert info.unix_time_start == 1556025376
-    assert info.datetime_start == datetime.datetime(2019, 4, 23, 13, 16, 16)
+    assert info.utc_datetime_start == datetime.datetime(2019, 4, 23, 13, 16, 16)
+    assert info.datetime_start == datetime.datetime(2019, 4, 23, 15, 16, 16)
     assert info.unix_time_stop == 1556025420
-    assert info.datetime_stop == datetime.datetime(2019, 4, 23, 13, 17, 00)
+    assert info.utc_datetime_stop == datetime.datetime(2019, 4, 23, 13, 17, 00)
+    assert info.datetime_stop == datetime.datetime(2019, 4, 23, 15, 17, 00)
     assert info.duration_s == 44
     assert info.num_samples == 9146
     assert info.version_firmware == 'v0.12.0'

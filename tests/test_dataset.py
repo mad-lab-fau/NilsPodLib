@@ -23,7 +23,7 @@ def test_size(dataset):
 def test_counter(dataset):
     """Counter should be monotonic and be in the correct range for sample since midnight."""
     assert np.all(np.diff(dataset.counter)) == 1
-    t = dataset.info.datetime_start
+    t = dataset.info.utc_datetime_start
     seconds_on_date = t.hour*3600 + t.minute * 60 + t.second
     assert int(dataset.counter[0] / dataset.info.sampling_rate_hz) == int(seconds_on_date)
 
