@@ -69,3 +69,39 @@ def test_inplace_factor_cal(simple_header, sensor):
     cal_ds = getattr(dataset, 'factory_calibrate_' + sensor)(inplace=False)
     assert id(cal_ds) != id(dataset)
     assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
+
+
+def test_imu_factory_cal(simple_header):
+    simple_header.enabled_sensors = ('acc', 'gyro')
+
+    dataset = Dataset({'acc': np.ones(100), 'gyro': np.ones(100) * 2}, np.arange(100), simple_header)
+
+    cal_ds = dataset.factory_calibrate_imu()
+
+    assert np.all(cal_ds.acc.data == 1. / 2048)
+    assert np.all(cal_ds.gyro.data == 2. / 16.4)
+    assert cal_ds.acc.is_calibrated is True
+    assert cal_ds.acc.is_calibrated is True
+
+
+def test_inplace_imu_factory_cal(simple_header):
+    simple_header.enabled_sensors = ('acc', 'gyro')
+
+    dataset = Dataset({'acc': np.ones(100), 'gyro': np.ones(100) * 2}, np.arange(100), simple_header)
+    # default: inplace = False
+    cal_ds = dataset.factory_calibrate_imu()
+    assert id(cal_ds) != id(dataset)
+    assert id(getattr(cal_ds, 'acc')) != id(getattr(dataset, 'acc'))
+    assert id(getattr(cal_ds, 'gyro')) != id(getattr(dataset, 'gyro'))
+
+    dataset = Dataset({'acc': np.ones(100), 'gyro': np.ones(100) * 2}, np.arange(100), simple_header)
+    cal_ds = dataset.factory_calibrate_imu(inplace=True)
+    assert id(cal_ds) == id(dataset)
+    assert id(getattr(cal_ds, 'acc')) == id(getattr(dataset, 'acc'))
+    assert id(getattr(cal_ds, 'gyro')) == id(getattr(dataset, 'gyro'))
+
+    dataset = Dataset({'acc': np.ones(100), 'gyro': np.ones(100) * 2}, np.arange(100), simple_header)
+    cal_ds = dataset.factory_calibrate_imu(inplace=False)
+    assert id(cal_ds) != id(dataset)
+    assert id(getattr(cal_ds, 'acc')) != id(getattr(dataset, 'acc'))
+    assert id(getattr(cal_ds, 'gyro')) != id(getattr(dataset, 'gyro'))
