@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Type
+from typing import TypeVar, Type, Union
 
 import numpy as np
 from pathlib import Path
+
+from imucal import CalibrationInfo
 
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
@@ -59,3 +61,11 @@ def datastream_does_not_exist_warning(sensor_name, operation):
     message = 'The datastream "{}" does not exist for the current session.\
      The performed operation "{}" will have not effect'
     return warnings.warn(message)
+
+
+def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> CalibrationInfo:
+    if isinstance(calibration, (Path, str)):
+        calibration = CalibrationInfo.from_json_file(calibration)
+    if not isinstance(calibration, CalibrationInfo):
+        raise ValueError('No valid CalibrationInfo object provided')
+    return calibration

@@ -16,7 +16,7 @@ import pandas as pd
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
 
 
@@ -68,23 +68,13 @@ class Dataset:
         for i in self.ACTIVE_SENSORS:
             yield i, getattr(self, i)
 
-    def calibrate_imu(self, calibration: Optional[Union[CalibrationInfo, path_t]] = None,
-                      inplace: bool = False, supress_warning=False) -> 'Dataset':
+    def calibrate_imu(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
         """Apply a calibration to the Dataset.
 
         The calibration can either be provided directly or loaded from a calibration '.json' file.
-        If no calibration info is provided, factory calibration is applied.
         """
         s = inplace_or_copy(self, inplace)
-
-        if calibration is None:
-            s.factory_calibrate_imu()
-            if supress_warning is not True:
-                warnings.warn('No Calibration Data provided - Using static Datasheet values for calibration!')
-            return s
-        elif isinstance(calibration, (Path, str)):
-            calibration = CalibrationInfo.from_json_file(calibration)
-
+        calibration = load_and_check_cal_info(calibration)
         # TODO: Handle cases were either Acc or gyro are disabled
         acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
         s.acc.data = acc
