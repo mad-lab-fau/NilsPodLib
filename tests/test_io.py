@@ -11,12 +11,12 @@ TEST_DATA = HERE / 'test_data'
 
 def test_load_simple():
     path = TEST_DATA / 'simple_synced_master.bin'
-    dataset = Dataset(path=path)
+    dataset = Dataset.from_bin_file(path=path)
 
     # Toplevel Stuff
     assert dataset.path == path
-    assert dataset.imu_is_calibrated is False
     assert isinstance(dataset.acc, Datastream)
+    assert dataset.acc.is_calibrated is False
     assert dataset.gyro is None
     assert dataset.baro is None
     assert dataset.mag is None
@@ -68,7 +68,7 @@ def test_load_simple():
 
 def test_sync_info():
     path = TEST_DATA / 'simple_synced_slave.bin'
-    dataset = Dataset(path=path)
+    dataset = Dataset.from_bin_file(path=path)
     info = dataset.info
 
     assert info.sync_role == 'slave'

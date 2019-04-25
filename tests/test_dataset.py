@@ -10,7 +10,7 @@ TEST_DATA = HERE / 'test_data'
 @pytest.fixture()
 def dataset():
     path = TEST_DATA / 'simple_synced_master.bin'
-    return Dataset(path=path)
+    return Dataset.from_bin_file(path=path)
 
 
 def test_size(dataset):

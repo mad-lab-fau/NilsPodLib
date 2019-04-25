@@ -36,20 +36,15 @@ class Dataset:
 
     ACTIVE_SENSORS: tuple
 
-    # TODO: Add alternative consturctorsg
     # TODO: Spalte mit Unix timestamp
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
 
-    def __init__(self, path: Union[Path, str]):
-        path = Path(path)
-        if not path.suffix == '.bin':
-            ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
-
-        self.path = path
-        sensor_data, self.counter, self.info = parse_binary(self.path)
+    def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
+        self.counter = counter
+        self.info = info
         active_sensors = []
         for k, v in sensor_data.items():
             if v is not None:
@@ -57,6 +52,22 @@ class Dataset:
                 v = Datastream(v, self.info.sampling_rate_hz, self.info._SENSOR_LEGENDS.get(k, None))
             setattr(self, k, v)
         self.ACTIVE_SENSORS = tuple(active_sensors)
+
+    @classmethod
+    def from_bin_file(cls, path: path_t):
+        path = Path(path)
+        if not path.suffix == '.bin':
+            ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
+
+        sensor_data, counter, info = parse_binary(path)
+        s = cls(sensor_data, counter, info)
+
+        s.path = path
+        return s
+
+    @classmethod
+    def from_csv_file(cls, path: path_t):
+        raise NotImplementedError('CSV importer comming soon')
 
     @property
     def size(self) -> int:
