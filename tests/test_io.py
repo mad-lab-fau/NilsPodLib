@@ -9,9 +9,8 @@ HERE = Path(__file__).parent
 TEST_DATA = HERE / 'test_data'
 
 
-def test_load_simple():
-    path = TEST_DATA / 'simple_synced_master.bin'
-    dataset = Dataset.from_bin_file(path=path)
+def test_load_simple(dataset_master_simple):
+    dataset, path = dataset_master_simple
 
     # Toplevel Stuff
     assert dataset.path == path
@@ -61,9 +60,8 @@ def test_load_simple():
     assert np.array_equal(info.custom_meta_data, np.zeros(3))
 
 
-def test_sync_info():
-    path = TEST_DATA / 'simple_synced_slave.bin'
-    dataset = Dataset.from_bin_file(path=path)
+def test_sync_info(dataset_slave_simple):
+    dataset, path = dataset_slave_simple
     info = dataset.info
 
     assert info.sync_role == 'slave'
