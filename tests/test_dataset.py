@@ -3,8 +3,6 @@ import numpy as np
 
 def test_size(dataset_master_simple):
     dataset, _ = dataset_master_simple
-    # TODO: Why is the actual dataset_master_simple shorter than the reported number of samples?
-    # assert dataset_master_simple.size == dataset_master_simple.info.num_samples
     assert len(dataset.acc) == dataset.size
     assert len(dataset.counter) == dataset.size
 

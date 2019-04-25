@@ -15,6 +15,7 @@ from NilsPodLib.utils import convert_little_endian
 
 # TODO: Put all Metainfos about the sensors into one object
 # TODO: Add method that can output all the header info as json
+# TODO: Include metainformation for units of sensors
 class Header:
     """Additional Infos of recording.
 
@@ -49,6 +50,8 @@ class Header:
     mac_address: str
 
     custom_meta_data = np.zeros(4)
+    # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
+    #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
     num_samples: int
 
     _SENSOR_FLAGS = {
