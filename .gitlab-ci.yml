@@ -10,5 +10,6 @@ test:
   image: python:3.6
   before_script:
     - pip install tox
+    - pip install git+https://gitlab-ci-token:${CI_JOB_TOKEN}@mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git
   script:
     - tox
