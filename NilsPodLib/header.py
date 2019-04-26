@@ -8,6 +8,8 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import datetime
+import warnings
+
 import numpy as np
 
 from NilsPodLib.utils import convert_little_endian
@@ -118,10 +120,18 @@ class Header:
         6: 'chest'
     }
 
+    _header_fields = ['enabled_sensors', 'motion_interrupt_enabled', 'dock_mode_enabled', 'sensor_position',
+                      'session_termination', 'sample_size', 'sampling_rate_hz', 'acc_range_g', 'gyro_range_dps',
+                      'sync_role', 'sync_distance_ms', 'sync_group', 'sync_address', 'sync_channel', 'sync_index_start',
+                      'sync_index_stop', 'unix_time_start', 'unix_time_stop', 'version_firmware', 'mac_address',
+                      'custom_meta_data', 'num_samples']
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            # TODO this is not very explicit and can cause problems
-            setattr(self, k, v)
+            if k in self._header_fields:
+                setattr(self, k, v)
+            else:
+                warnings.warn('Unexpected Argument {} for Header'.format(k))
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray):
