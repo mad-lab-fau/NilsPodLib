@@ -131,6 +131,7 @@ class Header:
             if k in self._header_fields:
                 setattr(self, k, v)
             else:
+                # Should this be a error?
                 warnings.warn('Unexpected Argument {} for Header'.format(k))
 
     @classmethod
