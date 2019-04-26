@@ -51,6 +51,7 @@ def test_load_simple(dataset_master_simple):
     assert info.sensor_id == '9e82'
     assert info.sync_address == '9f2be06f7c'
     assert info.sync_channel == 43
+    assert info.custom_meta_data == (0, 0, 0)
 
     # System Info
     assert info.sensor_position == 'undefined'
@@ -71,4 +72,3 @@ def test_sync_info(dataset_slave_simple):
     assert info.sync_index_stop == 6636
     assert info.sync_address == '9f2be06f7c'  # Should be same as master (see test above)
     assert info.sync_channel == 43  # Should be same as master (see test above)
-

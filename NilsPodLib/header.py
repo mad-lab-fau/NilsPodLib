@@ -8,6 +8,7 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import datetime
+import json
 import warnings
 
 import numpy as np
@@ -51,7 +52,7 @@ class Header:
     version_firmware: str
     mac_address: str
 
-    custom_meta_data = np.zeros(4)
+    custom_meta_data: tuple
     # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
     #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
     num_samples: int
@@ -135,9 +136,22 @@ class Header:
                 warnings.warn('Unexpected Argument {} for Header'.format(k))
 
     @classmethod
-    def from_bin_array(cls, bin_array: np.ndarray):
+    def from_bin_array(cls, bin_array: np.ndarray) -> 'Header':
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict)
+
+    @classmethod
+    def from_json(cls, json_string: str) -> 'Header':
+        h = cls(**json.loads(json_string))
+        # ensure that the enabled sensors and custom_metadata have the right dtype
+        for k in ('enabled_sensors', 'custom_meta_data'):
+            if getattr(h, k, None):
+                setattr(h, k, tuple(getattr(h, k)))
+        return h
+
+    def to_json(self) -> str:
+        header_dict = {k: v for k, v in self.__dict__.items() if k in self._header_fields}
+        return json.dumps(header_dict)
 
     @classmethod
     def parse_header_package(cls, bin_array: np.ndarray):
@@ -176,7 +190,7 @@ class Header:
         for para, val in cls._OPERATION_MODES.items():
             header_dict[para] = bool(operation_mode & val)
 
-        header_dict['custom_meta_data'] = bin_array[11:14]
+        header_dict['custom_meta_data'] = tuple(bin_array[11:14])
 
         # Note: We ignore timezones and provide just the time info, which was stored in the sensor
         header_dict['unix_time_start'] = convert_little_endian(bin_array[14:18])
