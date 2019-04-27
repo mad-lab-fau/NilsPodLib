@@ -1,14 +1,27 @@
 import datetime
 from pathlib import Path
+from unittest.mock import patch
+
 import numpy as np
 
+
 from NilsPodLib.datastream import Datastream
-from NilsPodLib.dataset import Dataset
+from dateutil.tz import tzoffset
 
 HERE = Path(__file__).parent
 TEST_DATA = HERE / 'test_data'
 
 
+class MockDate(datetime.datetime):
+    """This feels like a dirty hack, but nothing else seemed to work."""
+    mock_tz = 2
+
+    @classmethod
+    def fromtimestamp(cls, t, tz=None):
+        return super().utcfromtimestamp(t) + datetime.timedelta(hours=cls.mock_tz)
+
+
+@patch('datetime.datetime', MockDate)
 def test_load_simple(dataset_master_simple):
     dataset, path = dataset_master_simple
 
