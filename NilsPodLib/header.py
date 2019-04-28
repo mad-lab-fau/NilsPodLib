@@ -8,6 +8,7 @@ Created on Thu Sep 28 11:32:22 2017
 import datetime
 import json
 import warnings
+from itertools import chain
 from typing import Tuple, Any
 
 import numpy as np
@@ -242,8 +243,7 @@ class Header:
         return ''.join(self.mac_address[-5:].split(':'))
 
 
-# This inherits from header as a trick to allow autocomplete of all attributes
-class ProxyHeader(Header):
+class ProxyHeader:
     _headers: Tuple[Header]
 
     def __init__(self, headers: Tuple[Header]):
@@ -262,3 +262,7 @@ class ProxyHeader(Header):
         if name == '_headers':
             return super().__setattr__(name, value)
         raise NotImplementedError('ProxyHeader only allows readonly access to the info objects of a dataset')
+
+    def __dir__(self):
+        return chain(super().__dir__(), self._headers[0].__dir__())
+

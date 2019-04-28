@@ -5,6 +5,7 @@
 """
 
 import struct
+from itertools import chain
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict, Any, Callable
 
@@ -233,7 +234,7 @@ class ProxyDatasetMethod:
         return return_vals
 
 
-class ProxyDataset(Dataset):
+class ProxyDataset:
     _datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Tuple[Dataset]):
@@ -251,6 +252,9 @@ class ProxyDataset(Dataset):
         if name == '_datasets':
             return super().__setattr__(name, value)
         raise NotImplementedError('ProxyDataset only allows readonly access to attributes of a dataset')
+
+    def __dir__(self):
+        return chain(super().__dir__(), self._datasets[0].__dir__())
 
     def __iter__(self) -> Iterable[Dataset]:
         return self._datasets.__iter__()
