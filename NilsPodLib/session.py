@@ -6,50 +6,26 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import copy
-from typing import Iterable, Any, Tuple
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
 
-from NilsPodLib.dataset import Dataset
-from NilsPodLib.header import Header
+from NilsPodLib.dataset import Dataset, ProxyDataset
+from NilsPodLib.header import Header, ProxyHeader
 
 
 # TODO: Session synced
 # TODO: Synced session as separate class?
-
-
-# This inherits from header as a trick to allow autocomplete of all attributes
-class ProxyInfo(Header):
-    _datasets: Tuple[Dataset]
-
-    def __init__(self, datasets: Tuple[Dataset]):
-        self._datasets = datasets
-
-    def __getattribute__(self, name: str) -> Any:
-        if name == '_datasets':
-            return super().__getattribute__(name)
-        if callable(getattr(self._datasets[0].info, name)) is True:
-            raise ValueError(
-                'ProxyInfo only allows access to attributes of the info objects. {} is a callable method.'.format(name))
-
-        return tuple([getattr(d.info, name) for d in self._datasets])
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == '_datasets':
-            return super().__setattr__(name, value)
-        raise NotImplementedError('ProxyInfo only allows readonly access to the info objects of a dataset')
-
-
 class Session:
-    datasets: Tuple[Dataset]
+    datasets: ProxyDataset
 
     def __init__(self, datasets: Iterable[Dataset]):
-        self.datasets = tuple(datasets)
+        self.datasets = ProxyDataset(datasets)
 
     @property
-    def info(self) -> ProxyInfo:
-        return ProxyInfo(datasets=self.datasets)
+    def info(self) -> ProxyHeader:
+        return ProxyHeader(headers=self.datasets.info)
 
     def calibrate(self):
         self.leftFoot.calibrate()
@@ -61,7 +37,7 @@ class SyncedSession(Session):
     def __init__(self, datasets: Iterable[Dataset]):
         super().__init__(datasets)
         if not self._validate_sync_groups():
-            raise ValueError('The providid _datasets are not part of the same sync_group')
+            raise ValueError('The providid _headers are not part of the same sync_group')
         master_valid, slaves_valid = self._validate_sync_role()
         if not master_valid:
             raise ValueError('SyncedSessions require exactly 1 master.')
@@ -69,7 +45,7 @@ class SyncedSession(Session):
             raise ValueError('One of the provided sessions is not correctly set to either slave or master')
 
     def _validate_sync_groups(self):
-        """Check that all _datasets belon to the same sync group"""
+        """Check that all _headers belong to the same sync group"""
         sync_group = {d.info.sync_group for d in self.datasets}
         sync_channel = {d.info.sync_channel for d in self.datasets}
         sync_address = {d.info.sync_address for d in self.datasets}

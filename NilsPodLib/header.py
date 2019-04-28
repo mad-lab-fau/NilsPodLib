@@ -8,6 +8,7 @@ Created on Thu Sep 28 11:32:22 2017
 import datetime
 import json
 import warnings
+from typing import Tuple, Any
 
 import numpy as np
 
@@ -239,3 +240,25 @@ class Header:
     @property
     def sensor_id(self) -> str:
         return ''.join(self.mac_address[-5:].split(':'))
+
+
+# This inherits from header as a trick to allow autocomplete of all attributes
+class ProxyHeader(Header):
+    _headers: Tuple[Header]
+
+    def __init__(self, headers: Tuple[Header]):
+        self._headers = headers
+
+    def __getattribute__(self, name: str) -> Tuple[Any]:
+        if name == '_headers':
+            return super().__getattribute__(name)
+        if callable(getattr(self._headers[0], name)) is True:
+            raise ValueError(
+                'ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(name))
+
+        return tuple([getattr(d, name) for d in self._headers])
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == '_headers':
+            return super().__setattr__(name, value)
+        raise NotImplementedError('ProxyHeader only allows readonly access to the info objects of a dataset')

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Union
+from typing import TypeVar, Union, Iterable, Callable, Tuple, Any
 
 import numpy as np
 from pathlib import Path
@@ -69,3 +69,13 @@ def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> Cali
     if not isinstance(calibration, CalibrationInfo):
         raise ValueError('No valid CalibrationInfo object provided')
     return calibration
+
+
+class ProxyMethod:
+    _callables: Iterable[Callable]
+
+    def __init__(self, callables: Iterable[Callable]):
+        self._callables = callables
+
+    def __call__(self, *args, **kwargs) -> Tuple[Any]:
+        return tuple(c(*args, **kwargs) for c in self._callables)

@@ -6,7 +6,7 @@
 
 import struct
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict
+from typing import Union, Iterable, Optional, Tuple, Dict, Any
 
 import numpy as np
 import pandas as pd
@@ -222,6 +222,33 @@ class Dataset:
         self.imu_data_as_df().to_csv(path, index=False)
 
 
+class ProxyDataset(Dataset):
+    _datasets: Tuple[Dataset]
+
+    def __init__(self, datasets: Tuple[Dataset]):
+        self._datasets = datasets
+
+    def __getattribute__(self, name: str) -> Any:
+        if name == '_datasets':
+            return super().__getattribute__(name)
+        if callable(getattr(self._datasets[0], name)) is True:
+            raise ValueError(
+                'ProxyDataset only allows access to attributes of a dataset. {} is a callable method.'.format(name))
+
+        return tuple([getattr(d, name) for d in self._datasets])
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == '_datasets':
+            return super().__setattr__(name, value)
+        raise NotImplementedError('ProxyDataset only allows readonly access to attributes of a dataset')
+
+    def __iter__(self):
+        return self._datasets.__iter__()
+
+    def __getitem__(self, item: int) -> Dataset:
+        return self._datasets[item]
+
+
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                                         np.ndarray,
                                         Header]:
@@ -263,3 +290,4 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
     counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=np.uint32).astype(float)
 
     return sensor_data, counter, session_header
+
