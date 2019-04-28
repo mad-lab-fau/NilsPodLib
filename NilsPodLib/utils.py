@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Union, Iterable, Callable, Tuple, Any
+from typing import TypeVar, Union
 
 import numpy as np
 from pathlib import Path
@@ -71,11 +71,3 @@ def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> Cali
     return calibration
 
 
-class ProxyMethod:
-    _callables: Iterable[Callable]
-
-    def __init__(self, callables: Iterable[Callable]):
-        self._callables = callables
-
-    def __call__(self, *args, **kwargs) -> Tuple[Any]:
-        return tuple(c(*args, **kwargs) for c in self._callables)

@@ -6,7 +6,7 @@
 
 import struct
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, Any
+from typing import Union, Iterable, Optional, Tuple, Dict, Any, Callable
 
 import numpy as np
 import pandas as pd
@@ -165,9 +165,7 @@ class Dataset:
 
         for key, val in s._DATASTREAMS:
             setattr(s, key, val.cut(start, stop, step))
-        s.sync = s.sync[start:stop: step]
         s.counter = s.counter[start:stop:step]
-        s.rtc = s.rtc[start:stop:step]
         return s
 
     def interpolate_dataset(self, dataset, inplace=False):
@@ -206,20 +204,33 @@ class Dataset:
         # return dataset_master_simple
 
     def data_as_df(self) -> pd.DataFrame:
-        dfs = [s.data_as_df() for s in self._DATASTREAMS]
+        dfs = [s.data_as_df() for _, s in self._DATASTREAMS]
         return pd.concat(dfs, axis=1)
 
     def data_as_csv(self, path: path_t):
         self.data_as_df().to_csv(path, index=False)
 
     def imu_data_as_df(self) -> pd.DataFrame:
-        # Handle cases were one of the two sensors is not active
+        #TODO: Handle cases were one of the two sensors is not active
         acc_df = self.acc.data_as_df()
         gyro_df = self.gyro.data_as_df()
         return pd.concat([acc_df, gyro_df], axis=1)
 
     def imu_data_as_csv(self, path: path_t):
         self.imu_data_as_df().to_csv(path, index=False)
+
+
+class ProxyDatasetMethod:
+    _callables: Iterable[Callable]
+
+    def __init__(self, callables: Iterable[Callable], ):
+        self._callables = callables
+
+    def __call__(self, *args, **kwargs) -> Union[Tuple[Any], 'ProxyDataset']:
+        return_vals = tuple(c(*args, **kwargs) for c in self._callables)
+        if all(isinstance(d, Dataset) for d in return_vals):
+            return ProxyDataset(return_vals)
+        return return_vals
 
 
 class ProxyDataset(Dataset):
@@ -231,11 +242,10 @@ class ProxyDataset(Dataset):
     def __getattribute__(self, name: str) -> Any:
         if name == '_datasets':
             return super().__getattribute__(name)
+        attr_list = tuple([getattr(d, name) for d in self._datasets])
         if callable(getattr(self._datasets[0], name)) is True:
-            raise ValueError(
-                'ProxyDataset only allows access to attributes of a dataset. {} is a callable method.'.format(name))
-
-        return tuple([getattr(d, name) for d in self._datasets])
+            return ProxyDatasetMethod(attr_list)
+        return attr_list
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == '_datasets':

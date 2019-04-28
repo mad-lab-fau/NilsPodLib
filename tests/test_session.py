@@ -1,3 +1,5 @@
+import pandas as pd
+import numpy as np
 import pytest
 
 from NilsPodLib.dataset import ProxyDataset
@@ -45,3 +47,18 @@ def test_dataset_access(dataset_master_simple, dataset_slave_simple):
 def test_dataset_attr_access(dataset_master_simple, dataset_slave_simple):
     session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
     assert session.datasets.acc == (dataset_master_simple[0].acc, dataset_slave_simple[0].acc)
+
+
+def test_dataset_func_call(dataset_master_simple, dataset_slave_simple):
+    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
+    pd.testing.assert_frame_equal(session.datasets.data_as_df()[0], dataset_master_simple[0].data_as_df())
+    pd.testing.assert_frame_equal(session.datasets.data_as_df()[1], dataset_slave_simple[0].data_as_df())
+
+
+def test_dataset_func_call_dataset_return(dataset_master_simple, dataset_slave_simple):
+    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
+    return_val = session.datasets.cut(0, 10)
+    assert isinstance(return_val, ProxyDataset)
+    assert np.array_equal(return_val[0].acc.data, dataset_master_simple[0].cut(0, 10).acc.data)
+    assert np.array_equal(return_val[1].acc.data, dataset_slave_simple[0].cut(0, 10).acc.data)
+
