@@ -13,7 +13,7 @@ def basic_session(dataset_master_simple, dataset_slave_simple):
 
 def test_basic_init(dataset_master_simple, dataset_slave_simple):
     session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert session.datasets._datasets == ([dataset_master_simple[0], dataset_slave_simple[0]])
+    assert session.datasets._datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
     assert isinstance(session.datasets, ProxyDataset)
 
 
@@ -61,4 +61,3 @@ def test_dataset_func_call_dataset_return(dataset_master_simple, dataset_slave_s
     assert isinstance(return_val, ProxyDataset)
     assert np.array_equal(return_val[0].acc.data, dataset_master_simple[0].cut(0, 10).acc.data)
     assert np.array_equal(return_val[1].acc.data, dataset_slave_simple[0].cut(0, 10).acc.data)
-

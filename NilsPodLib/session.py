@@ -21,11 +21,11 @@ class Session:
     datasets: ProxyDataset
 
     def __init__(self, datasets: Iterable[Dataset]):
-        self.datasets = ProxyDataset(datasets)
+        self.datasets = ProxyDataset(tuple(datasets))
 
     @property
     def info(self) -> ProxyHeader:
-        return ProxyHeader(headers=self.datasets.info)
+        return ProxyHeader(headers=tuple(self.datasets.info))
 
     def calibrate(self):
         self.leftFoot.calibrate()
@@ -37,26 +37,33 @@ class SyncedSession(Session):
     def __init__(self, datasets: Iterable[Dataset]):
         super().__init__(datasets)
         if not self._validate_sync_groups():
-            raise ValueError('The providid _headers are not part of the same sync_group')
+            raise ValueError('The provided datasets are not part of the same sync_group')
         master_valid, slaves_valid = self._validate_sync_role()
         if not master_valid:
             raise ValueError('SyncedSessions require exactly 1 master.')
         if not slaves_valid:
             raise ValueError('One of the provided sessions is not correctly set to either slave or master')
+        if not self._validate_sampling_rate():
+            raise ValueError('All provided sessions need to have the same sampling rate')
 
     def _validate_sync_groups(self):
         """Check that all _headers belong to the same sync group"""
-        sync_group = {d.info.sync_group for d in self.datasets}
-        sync_channel = {d.info.sync_channel for d in self.datasets}
-        sync_address = {d.info.sync_address for d in self.datasets}
+        sync_group = set(self.info.sync_group)
+        sync_channel = set(self.info.sync_channel)
+        sync_address = set(self.info.sync_address)
         return all((True for i in [sync_group, sync_channel, sync_address] if len(i) == 1))
 
     def _validate_sync_role(self):
         """Check that there is only 1 master and all other sensors were configured as slaves."""
-        roles = [d.info.sync_role for d in self.datasets]
+        roles = self.info.sync_role
         master_valid = len([i for i in roles if i == 'master']) == 1
         slaves_valid = len([i for i in roles if i == 'slaves']) == len(roles) - 1
         return master_valid, slaves_valid
+
+    def _validate_sampling_rate(self):
+        """Check that all sensors had the same sampling rate."""
+        sr = set(self.info.sampling_rate_hz)
+        return len(sr) == 1
 
     @classmethod
     def from_filePaths(cls, leftFootPath, rightFootPath):
