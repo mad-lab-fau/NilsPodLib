@@ -1,13 +1,12 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
+"""Session groups multiple Datasets from sensors recorded at the same time
 Created on Thu Sep 28 11:32:22 2017
 
-@author: nils
+@author: Nils Roth, Arne Küderle
 """
 
 import copy
-import os
+from typing import Iterable, Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,41 +14,73 @@ import pandas as pd
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import Header
 
-leftFootFileNames = ["NRF52-92", "Left"]
-rightFootFileNames = ["NRF52-84", "Right"]
+
+# TODO: Session synced
+# TODO: Synced session as separate class?
 
 
-def getFileNames(folderPath, fileEnding):
-    fileNames = list()
-    for file in os.listdir(folderPath):
-        if file.endswith(fileEnding):
-            print(os.path.join(folderPath, file))
-            fileNames.append(os.path.join(folderPath, file))
-    return fileNames
+# This inherits from header as a trick to allow autocomplete of all attributes
+class ProxyInfo(Header):
+    _datasets: Tuple[Dataset]
 
+    def __init__(self, datasets: Tuple[Dataset]):
+        self._datasets = datasets
 
-def getFilesNamesPerFoot(path):
-    leftFootPath = ""
-    rightFootPath = ""
-    for file in os.listdir(path):
-        if file.endswith(".bin"):
-            fullFileName = os.path.join(path, file)
-            for filename in leftFootFileNames:
-                if filename in fullFileName:
-                    leftFootPath = fullFileName
-            for filename in rightFootFileNames:
-                if filename in fullFileName:
-                    rightFootPath = fullFileName
-    return [leftFootPath, rightFootPath]
+    def __getattribute__(self, name: str) -> Any:
+        if name == '_datasets':
+            return super().__getattribute__(name)
+        if callable(getattr(self._datasets[0].info, name)) is True:
+            raise ValueError(
+                'ProxyInfo only allows access to attributes of the info objects. {} is a callable method.'.format(name))
+
+        return tuple([getattr(d.info, name) for d in self._datasets])
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == '_datasets':
+            return super().__setattr__(name, value)
+        raise NotImplementedError('ProxyInfo only allows readonly access to the info objects of a dataset')
 
 
 class Session:
-    leftFoot = None
-    rightFoot = None
+    datasets: Tuple[Dataset]
 
-    def __init__(self, leftFoot, rightFoot):
-        self.leftFoot = leftFoot
-        self.rightFoot = rightFoot
+    def __init__(self, datasets: Iterable[Dataset]):
+        self.datasets = tuple(datasets)
+
+    @property
+    def info(self) -> ProxyInfo:
+        return ProxyInfo(datasets=self.datasets)
+
+    def calibrate(self):
+        self.leftFoot.calibrate()
+        self.rightFoot.calibrate()
+
+
+class SyncedSession(Session):
+
+    def __init__(self, datasets: Iterable[Dataset]):
+        super().__init__(datasets)
+        if not self._validate_sync_groups():
+            raise ValueError('The providid _datasets are not part of the same sync_group')
+        master_valid, slaves_valid = self._validate_sync_role()
+        if not master_valid:
+            raise ValueError('SyncedSessions require exactly 1 master.')
+        if not slaves_valid:
+            raise ValueError('One of the provided sessions is not correctly set to either slave or master')
+
+    def _validate_sync_groups(self):
+        """Check that all _datasets belon to the same sync group"""
+        sync_group = {d.info.sync_group for d in self.datasets}
+        sync_channel = {d.info.sync_channel for d in self.datasets}
+        sync_address = {d.info.sync_address for d in self.datasets}
+        return all((True for i in [sync_group, sync_channel, sync_address] if len(i) == 1))
+
+    def _validate_sync_role(self):
+        """Check that there is only 1 master and all other sensors were configured as slaves."""
+        roles = [d.info.sync_role for d in self.datasets]
+        master_valid = len([i for i in roles if i == 'master']) == 1
+        slaves_valid = len([i for i in roles if i == 'slaves']) == len(roles) - 1
+        return master_valid, slaves_valid
 
     @classmethod
     def from_filePaths(cls, leftFootPath, rightFootPath):
@@ -139,10 +170,6 @@ class Session:
         except Exception as e:
             print(e)
             print("synchronization failed with ERROR")
-
-    def calibrate(self):
-        self.leftFoot.calibrate()
-        self.rightFoot.calibrate()
 
     def rotateAxis(self, system):
         if system == 'egait':
