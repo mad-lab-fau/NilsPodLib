@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Type, Union
+from typing import TypeVar, Union
 
 import numpy as np
 from pathlib import Path
@@ -21,18 +21,18 @@ def convert_little_endian(byte_list, dtype=int):
     return number
 
 
-def read_binary_file_uint8(path, packet_size, skipHeaderBytes):
+def read_binary_file_uint8(path, packet_size, skip_header_bytes):
     with open(path, 'rb') as f:
-        f.seek(skipHeaderBytes)  # skip Header bytes
+        f.seek(skip_header_bytes)  # skip Header bytes
         data = np.fromfile(f, dtype=np.dtype('B'))
     data = data[0:(int(len(data) / packet_size) * packet_size)]
     data = np.reshape(data, (int(len(data) / packet_size), int(packet_size)))
     return data
 
 
-def read_binary_file_int16(path, packet_size, skipHeaderBytes):
+def read_binary_file_int16(path, packet_size, skip_header_bytes):
     with open(path, 'rb') as f:
-        f.seek(skipHeaderBytes)  # skip Header bytes
+        f.seek(skip_header_bytes)  # skip Header bytes
         data = np.fromfile(f, dtype=np.dtype('i2'))
     data = data[0:(int(len(data) / int(packet_size / 2)) * int(packet_size / 2))]
     data = np.reshape(data, (int(len(data) / (packet_size / 2)), int(packet_size / 2)))

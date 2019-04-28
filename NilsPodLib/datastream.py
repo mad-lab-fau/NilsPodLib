@@ -1,12 +1,12 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
 Created on Thu Sep 28 11:32:22 2017
 
-@author: nils, arne
+@author: Nils Roth, Arne Küderle
 """
 import copy
+import warnings
 from typing import Optional, Iterable, List
 
 import numpy as np
@@ -21,11 +21,13 @@ class Datastream:
     columns: List
     is_calibrated: bool = False
     _unit: str
+
     # TODO: Representatation
     # TODO: Implement inplace vs copy
     # TODO: implement the concept of units
 
-    def __init__(self, data: np.ndarray, sampling_rate: Optional[float] = 1., columns: Optional[Iterable] = None, unit: Optional[str] = None):
+    def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
+                 unit: Optional[str] = None):
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
         self._unit = unit
@@ -36,6 +38,7 @@ class Datastream:
 
     @property
     def unit(self):
+        warnings.warn('Units are not really supported at this point')
         if self.is_calibrated is True:
             return self._unit
         return 'a.u.'

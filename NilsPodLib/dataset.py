@@ -1,9 +1,7 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 28 11:32:22 2017
+"""Dataset represents a measurement session of a single sensor.
 
-@author: nils
+@author: Nils Roth, Arne Küderle
 """
 
 import struct
@@ -83,6 +81,7 @@ class Dataset:
         return s
 
     def calibrate_acc(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+        # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
             calibration = load_and_check_cal_info(calibration)
@@ -92,6 +91,7 @@ class Dataset:
         return s
 
     def calibrate_gyro(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+        # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
             calibration = load_and_check_cal_info(calibration)

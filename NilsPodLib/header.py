@@ -1,10 +1,8 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
 """
 Created on Thu Sep 28 11:32:22 2017
 
-@author: nils
+@author: Nils Roth, Arne Küderle
 """
 
 import datetime
@@ -17,7 +15,6 @@ from NilsPodLib.utils import convert_little_endian
 
 
 # TODO: Put all Metainfos about the sensors into one object
-# TODO: Add method that can output all the header info as json
 # TODO: Include metainformation for units of sensors
 class Header:
     """Additional Infos of recording.
@@ -26,6 +23,7 @@ class Header:
         - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
             any local conversions
     """
+
     enabled_sensors: tuple
 
     motion_interrupt_enabled: bool
