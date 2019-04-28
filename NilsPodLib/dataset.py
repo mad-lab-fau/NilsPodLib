@@ -252,7 +252,7 @@ class ProxyDataset(Dataset):
             return super().__setattr__(name, value)
         raise NotImplementedError('ProxyDataset only allows readonly access to attributes of a dataset')
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Dataset]:
         return self._datasets.__iter__()
 
     def __getitem__(self, item: int) -> Dataset:

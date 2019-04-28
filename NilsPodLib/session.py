@@ -6,17 +6,15 @@ Created on Thu Sep 28 11:32:22 2017
 """
 
 import copy
-from typing import Iterable
+from typing import Iterable, Tuple
 
 import numpy as np
-import pandas as pd
 
 from NilsPodLib.dataset import Dataset, ProxyDataset
 from NilsPodLib.header import Header, ProxyHeader
 
 
 # TODO: Session synced
-# TODO: Synced session as separate class?
 class Session:
     datasets: ProxyDataset
 
@@ -30,6 +28,21 @@ class Session:
     def calibrate(self):
         self.leftFoot.calibrate()
         self.rightFoot.calibrate()
+
+    @classmethod
+    def from_filePaths(cls, leftFootPath, rightFootPath):
+        leftFoot = Dataset(leftFootPath, Header, freeRTOS)
+        rightFoot = Dataset(rightFootPath, Header, freeRTOS)
+        session = cls(leftFoot, rightFoot)
+        return session
+
+    @classmethod
+    def from_folderPath(cls, folderPath):
+        [leftFootPath, rightFootPath] = getFilesNamesPerFoot(folderPath)
+        leftFoot = Dataset(leftFootPath)
+        rightFoot = Dataset(rightFootPath)
+        session = cls(leftFoot, rightFoot)
+        return session
 
 
 class SyncedSession(Session):
@@ -65,22 +78,16 @@ class SyncedSession(Session):
         sr = set(self.info.sampling_rate_hz)
         return len(sr) == 1
 
-    @classmethod
-    def from_filePaths(cls, leftFootPath, rightFootPath):
-        leftFoot = Dataset(leftFootPath, Header, freeRTOS)
-        rightFoot = Dataset(rightFootPath, Header, freeRTOS)
-        session = cls(leftFoot, rightFoot)
-        return session
+    @property
+    def master(self) -> Dataset:
+        return next(d for d in self.datasets if d.info.sync_role == 'master')
 
-    @classmethod
-    def from_folderPath(cls, folderPath):
-        [leftFootPath, rightFootPath] = getFilesNamesPerFoot(folderPath)
-        leftFoot = Dataset(leftFootPath)
-        rightFoot = Dataset(rightFootPath)
-        session = cls(leftFoot, rightFoot)
-        return session
+    @property
+    def slaves(self) -> Tuple[Dataset]:
+        return tuple(d for d in self.datasets if d.info.sync_role == 'slaves')
 
     def synchronizeFallback(self):
+        # TODO: What does this do?
         # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
         inSync = (np.argwhere(self.leftFoot.sync > 0)[0])[0]
         self.leftFoot = self.leftFoot.cut_dataset(inSync, len(self.leftFoot.counter))
@@ -153,52 +160,3 @@ class SyncedSession(Session):
         except Exception as e:
             print(e)
             print("synchronization failed with ERROR")
-
-    def rotateAxis(self, system):
-        if system == 'egait':
-            self.leftFoot.rotate_axis('gyro', 2, 0, 1, -1, -1, 1)  # swap axis Z,X,Y, change sign -X-Y+Z
-            self.leftFoot.rotate_axis('acc', 2, 0, 1, -1, -1, 1)
-            self.rightFoot.rotate_axis('gyro', 2, 0, 1, 1, 1, -1)
-            self.rightFoot.rotate_axis('acc', 2, 0, 1, 1, -1, -1)
-            self.leftFoot.rotate_axis('pressure', 0, 0, 0, 0, 0, 0)
-            self.rightFoot.rotate_axis('pressure', 0, 0, 0, 0, 0, 0)
-        elif system == 'default':
-            self.rightFoot.rotate_axis('default', 0, 0, 0, 0, 0, 0)
-            self.leftFoot.rotate_axis('default', 0, 0, 0, 0, 0, 0)
-        else:
-            print('unknown system, you need to handle axis rotation per foot yourself!')
-
-    def cutData(self, start, stop):
-        session = copy.copy(self)
-        session.leftFoot = session.leftFoot.cut_dataset(start, stop)
-        session.rightFoot = session.rightFoot.cut_dataset(start, stop)
-        return session
-
-    def convertToDataFrame(self, session):
-        # create pandas dataframe
-        dataset = session.leftFoot
-        baro = np.reshape(dataset.baro.data, (dataset.size, 1))
-        battery = np.reshape(dataset.battery.data, (dataset.size, 1))
-        rtc = np.reshape(dataset.rtc, (dataset.size, 1))
-        dfLeft = pd.DataFrame(
-            np.hstack((rtc, dataset.acc.data, dataset.gyro.data, dataset.pressure.data, baro, battery)))
-        foot = 'L'
-        dfLeft.columns = ['utc' + foot, 'aX' + foot, 'aY' + foot, 'aZ' + foot, 'gX' + foot, 'gY' + foot, 'gZ' + foot,
-                          'p1' + foot, 'p2' + foot, 'p3' + foot, 'b' + foot, 'bat' + foot]
-
-        dataset = session.rightFoot
-        baro = np.reshape(dataset.baro.data, (dataset.size, 1))
-        battery = np.reshape(dataset.battery.data, (dataset.size, 1))
-        rtc = np.reshape(dataset.rtc, (dataset.size, 1))
-        dfRight = pd.DataFrame(
-            np.hstack((rtc, dataset.acc.data, dataset.gyro.data, dataset.pressure.data, baro, battery)))
-        foot = 'R'
-        dfRight.columns = ['utc' + foot, 'aX' + foot, 'aY' + foot, 'aZ' + foot, 'gX' + foot, 'gY' + foot, 'gZ' + foot,
-                           'p1' + foot, 'p2' + foot, 'p3' + foot, 'b' + foot, 'bat' + foot]
-        dfCombined = pd.concat([dfLeft, dfRight], axis=1)
-
-        return dfCombined
-
-    def saveToCSV(self, filename, sep=';', compression=None, index=False):
-        df = self.convertToDataFrame(self)
-        df.to_csv(filename, sep=sep, compression=compression)
