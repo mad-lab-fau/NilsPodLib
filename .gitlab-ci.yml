@@ -26,3 +26,4 @@ lint:
     - docker
   script:
     - tox -e lint
+  allow_failure: true
