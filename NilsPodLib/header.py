@@ -50,6 +50,7 @@ class Header:
     utc_stop: int
 
     version_firmware: str
+    version_hardware: str
     mac_address: str
 
     custom_meta_data: tuple
@@ -124,7 +125,7 @@ class Header:
     _header_fields = ['enabled_sensors', 'motion_interrupt_enabled', 'dock_mode_enabled', 'sensor_position',
                       'session_termination', 'sample_size', 'sampling_rate_hz', 'acc_range_g', 'gyro_range_dps',
                       'sync_role', 'sync_distance_ms', 'sync_group', 'sync_address', 'sync_channel', 'sync_index_start',
-                      'sync_index_stop', 'utc_start', 'utc_stop', 'version_firmware', 'mac_address',
+                      'sync_index_stop', 'utc_start', 'utc_stop', 'version_firmware', 'version_hardware', 'mac_address',
                       'custom_meta_data', 'num_samples']
 
     def __init__(self, **kwargs):
@@ -205,6 +206,8 @@ class Header:
 
         header_dict['sync_address'] = ''.join([hex(int(x))[-2:] for x in bin_array[40:45]][::-1])
         header_dict['sync_channel'] = bin_array[45]
+
+        header_dict['version_hardware'] = bin_array[46:48]
 
         header_dict['version_firmware'] = 'v{}.{}.{}'.format(*(int(x) for x in bin_array[-3:]))
 
