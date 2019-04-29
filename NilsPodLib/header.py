@@ -46,8 +46,8 @@ class Header:
     sync_index_start: int
     sync_index_stop: int
 
-    unix_time_start: int
-    unix_time_stop: int
+    utc_start: int
+    utc_stop: int
 
     version_firmware: str
     mac_address: str
@@ -124,7 +124,7 @@ class Header:
     _header_fields = ['enabled_sensors', 'motion_interrupt_enabled', 'dock_mode_enabled', 'sensor_position',
                       'session_termination', 'sample_size', 'sampling_rate_hz', 'acc_range_g', 'gyro_range_dps',
                       'sync_role', 'sync_distance_ms', 'sync_group', 'sync_address', 'sync_channel', 'sync_index_start',
-                      'sync_index_stop', 'unix_time_start', 'unix_time_stop', 'version_firmware', 'mac_address',
+                      'sync_index_stop', 'utc_start', 'utc_stop', 'version_firmware', 'mac_address',
                       'custom_meta_data', 'num_samples']
 
     def __init__(self, **kwargs):
@@ -193,8 +193,8 @@ class Header:
         header_dict['custom_meta_data'] = tuple(bin_array[11:14])
 
         # Note: We ignore timezones and provide just the time info, which was stored in the sensor
-        header_dict['unix_time_start'] = convert_little_endian(bin_array[14:18])
-        header_dict['unix_time_stop'] = convert_little_endian(bin_array[18:22])
+        header_dict['utc_start'] = convert_little_endian(bin_array[14:18])
+        header_dict['utc_stop'] = convert_little_endian(bin_array[18:22])
 
         header_dict['num_samples'] = convert_little_endian(bin_array[22:26])
 
@@ -212,23 +212,23 @@ class Header:
 
     @property
     def duration_s(self) -> int:
-        return self.unix_time_stop - self.unix_time_start
+        return self.utc_stop - self.utc_start
 
     @property
     def utc_datetime_start(self) -> datetime.datetime:
-        return datetime.datetime.utcfromtimestamp(self.unix_time_start)
+        return datetime.datetime.utcfromtimestamp(self.utc_start)
 
     @property
     def utc_datetime_stop(self) -> datetime.datetime:
-        return datetime.datetime.utcfromtimestamp(self.unix_time_stop)
+        return datetime.datetime.utcfromtimestamp(self.utc_stop)
 
     @property
     def datetime_start(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.unix_time_start)
+        return datetime.datetime.fromtimestamp(self.utc_start)
 
     @property
     def datetime_stop(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.unix_time_stop)
+        return datetime.datetime.fromtimestamp(self.utc_stop)
 
     @property
     def is_synchronised(self) -> bool:
