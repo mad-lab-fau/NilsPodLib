@@ -5,7 +5,7 @@
 """
 
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type
+from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence
 
 import numpy as np
 import pandas as pd
@@ -162,18 +162,16 @@ class Dataset(CascadingDatasetInterface):
             return inplace_or_copy(self, inplace)
         return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
 
-    def data_as_df(self) -> pd.DataFrame:
-        dfs = [s.data_as_df() for _, s in self._datastreams]
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None) -> pd.DataFrame:
+        datastreams = datastreams or self.ACTIVE_SENSORS
+        dfs = [s.data_as_df() for k, s in self._datastreams if k in datastreams]
         return pd.concat(dfs, axis=1)
 
-    def data_as_csv(self, path: path_t) -> None:
-        self.data_as_df().to_csv(path, index=False)
+    def data_as_csv(self, path: path_t, datastreams: Optional[Iterable[str]] = None) -> None:
+        self.data_as_df(datastreams).to_csv(path, index=False)
 
     def imu_data_as_df(self) -> pd.DataFrame:
-        # TODO: Handle cases were one of the two sensors is not active
-        acc_df = self.acc.data_as_df()
-        gyro_df = self.gyro.data_as_df()
-        return pd.concat([acc_df, gyro_df], axis=1)
+        return self.data_as_df(['acc', 'gyro'])
 
     def imu_data_as_csv(self, path: path_t) -> None:
         self.imu_data_as_df().to_csv(path, index=False)

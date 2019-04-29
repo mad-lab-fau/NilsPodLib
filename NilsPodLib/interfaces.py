@@ -71,7 +71,7 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('downsample', factor, inplace)
 
-    def data_as_df(self) -> pd.DataFrame:
+    def data_as_df(self, datastreams: Optional[Iterable[str]] = None) -> pd.DataFrame:
         return self._cascading_dataset_method_called('data_as_df')
 
     def __getattribute__(self, name: str) -> Any:
