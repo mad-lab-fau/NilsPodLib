@@ -14,7 +14,12 @@ from NilsPodLib.dataset import Dataset, ProxyDataset
 from NilsPodLib.header import Header, ProxyHeader
 
 
-# TODO: Session synced
+# TODO: Concept of inplace for sessions
+# TODO: Calibration for multiple sensors
+# TODO: Helper to create from folder/multiple names
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy
+
+
 class Session:
     datasets: ProxyDataset
 
@@ -58,25 +63,33 @@ class SyncedSession(Session):
             raise ValueError('One of the provided sessions is not correctly set to either slave or master')
         if not self._validate_sampling_rate():
             raise ValueError('All provided sessions need to have the same sampling rate')
+        if not self._validate_overlapping_record_time():
+            raise ValueError('The provided datasets do not have any overlapping time period.')
 
-    def _validate_sync_groups(self):
+    def _validate_sync_groups(self) -> bool:
         """Check that all _headers belong to the same sync group"""
         sync_group = set(self.info.sync_group)
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
         return all((True for i in [sync_group, sync_channel, sync_address] if len(i) == 1))
 
-    def _validate_sync_role(self):
+    def _validate_sync_role(self) -> Tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""
         roles = self.info.sync_role
         master_valid = len([i for i in roles if i == 'master']) == 1
         slaves_valid = len([i for i in roles if i == 'slaves']) == len(roles) - 1
         return master_valid, slaves_valid
 
-    def _validate_sampling_rate(self):
+    def _validate_sampling_rate(self) -> bool:
         """Check that all sensors had the same sampling rate."""
         sr = set(self.info.sampling_rate_hz)
         return len(sr) == 1
+
+    def _validate_overlapping_record_time(self) -> bool:
+        """Check if all provided sessions have overlapping recording times."""
+        start_times = np.array(self.info.utc_start)
+        stop_times = np.array(self.info.utc_stop)
+        return validate_existing_overlap(start_times, stop_times)
 
     @property
     def master(self) -> Dataset:
@@ -86,54 +99,26 @@ class SyncedSession(Session):
     def slaves(self) -> Tuple[Dataset]:
         return tuple(d for d in self.datasets if d.info.sync_role == 'slaves')
 
-    def synchronize(self):
-        try:
-            if self.leftFoot.header.syncRole == self.rightFoot.header.syncRole:
-                print("ERROR: no master/slave pair found - synchronization FAILED")
-                return
+    def synchronize(self, only_to_master: bool = False, inplace=False):
+        """Cut all datasets to the regions where they were syncronised to the master.
 
-            if self.rightFoot.header.syncRole == 'master':
-                master = self.rightFoot
-                slave = self.leftFoot
-            else:
-                master = self.leftFoot
-                slave = self.rightFoot
+        Args:
+            only_to_master: If True each slave will be cut to the region, where it was synchronised with the master.
+                Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
+                in sync
+        """
+        # TODO: Replace all counter arrays with the master counter (is this required?)
+        # cut all individual sensors
+        s = inplace_or_copy(self, inplace)
 
-            try:
-                inSync = (np.argwhere(slave.sync > 0)[0])[0]
-            except:
-                print("No Synchronization signal found - synchronization FAILED")
-                return
+        if only_to_master is True:
+            s.datasets = s.datasets.cut_to_syncregion()
+            return s
 
-            # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
-            inSync = (np.argwhere(slave.sync > 0)[0])[0]
-            slave = slave.cut_dataset(inSync, len(slave.counter))
+        start_idx = [d.info.sync_index_start for d in s.slaves]
+        stop_idx = [d.info.sync_index_stop for d in s.slaves]
+        if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
+            raise ValueError('The provided datasets do not have a overlapping regions where all a synced!')
 
-            # cut away all sample at the beginning until both data streams are synchronized (MASTER)
-            inSync = (np.argwhere(master.counter >= slave.counter[0])[0])[0]
-            master = master.cut_dataset(inSync, len(master.counter))
-
-            # cut both streams to the same lenght
-            if len(master.counter) >= len(slave.counter):
-                length = len(slave.counter) - 1
-            else:
-                length = len(master.counter) - 1
-
-            slave = slave.cut_dataset(0, length)
-            master = master.cut_dataset(0, length)
-
-            if self.rightFoot.header.syncRole == 'master':
-                self.rightFoot = master
-                self.leftFoot = slave
-            else:
-                self.rightFoot = slave
-                self.leftFoot = master
-            # check if synchronization is valid
-            # test synchronization
-            deltaCounter = abs(self.leftFoot.counter - self.rightFoot.counter)
-            sumDelta = np.sum(deltaCounter)
-            if sumDelta != 0.0:
-                print("ATTENTION: Error in synchronization. Check Data!")
-        except Exception as e:
-            print(e)
-            print("synchronization failed with ERROR")
+        s.datasets = s.datasets.cut(np.max(start_idx), np.min(stop_idx))
+        return s

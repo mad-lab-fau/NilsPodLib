@@ -37,6 +37,7 @@ class Dataset:
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
     # TODO: Docu all the things
+    # TODO: make baseclass for cascading methods
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
@@ -162,12 +163,20 @@ class Dataset:
 
     def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> 'Dataset':
+        # TODO: should cut change the start and end date of recording in the header?
         s = inplace_or_copy(self, inplace)
 
         for key, val in s._DATASTREAMS:
             setattr(s, key, val.cut(start, stop, step))
         s.counter = s.counter[start:stop:step]
         return s
+
+    def cut_to_syncregion(self, inplace=False) -> 'Dataset':
+        if self.info.is_synchronised is False:
+            raise ValueError('Only syncronised Datasets can be cut to the syncregion')
+        if self.info.sync_role == 'master':
+            return inplace_or_copy(self, inplace)
+        return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
 
     def interpolate_dataset(self, dataset, inplace=False):
         raise NotImplementedError('This is currently not working')
