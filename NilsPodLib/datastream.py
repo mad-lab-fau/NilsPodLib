@@ -7,15 +7,35 @@ Created on Thu Sep 28 11:32:22 2017
 """
 import copy
 import warnings
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable, List, TypeVar
 
 import numpy as np
 import pandas as pd
 from scipy import signal
 from scipy.signal import decimate
 
+from NilsPodLib.utils import inplace_or_copy
 
-class Datastream:
+T = TypeVar('T')
+
+
+class CascadingDatastreamInterface:
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        return self._cascading_datastream_method_called('cut', start, stop, step)
+
+    def downsample(self: T, factor, inplace=False) -> T:
+        return self._cascading_datastream_method_called('downsample', factor, inplace)
+
+    def data_as_df(self) -> pd.DataFrame:
+        return self._cascading_datastream_method_called('data_as_df')
+
+    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
+        raise NotImplementedError('Implement either the method itself or _cascading_datastream_method_called to handle'
+                                  'all method calls.')
+
+
+class Datastream(CascadingDatastreamInterface):
     data: np.ndarray
     sampling_rate_hz: float
     columns: List
@@ -54,15 +74,16 @@ class Datastream:
         ds.data /= ds.data.max(axis=0)
         return ds
 
-    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None) -> 'Datastream':
-        ds = copy.deepcopy(self)
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        s = inplace_or_copy(self, inplace)
         sl = slice(start, stop, step)
-        ds.data = ds.data[sl]
-        return ds
+        s.data = s.data[sl]
+        return s
 
-    def downsample(self, factor: int) -> 'Datastream':
-        """Downsample all datastreams by a factor using a iir filter."""
-        s = copy.deepcopy(self)
+    def downsample(self: T, factor, inplace=False) -> T:
+        """Downsample the datastreams by a factor using a iir filter."""
+        s = inplace_or_copy(self, inplace)
         s.data = decimate(s.data, factor, axis=0)
         s.sampling_rate_hz /= factor
         return s

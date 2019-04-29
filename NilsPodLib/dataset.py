@@ -7,15 +7,17 @@
 import struct
 from itertools import chain
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, Any, Callable, T
+from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar
 
 import numpy as np
 import pandas as pd
-from NilsPodLib.datastream import Datastream
+from NilsPodLib.datastream import Datastream, CascadingDatastreamInterface
 from NilsPodLib.header import Header
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
+
+T = TypeVar('T')
 
 
 class CascadingDatasetInterface:
@@ -32,7 +34,9 @@ class CascadingDatasetInterface:
     info: Header
 
     size: int
-    DATASTREAMS: Iterable[Datastream]
+    datastreams: Iterable[Datastream]
+
+    ACTIVE_SENSORS: Tuple[str]
 
     def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
@@ -60,19 +64,6 @@ class CascadingDatasetInterface:
 
     def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
         raise NotImplementedError('Implement either the method itself or _cascading_dataset_method_called to handle'
-                                  'all method calls.')
-
-
-class CascadingDatastreamInterface:
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
-        return self._cascading_datastream_method_called('cut', start, stop, step)
-
-    def data_as_df(self) -> pd.DataFrame:
-        return self._cascading_datastream_method_called('data_as_df')
-
-    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
-        raise NotImplementedError('Implement either the method itself or _cascading_datastream_method_called to handle'
                                   'all method calls.')
 
 
@@ -113,7 +104,7 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
         return len(self.counter)
 
     @property
-    def _DATASTREAMS(self) -> Iterable[Datastream]:
+    def _datastreams(self) -> Iterable[Datastream]:
         """Iterate through all available datastreams."""
         for i in self.ACTIVE_SENSORS:
             yield i, getattr(self, i)
@@ -197,13 +188,13 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
             return False
 
     @property
-    def ACTIVE_SENSORS(self):
+    def ACTIVE_SENSORS(self) -> Tuple[str]:
         return tuple(self.info.enabled_sensors)
 
     def downsample(self: T, factor, inplace=False) -> T:
         """Downsample all datastreams by a factor."""
         s = inplace_or_copy(self, inplace)
-        for key, val in s._DATASTREAMS:
+        for key, val in s._datastreams:
             setattr(s, key, val.downsample(factor))
         return s
 
@@ -212,14 +203,14 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
         # TODO: should cut change the start and end date of recording in the header?
         s = inplace_or_copy(self, inplace)
 
-        for key, val in s._DATASTREAMS:
+        for key, val in s._datastreams:
             setattr(s, key, val.cut(start, stop, step))
         s.counter = s.counter[start:stop:step]
         return s
 
     def cut_to_syncregion(self: T, inplace=False) -> T:
         if self.info.is_synchronised is False:
-            raise ValueError('Only syncronised Datasets can be cut to the syncregion')
+            raise ValueError('Only synchronised Datasets can be cut to the syncregion')
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
         return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
@@ -260,14 +251,14 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
         # return dataset_master_simple
 
     def data_as_df(self) -> pd.DataFrame:
-        dfs = [s.data_as_df() for _, s in self._DATASTREAMS]
+        dfs = [s.data_as_df() for _, s in self._datastreams]
         return pd.concat(dfs, axis=1)
 
     def data_as_csv(self, path: path_t) -> None:
         self.data_as_df().to_csv(path, index=False)
 
     def imu_data_as_df(self) -> pd.DataFrame:
-        #TODO: Handle cases were one of the two sensors is not active
+        # TODO: Handle cases were one of the two sensors is not active
         acc_df = self.acc.data_as_df()
         gyro_df = self.gyro.data_as_df()
         return pd.concat([acc_df, gyro_df], axis=1)
