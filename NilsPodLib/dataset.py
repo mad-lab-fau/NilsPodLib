@@ -26,7 +26,6 @@ class Dataset(CascadingDatasetInterface):
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
     # TODO: Docu all the things
-    # TODO: make baseclass for cascading methods
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
@@ -162,41 +161,6 @@ class Dataset(CascadingDatasetInterface):
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
         return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
-
-    def interpolate_dataset(self: T, dataset, inplace=False) -> T:
-        raise NotImplementedError('This is currently not working')
-        # Todo: fix
-        # counterTmp = np.copy(dataset_master_simple.counter)
-        # accTmp = np.copy(dataset_master_simple.acc.data)
-        # gyroTmp = np.copy(dataset_master_simple.gyro.data)
-        # baroTmp = np.copy(dataset_master_simple.baro.data)
-        # pressureTmp = np.copy(dataset_master_simple.pressure.data)
-        # batteryTmp = np.copy(dataset_master_simple.battery.data)
-        #
-        # c = 0
-        #
-        # for i in range(1, len(counterTmp)):
-        #     delta = counterTmp[i] - counterTmp[i - 1]
-        #     if 1 < delta < 30000:
-        #         c = c + 1
-        #         counterTmp = self.interpolate_1D(counterTmp, i - 1, delta - 1)
-        #         baroTmp = self.interpolate_1D(baroTmp, i - 1, delta - 1)
-        #         batteryTmp = self.interpolate_1D(batteryTmp, i - 1, delta - 1)
-        #         accTmp = self.interpolate_3d(accTmp, i - 1, delta - 1)
-        #         gyroTmp = self.interpolate_3d(gyroTmp, i - 1, delta - 1)
-        #         pressureTmp = self.interpolate_3d(pressureTmp, i - 1, delta - 1)
-        #
-        # if c > 0:
-        #     warnings.warn(
-        #         "ATTENTION: Dataset was interpolated due to synchronization Error! {} Samples were added!".format(
-        #             str(c)))
-        #
-        # dataset_master_simple.counter = counterTmp
-        # dataset_master_simple.gyro.data = gyroTmp
-        # dataset_master_simple.pressure.data = pressureTmp
-        # dataset_master_simple.baro.data = baroTmp
-        # dataset_master_simple.battery.data = batteryTmp
-        # return dataset_master_simple
 
     def data_as_df(self) -> pd.DataFrame:
         dfs = [s.data_as_df() for _, s in self._datastreams]
