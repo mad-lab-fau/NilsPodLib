@@ -86,30 +86,7 @@ class SyncedSession(Session):
     def slaves(self) -> Tuple[Dataset]:
         return tuple(d for d in self.datasets if d.info.sync_role == 'slaves')
 
-    def synchronizeFallback(self):
-        # TODO: What does this do?
-        # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
-        inSync = (np.argwhere(self.leftFoot.sync > 0)[0])[0]
-        self.leftFoot = self.leftFoot.cut_dataset(inSync, len(self.leftFoot.counter))
-
-        # cut away all sample at the beginning until both data streams are synchronized (MASTER)
-        inSync = (np.argwhere(self.rightFoot.counter >= self.leftFoot.counter[0])[0])[0]
-        self.rightFoot = self.rightFoot.cut_dataset(inSync, len(self.rightFoot.counter))
-
-        # cut both streams to the same lenght
-        if len(self.rightFoot.counter) >= len(self.leftFoot.counter):
-            length = len(self.leftFoot.counter) - 1
-        else:
-            length = len(self.rightFoot.counter) - 1
-
-        self.leftFoot = self.leftFoot.cut_dataset(0, length)
-        self.rightFoot = self.rightFoot.cut_dataset(0, length)
-
     def synchronize(self):
-        if self.leftFoot.header.syncRole == 'disabled' or self.rightFoot.header.syncRole == 'disabled':
-            print("No Header information found using fallback sync")
-            self.synchronizeFallback()
-            return
         try:
             if self.leftFoot.header.syncRole == self.rightFoot.header.syncRole:
                 print("ERROR: no master/slave pair found - synchronization FAILED")
