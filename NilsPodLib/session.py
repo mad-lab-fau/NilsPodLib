@@ -4,12 +4,13 @@
 @author: Nils Roth, Arne Küderle
 """
 
-from typing import Iterable, Tuple, TypeVar, Type
+from typing import Iterable, Tuple, TypeVar, Type,  Any
 
 import numpy as np
 from pathlib import Path
 
-from NilsPodLib.dataset import Dataset, ProxyDataset
+from NilsPodLib.dataset import Dataset, CascadingDatasetInterface
+from NilsPodLib.datastream import CascadingDatastreamInterface
 from NilsPodLib.header import ProxyHeader
 
 
@@ -20,20 +21,18 @@ from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 T = TypeVar('T', bound='Session')
 
+# def identify_sessions(folder_path: path_t, filter_pattern: str = '*') -> Sequence[Sequence[path_t]]:
+#     files = Path(folder_path).glob(filter_pattern)
+#     props = dict()
+#     for f in files:
+#         props[f] =
 
-class Session:
-    datasets: ProxyDataset
+
+class Session(CascadingDatasetInterface, CascadingDatastreamInterface):
+    datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Iterable[Dataset]):
-        self.datasets = ProxyDataset(tuple(datasets))
-
-    @property
-    def info(self) -> ProxyHeader:
-        return ProxyHeader(headers=tuple(self.datasets.info))
-
-    def calibrate_imu(self, inplace: bool = False):
-        self.leftFoot.calibrate()
-        self.rightFoot.calibrate()
+        self.datasets = tuple(datasets)
 
     @classmethod
     def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
@@ -43,6 +42,28 @@ class Session:
     @classmethod
     def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*') -> T:
         return cls.from_file_paths(Path(base_path).glob(filter_pattern))
+
+    def calibrate_imu(self, inplace: bool = False):
+        self.leftFoot.calibrate()
+        self.rightFoot.calibrate()
+
+    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
+        return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self.datasets)
+        if all(isinstance(d, Dataset) for d in return_vals):
+            inplace = kwargs.get('inplace', False)
+            s = inplace_or_copy(self, inplace)
+            s.datasets = return_vals
+            return s
+        return return_vals
+
+    def _cascading_datastream_method_called(self, name: str, *args, **kwargs) -> Any:
+        return self._cascading_dataset_method_called(name, *args, **kwargs)
+
+    def _cascading_dataset_attribute_access(self, name: str) -> Any:
+        return_val = tuple([getattr(d, name) for d in self.datasets])
+        if name == 'info':
+            return ProxyHeader(return_val)
+        return return_val
 
 
 class SyncedSession(Session):

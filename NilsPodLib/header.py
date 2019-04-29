@@ -10,7 +10,7 @@ import json
 import struct
 import warnings
 from itertools import chain
-from typing import Tuple, Any
+from typing import Tuple, Any, List
 
 import numpy as np
 
@@ -124,12 +124,6 @@ class Header:
         6: 'chest'
     }
 
-    _header_fields = ['enabled_sensors', 'motion_interrupt_enabled', 'dock_mode_enabled', 'sensor_position',
-                      'session_termination', 'sample_size', 'sampling_rate_hz', 'acc_range_g', 'gyro_range_dps',
-                      'sync_role', 'sync_distance_ms', 'sync_group', 'sync_address', 'sync_channel', 'sync_index_start',
-                      'sync_index_stop', 'utc_start', 'utc_stop', 'version_firmware', 'version_hardware', 'mac_address',
-                      'custom_meta_data', 'num_samples']
-
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if k in self._header_fields:
@@ -137,6 +131,10 @@ class Header:
             else:
                 # Should this be a error?
                 warnings.warn('Unexpected Argument {} for Header'.format(k))
+
+    @property
+    def _header_fields(self) -> List[str]:
+        return list(self.__class__.__annotations__.keys())
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray) -> 'Header':

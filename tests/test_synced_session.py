@@ -11,8 +11,7 @@ def basic_synced_session(dataset_master_simple, dataset_slave_simple):
 
 def test_basic_init(dataset_master_simple, dataset_slave_simple):
     session = SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert session.datasets._datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert isinstance(session.datasets, ProxyDataset)
+    assert session.datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
 
 # TODO: Tests for different error cases
 

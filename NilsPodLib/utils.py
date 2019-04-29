@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Union
+from typing import TypeVar, Union, Type
 
 import numpy as np
 from pathlib import Path
@@ -76,4 +76,11 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
         raise ValueError('The start values need to be smaller then their respective end values!')
     return np.max(start_vals) < np.min(end_vals)
 
+
+class AnnotFieldMeta(type):
+    def __new__(mcs, name, bases, attrs):
+        cls = super().__new__(mcs, name, bases, attrs)
+        if not bases:
+            setattr(cls, '_' + name + '_fields', list(cls.__annotations__.keys()))
+        return cls
 

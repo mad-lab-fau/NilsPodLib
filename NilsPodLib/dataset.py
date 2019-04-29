@@ -4,8 +4,6 @@
 @author: Nils Roth, Arne Küderle
 """
 
-import struct
-from itertools import chain
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar, Type
 
@@ -14,13 +12,14 @@ import pandas as pd
 from NilsPodLib.datastream import Datastream, CascadingDatastreamInterface
 from NilsPodLib.header import Header, parse_header
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
+    AnnotFieldMeta
 from imucal import CalibrationInfo
 
 T = TypeVar('T', bound='CascadingDatasetInterface')
 
 
-class CascadingDatasetInterface:
+class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     path: path_t
     acc: Optional[Datastream] = None
     gyro: Optional[Datastream] = None
@@ -62,9 +61,22 @@ class CascadingDatasetInterface:
     def cut_to_syncregion(self: T, inplace=False) -> T:
         return self._cascading_dataset_method_called('cut_to_syncregion', inplace)
 
-    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
+    def __getattribute__(self, name: str) -> Any:
+        if name != '_CascadingDatasetInterface_fields' \
+                and name in self._CascadingDatasetInterface_fields:
+            try:
+                return self._cascading_dataset_attribute_access(name)
+            except NotImplementedError:
+                return super().__getattribute__(name)
+        else:
+            return super().__getattribute__(name)
+
+    def _cascading_dataset_method_called(self, name: str, *args, **kwargs) -> Any:
         raise NotImplementedError('Implement either the method itself or _cascading_dataset_method_called to handle'
                                   'all method calls.')
+
+    def _cascading_dataset_attribute_access(self, name: str) -> Any:
+        raise NotImplementedError('Implement either the method itself to handle all attribute access.')
 
 
 class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
@@ -265,44 +277,6 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
 
     def imu_data_as_csv(self, path: path_t) -> None:
         self.imu_data_as_df().to_csv(path, index=False)
-
-
-class ProxyDataset(CascadingDatasetInterface, CascadingDatastreamInterface):
-    _datasets: Tuple[Dataset]
-
-    def __init__(self, datasets: Tuple[Dataset]):
-        self._datasets = datasets
-
-    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
-        return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self._datasets)
-        if all(isinstance(d, Dataset) for d in return_vals):
-            return ProxyDataset(return_vals)
-        return return_vals
-
-    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
-        return self._cascading_dataset_method_called(name, *args, **kwargs)
-
-    def __getattribute__(self, name: str) -> Any:
-        if name == '_datasets':
-            return super().__getattribute__(name)
-        attr_list = tuple([getattr(d, name) for d in self._datasets])
-        if callable(getattr(self._datasets[0], name)) is True:
-            return super().__getattribute__(name)
-        return attr_list
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == '_datasets':
-            return super().__setattr__(name, value)
-        raise NotImplementedError('ProxyDataset only allows readonly access to attributes of a dataset')
-
-    def __dir__(self):
-        return chain(super().__dir__(), self._datasets[0].__dir__())
-
-    def __iter__(self) -> Iterable[Dataset]:
-        return self._datasets.__iter__()
-
-    def __getitem__(self, item: int) -> Dataset:
-        return self._datasets[item]
 
 
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
