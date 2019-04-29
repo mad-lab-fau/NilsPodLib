@@ -15,7 +15,7 @@ from scipy.signal import decimate
 
 from NilsPodLib.utils import inplace_or_copy
 
-T = TypeVar('T')
+T = TypeVar('T', bound='CascadingDatastreamInterface')
 
 
 class CascadingDatastreamInterface:

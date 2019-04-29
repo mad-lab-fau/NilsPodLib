@@ -7,7 +7,7 @@
 import struct
 from itertools import chain
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar
+from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar, Type
 
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endi
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
 
-T = TypeVar('T')
+T = TypeVar('T', bound='CascadingDatasetInterface')
 
 
 class CascadingDatasetInterface:
@@ -84,7 +84,7 @@ class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
             setattr(self, k, v)
 
     @classmethod
-    def from_bin_file(cls: T, path: path_t) -> T:
+    def from_bin_file(cls: Type[T], path: path_t) -> T:
         path = Path(path)
         if not path.suffix == '.bin':
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
