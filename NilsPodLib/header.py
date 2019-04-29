@@ -7,13 +7,14 @@ Created on Thu Sep 28 11:32:22 2017
 
 import datetime
 import json
+import struct
 import warnings
 from itertools import chain
 from typing import Tuple, Any
 
 import numpy as np
 
-from NilsPodLib.utils import convert_little_endian
+from NilsPodLib.utils import convert_little_endian, path_t
 
 
 # TODO: Put all Metainfos about the sensors into one object
@@ -269,4 +270,16 @@ class ProxyHeader:
 
     def __dir__(self):
         return chain(super().__dir__(), self._headers[0].__dir__())
+
+
+def parse_header(path: path_t) -> Tuple[Header, int]:
+    with open(path, 'rb') as f:
+        data = f.read(1)
+        header_size = data[0]
+        data += f.read(header_size - 1)
+
+    data = bytearray(data)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
+    session_header = Header.from_bin_array(header_bytes[1:header_size])
+    return session_header, header_size
 

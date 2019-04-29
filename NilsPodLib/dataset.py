@@ -12,7 +12,7 @@ from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar, Type
 import numpy as np
 import pandas as pd
 from NilsPodLib.datastream import Datastream, CascadingDatastreamInterface
-from NilsPodLib.header import Header
+from NilsPodLib.header import Header, parse_header
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
@@ -308,15 +308,8 @@ class ProxyDataset(CascadingDatasetInterface, CascadingDatastreamInterface):
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                                         np.ndarray,
                                         Header]:
-    with open(path, 'rb') as f:
-        # TODO: Don't read the full file here, but only the header to improve performance
-        data = f.read()
 
-    header_size = data[0]
-
-    data = bytearray(data)
-    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
-    session_header = Header.from_bin_array(header_bytes[1:header_size])
+    session_header, header_size = parse_header(path)
 
     sample_size = session_header.sample_size
 
