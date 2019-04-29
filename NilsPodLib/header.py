@@ -14,11 +14,10 @@ from typing import Tuple, Any, List
 
 import numpy as np
 
-from NilsPodLib.interfaces import AnnotFieldMeta
 from NilsPodLib.utils import convert_little_endian, path_t
 
 
-class HeaderFields(metaclass=AnnotFieldMeta):
+class HeaderFields:
     enabled_sensors: tuple
 
     motion_interrupt_enabled: bool

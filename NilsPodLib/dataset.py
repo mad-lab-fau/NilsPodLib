@@ -98,20 +98,16 @@ class Dataset(CascadingDatasetInterface):
         return s
 
     def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
-        # Todo: Use correct static calibration values according to sensor range
-        #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
-            s.gyro.data /= 16.4
+            s.gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
             s.gyro.is_calibrated = True
         return s
 
     def factory_calibrate_acc(self: T, inplace: bool = False) -> T:
-        # Todo: Use correct static calibration values according to sensor range
-        #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
-            s.acc.data /= 2048.0
+            s.acc.data /= 2 ** 16 / self.info.acc_range_g / 2
             s.acc.is_calibrated = True
         return s
 

@@ -5,14 +5,14 @@ import numpy as np
 from NilsPodLib.utils import RepeatedCalibrationError
 
 calibrate_sensors = [('acc', 1. / 2048),
-                     ('gyro', 1. / 16.4),
+                     ('gyro', 1. / 16.384),
                      ('baro', 1013.26),
                      ('battery', 2. / 100)]
 
 
 @pytest.fixture()
 def simple_header():
-    return Header(sampling_rate_hz=102.4)
+    return Header(sampling_rate_hz=102.4, acc_range_g=16, gyro_range_dps=2000)
 
 
 @pytest.mark.parametrize('sensor,calval', calibrate_sensors)
@@ -79,7 +79,7 @@ def test_imu_factory_cal(simple_header):
     cal_ds = dataset.factory_calibrate_imu()
 
     assert np.all(cal_ds.acc.data == 1. / 2048)
-    assert np.all(cal_ds.gyro.data == 2. / 16.4)
+    assert np.all(cal_ds.gyro.data == 2. / 16.384)
     assert cal_ds.acc.is_calibrated is True
     assert cal_ds.acc.is_calibrated is True
 

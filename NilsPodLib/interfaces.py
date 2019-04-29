@@ -3,13 +3,13 @@ from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from imucal import CalibrationInfo
+from NilsPodLib.header import Header
 
 from NilsPodLib.utils import path_t
 
 T = TypeVar('T')
 
 if TYPE_CHECKING:
-    from NilsPodLib.header import Header
     from NilsPodLib.datastream import Datastream
 
 
@@ -33,7 +33,7 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     ppg: Optional['Datastream'] = None
     battery: Optional['Datastream'] = None
     counter: np.ndarray
-    info: 'Header'
+    info: Header
 
     size: int
     datastreams: Iterable['Datastream']
