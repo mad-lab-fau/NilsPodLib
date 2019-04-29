@@ -77,7 +77,7 @@ class SyncedSession(Session):
         """Check that there is only 1 master and all other sensors were configured as slaves."""
         roles = self.info.sync_role
         master_valid = len([i for i in roles if i == 'master']) == 1
-        slaves_valid = len([i for i in roles if i == 'slaves']) == len(roles) - 1
+        slaves_valid = len([i for i in roles if i == 'slave']) == len(roles) - 1
         return master_valid, slaves_valid
 
     def _validate_sampling_rate(self) -> bool:
