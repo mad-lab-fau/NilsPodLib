@@ -64,6 +64,16 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def cut_to_syncregion(self: T, inplace=False) -> T:
         return self._cascading_dataset_method_called('cut_to_syncregion', inplace)
 
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('cut', start, stop, step)
+
+    def downsample(self: T, factor: int, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('downsample', factor, inplace)
+
+    def data_as_df(self) -> pd.DataFrame:
+        return self._cascading_dataset_method_called('data_as_df')
+
     def __getattribute__(self, name: str) -> Any:
         if name != '_CascadingDatasetInterface_fields' \
                 and name in self._CascadingDatasetInterface_fields:
@@ -82,17 +92,3 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
         raise NotImplementedError('Implement either the method itself to handle all attribute access.')
 
 
-class CascadingDatastreamInterface:
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
-        return self._cascading_datastream_method_called('cut', start, stop, step)
-
-    def downsample(self: T, factor: int, inplace: bool = False) -> T:
-        return self._cascading_datastream_method_called('downsample', factor, inplace)
-
-    def data_as_df(self) -> pd.DataFrame:
-        return self._cascading_datastream_method_called('data_as_df')
-
-    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
-        raise NotImplementedError('Implement either the method itself or _cascading_datastream_method_called to handle'
-                                  'all method calls.')

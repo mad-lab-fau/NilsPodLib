@@ -11,15 +11,15 @@ import numpy as np
 import pandas as pd
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header, parse_header
-from NilsPodLib.interfaces import CascadingDatasetInterface, CascadingDatastreamInterface
+from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
 
-T = TypeVar('T', bound='CascadingDatasetInterface')
+T = TypeVar('T')
 
 
-class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
+class Dataset(CascadingDatasetInterface):
     # TODO: Spalte mit Unix timestamp
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter

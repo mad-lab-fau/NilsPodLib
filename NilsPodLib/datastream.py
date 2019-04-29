@@ -13,12 +13,12 @@ import pandas as pd
 from scipy import signal
 from scipy.signal import decimate
 
-from NilsPodLib.interfaces import CascadingDatastreamInterface
 from NilsPodLib.utils import inplace_or_copy
 
 T = TypeVar('T')
 
-class Datastream(CascadingDatastreamInterface):
+
+class Datastream:
     data: np.ndarray
     sampling_rate_hz: float
     columns: List

@@ -10,7 +10,7 @@ import numpy as np
 from pathlib import Path
 
 from NilsPodLib.dataset import Dataset
-from NilsPodLib.interfaces import CascadingDatasetInterface, CascadingDatastreamInterface
+from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.header import ProxyHeader
 
 
@@ -28,7 +28,7 @@ T = TypeVar('T', bound='Session')
 #         props[f] =
 
 
-class Session(CascadingDatasetInterface, CascadingDatastreamInterface):
+class Session(CascadingDatasetInterface):
     datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Iterable[Dataset]):
@@ -55,9 +55,6 @@ class Session(CascadingDatasetInterface, CascadingDatastreamInterface):
             s.datasets = return_vals
             return s
         return return_vals
-
-    def _cascading_datastream_method_called(self, name: str, *args, **kwargs) -> Any:
-        return self._cascading_dataset_method_called(name, *args, **kwargs)
 
     def _cascading_dataset_attribute_access(self, name: str) -> Any:
         return_val = tuple([getattr(d, name) for d in self.datasets])
