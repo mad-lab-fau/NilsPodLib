@@ -13,26 +13,10 @@ import pandas as pd
 from scipy import signal
 from scipy.signal import decimate
 
+from NilsPodLib.interfaces import CascadingDatastreamInterface
 from NilsPodLib.utils import inplace_or_copy
 
-T = TypeVar('T', bound='CascadingDatastreamInterface')
-
-
-class CascadingDatastreamInterface:
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
-        return self._cascading_datastream_method_called('cut', start, stop, step)
-
-    def downsample(self: T, factor: int, inplace: bool = False) -> T:
-        return self._cascading_datastream_method_called('downsample', factor, inplace)
-
-    def data_as_df(self) -> pd.DataFrame:
-        return self._cascading_datastream_method_called('data_as_df')
-
-    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
-        raise NotImplementedError('Implement either the method itself or _cascading_datastream_method_called to handle'
-                                  'all method calls.')
-
+T = TypeVar('T')
 
 class Datastream(CascadingDatastreamInterface):
     data: np.ndarray

@@ -9,8 +9,8 @@ from typing import Iterable, Tuple, TypeVar, Type,  Any
 import numpy as np
 from pathlib import Path
 
-from NilsPodLib.dataset import Dataset, CascadingDatasetInterface
-from NilsPodLib.datastream import CascadingDatastreamInterface
+from NilsPodLib.dataset import Dataset
+from NilsPodLib.interfaces import CascadingDatasetInterface, CascadingDatastreamInterface
 from NilsPodLib.header import ProxyHeader
 
 

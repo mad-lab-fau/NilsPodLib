@@ -5,78 +5,18 @@
 """
 
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, Any, TypeVar, Type
+from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type
 
 import numpy as np
 import pandas as pd
-from NilsPodLib.datastream import Datastream, CascadingDatastreamInterface
+from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header, parse_header
+from NilsPodLib.interfaces import CascadingDatasetInterface, CascadingDatastreamInterface
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
-    AnnotFieldMeta
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
 from imucal import CalibrationInfo
 
 T = TypeVar('T', bound='CascadingDatasetInterface')
-
-
-class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
-    path: path_t
-    acc: Optional[Datastream] = None
-    gyro: Optional[Datastream] = None
-    mag: Optional[Datastream] = None
-    baro: Optional[Datastream] = None
-    analog: Optional[Datastream] = None
-    ecg: Optional[Datastream] = None
-    ppg: Optional[Datastream] = None
-    battery: Optional[Datastream] = None
-    counter: np.ndarray
-    info: Header
-
-    size: int
-    datastreams: Iterable[Datastream]
-
-    ACTIVE_SENSORS: Tuple[str]
-
-    def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
-
-    def calibrate_acc(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
-
-    def calibrate_gyro(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('calibrate_gyro', calibration, inplace)
-
-    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('factory_calibrate_imu', inplace)
-
-    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('factory_calibrate_gyro', inplace)
-
-    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('factory_calibrate_baro', inplace)
-
-    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('factory_calibrate_battery', inplace)
-
-    def cut_to_syncregion(self: T, inplace=False) -> T:
-        return self._cascading_dataset_method_called('cut_to_syncregion', inplace)
-
-    def __getattribute__(self, name: str) -> Any:
-        if name != '_CascadingDatasetInterface_fields' \
-                and name in self._CascadingDatasetInterface_fields:
-            try:
-                return self._cascading_dataset_attribute_access(name)
-            except NotImplementedError:
-                return super().__getattribute__(name)
-        else:
-            return super().__getattribute__(name)
-
-    def _cascading_dataset_method_called(self, name: str, *args, **kwargs) -> Any:
-        raise NotImplementedError('Implement either the method itself or _cascading_dataset_method_called to handle'
-                                  'all method calls.')
-
-    def _cascading_dataset_attribute_access(self, name: str) -> Any:
-        raise NotImplementedError('Implement either the method itself to handle all attribute access.')
 
 
 class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):

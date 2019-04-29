@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from NilsPodLib.dataset import ProxyDataset
 from NilsPodLib.session import Session
 
 

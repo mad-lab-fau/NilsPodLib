@@ -1,6 +1,5 @@
 import pytest
 
-from NilsPodLib.dataset import ProxyDataset
 from NilsPodLib.session import SyncedSession
 
 
