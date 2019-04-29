@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Session groups multiple Datasets from sensors recorded at the same time
-Created on Thu Sep 28 11:32:22 2017
 
 @author: Nils Roth, Arne Küderle
 """
@@ -29,7 +28,7 @@ class Session:
     def info(self) -> ProxyHeader:
         return ProxyHeader(headers=tuple(self.datasets.info))
 
-    def calibrate(self):
+    def calibrate(self, inplace: bool = False):
         self.leftFoot.calibrate()
         self.rightFoot.calibrate()
 
@@ -101,13 +100,14 @@ class SyncedSession(Session):
     def slaves(self) -> Tuple[Dataset]:
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
-    def synchronize(self, only_to_master: bool = False, inplace=False):
-        """Cut all datasets to the regions where they were syncronised to the master.
+    def cut_to_syncregion(self, only_to_master: bool = False, inplace: bool = False) -> 'Session':
+        """Cut all datasets to the regions where they were synchronised to the master.
 
         Args:
             only_to_master: If True each slave will be cut to the region, where it was synchronised with the master.
                 Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
                 in sync
+            inplace: If operation should be performed on the current Session object, or on a copy
         """
         # TODO: Replace all counter arrays with the master counter (is this required?)
         # cut all individual sensors
