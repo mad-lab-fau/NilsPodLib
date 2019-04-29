@@ -5,7 +5,6 @@ Created on Thu Sep 28 11:32:22 2017
 @author: Nils Roth, Arne Küderle
 """
 
-import copy
 from typing import Iterable, Tuple
 
 import numpy as np
@@ -100,7 +99,7 @@ class SyncedSession(Session):
 
     @property
     def slaves(self) -> Tuple[Dataset]:
-        return tuple(d for d in self.datasets if d.info.sync_role == 'slaves')
+        return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
     def synchronize(self, only_to_master: bool = False, inplace=False):
         """Cut all datasets to the regions where they were syncronised to the master.
