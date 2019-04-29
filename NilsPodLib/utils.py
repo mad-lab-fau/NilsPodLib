@@ -72,14 +72,8 @@ def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> Cali
 
 
 def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> bool:
-    # Note: There might be obscure constellations were this all fails :D
     if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError('The start values need to be smaller then their respective end values!')
-    valid = True
-    # Check if the latest start is before all stops
-    valid &= np.all(np.array(end_vals) > np.max(start_vals))
-    # Check if the first stop is later than all starts
-    valid &= np.all(np.array(start_vals) < np.min(end_vals))
-    return valid
+    return np.max(start_vals) < np.min(end_vals)
 
 
