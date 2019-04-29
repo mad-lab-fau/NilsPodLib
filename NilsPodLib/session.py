@@ -54,6 +54,9 @@ class SyncedSession(Session):
 
     def __init__(self, datasets: Iterable[Dataset]):
         super().__init__(datasets)
+        self.validate()
+
+    def validate(self) -> None:
         if not self._validate_sync_groups():
             raise ValueError('The provided datasets are not part of the same sync_group')
         master_valid, slaves_valid = self._validate_sync_role()
