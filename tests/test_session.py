@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
+from pathlib import Path
 
 from NilsPodLib.dataset import ProxyDataset
 from NilsPodLib.session import Session
@@ -14,6 +15,22 @@ def basic_session(dataset_master_simple, dataset_slave_simple):
 def test_basic_init(dataset_master_simple, dataset_slave_simple):
     session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
     assert session.datasets._datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
+    assert isinstance(session.datasets, ProxyDataset)
+
+
+def test_init_from_file_paths(dataset_master_simple, dataset_slave_simple):
+    session = Session.from_file_paths([dataset_master_simple[1], dataset_slave_simple[1]])
+    assert dataset_master_simple[0].info.sensor_id in session.info.sensor_id
+    assert dataset_slave_simple[0].info.sensor_id in session.info.sensor_id
+    assert len(session.datasets._datasets) == 2
+    assert isinstance(session.datasets, ProxyDataset)
+
+
+def test_init_from_folder(dataset_master_simple, dataset_slave_simple):
+    session = Session.from_folder_path(Path(dataset_master_simple[0].path).parent)
+    assert dataset_master_simple[0].info.sensor_id in session.info.sensor_id
+    assert dataset_slave_simple[0].info.sensor_id in session.info.sensor_id
+    assert len(session.datasets._datasets) == 2
     assert isinstance(session.datasets, ProxyDataset)
 
 

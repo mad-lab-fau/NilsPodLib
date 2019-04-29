@@ -4,18 +4,21 @@
 @author: Nils Roth, Arne Küderle
 """
 
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, TypeVar, Type
 
 import numpy as np
+from pathlib import Path
 
 from NilsPodLib.dataset import Dataset, ProxyDataset
-from NilsPodLib.header import Header, ProxyHeader
+from NilsPodLib.header import ProxyHeader
 
 
 # TODO: Concept of inplace for sessions
 # TODO: Calibration for multiple sensors
 # TODO: Helper to create from folder/multiple names
-from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
+
+T = TypeVar('T', bound='Session')
 
 
 class Session:
@@ -33,19 +36,13 @@ class Session:
         self.rightFoot.calibrate()
 
     @classmethod
-    def from_filePaths(cls, leftFootPath, rightFootPath):
-        leftFoot = Dataset(leftFootPath, Header, freeRTOS)
-        rightFoot = Dataset(rightFootPath, Header, freeRTOS)
-        session = cls(leftFoot, rightFoot)
-        return session
+    def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
+        ds = (Dataset.from_bin_file(p) for p in paths)
+        return cls(ds)
 
     @classmethod
-    def from_folderPath(cls, folderPath):
-        [leftFootPath, rightFootPath] = getFilesNamesPerFoot(folderPath)
-        leftFoot = Dataset(leftFootPath)
-        rightFoot = Dataset(rightFootPath)
-        session = cls(leftFoot, rightFoot)
-        return session
+    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*') -> T:
+        return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
 
 class SyncedSession(Session):

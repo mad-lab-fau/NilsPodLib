@@ -1,15 +1,9 @@
 import datetime
-from pathlib import Path
 from unittest.mock import patch
 
 import numpy as np
 
-
 from NilsPodLib.datastream import Datastream
-from dateutil.tz import tzoffset
-
-HERE = Path(__file__).parent
-TEST_DATA = HERE / 'test_data'
 
 
 class MockDate(datetime.datetime):

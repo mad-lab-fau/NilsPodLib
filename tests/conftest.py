@@ -4,7 +4,7 @@ import pytest
 from NilsPodLib.dataset import Dataset
 
 HERE = Path(__file__).parent
-TEST_DATA = HERE / 'test_data'
+TEST_DATA = HERE / 'test_data/sample_session'
 
 
 @pytest.fixture()
