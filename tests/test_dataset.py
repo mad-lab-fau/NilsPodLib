@@ -44,5 +44,47 @@ def test_imu_data_as_df(dataset_master_simple):
     pd.testing.assert_frame_equal(ds.imu_data_as_df(), ds.data_as_df(datastreams=('acc', 'gyro')))
 
 
+def test_cut(dataset_master_simple):
+    ds = dataset_master_simple[0]
+    # Add fake counter and fake acc to easily check cut
+    ds.counter = np.arange(len(ds.counter))
+
+    ds_new = ds.cut(0, 100)
+    assert ds_new.counter[0] == 0.
+    assert ds_new.counter[-1] == 99.
+    assert len(ds_new.counter) == 100
+
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[0])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[99])
+    assert len(ds_new.acc.data) == 100
+
+    # inplace
+    ds_new = copy.deepcopy(ds)
+    ds_new.cut(0, 100, inplace=True)
+    assert ds_new.counter[0] == 0.
+    assert ds_new.counter[-1] == 99.
+    assert len(ds_new.counter) == 100
+
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[0])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[99])
+    assert len(ds_new.acc.data) == 100
+
+
+def test_cut_to_sync_master(dataset_master_simple):
+    ds = dataset_master_simple[0]
+    ds_new = ds.cut_to_syncregion()
+
+    assert np.array_equal(ds.counter, ds_new.counter)
+
+
+def test_cut_to_sync_slave(dataset_slave_simple):
+    ds = dataset_slave_simple[0]
+    ds_new = ds.cut_to_syncregion()
+
+    assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
+    assert ds_new.counter[-1] == ds.counter[ds.info.sync_index_stop]
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop])
+
 def test_datastreams():
     pass

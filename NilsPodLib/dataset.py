@@ -55,6 +55,10 @@ class Dataset(CascadingDatasetInterface):
         return len(self.counter)
 
     @property
+    def ACTIVE_SENSORS(self) -> Tuple[str]:
+        return tuple(self.info.enabled_sensors)
+
+    @property
     def _datastreams(self) -> Iterable[Datastream]:
         """Iterate through all available datastreams."""
         for i in self.ACTIVE_SENSORS:
@@ -134,10 +138,6 @@ class Dataset(CascadingDatasetInterface):
             datastream_does_not_exist_warning(name, 'calibration')
             return False
 
-    @property
-    def ACTIVE_SENSORS(self) -> Tuple[str]:
-        return tuple(self.info.enabled_sensors)
-
     def downsample(self: T, factor, inplace=False) -> T:
         """Downsample all datastreams by a factor."""
         s = inplace_or_copy(self, inplace)
@@ -160,7 +160,7 @@ class Dataset(CascadingDatasetInterface):
             raise ValueError('Only synchronised Datasets can be cut to the syncregion')
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
-        return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
+        return self.cut(self.info.sync_index_start, self.info.sync_index_stop + 1, inplace=inplace)
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None) -> pd.DataFrame:
         datastreams = datastreams or self.ACTIVE_SENSORS

@@ -1,6 +1,5 @@
 import pytest
 from NilsPodLib.header import Header
-import numpy as np
 
 
 def test_header_init_warning():
