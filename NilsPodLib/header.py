@@ -74,7 +74,7 @@ class Header:
         'gyro': (6, 3),
         'mag': (6, 3),
         'baro': (2, 1),
-        'analog': (3, 1),
+        'analog': (1, 3),
         'ecg': (None, None),  # Needs to be implement
         'ppg': (None, None),  # Needs to be implement
         'battery': (1, 1)
