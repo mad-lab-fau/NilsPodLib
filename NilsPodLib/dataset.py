@@ -7,7 +7,7 @@
 import struct
 from itertools import chain
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, Any, Callable
+from typing import Union, Iterable, Optional, Tuple, Dict, Any, Callable, T
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endi
 from imucal import CalibrationInfo
 
 
-class Dataset:
+class CascadingDatasetInterface:
     path: path_t
     acc: Optional[Datastream] = None
     gyro: Optional[Datastream] = None
@@ -31,6 +31,52 @@ class Dataset:
     counter: np.ndarray
     info: Header
 
+    size: int
+    DATASTREAMS: Iterable[Datastream]
+
+    def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
+
+    def calibrate_acc(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
+
+    def calibrate_gyro(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('calibrate_gyro', calibration, inplace)
+
+    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('factory_calibrate_imu', inplace)
+
+    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('factory_calibrate_gyro', inplace)
+
+    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('factory_calibrate_baro', inplace)
+
+    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('factory_calibrate_battery', inplace)
+
+    def cut_to_syncregion(self: T, inplace=False) -> T:
+        return self._cascading_dataset_method_called('cut_to_syncregion', inplace)
+
+    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
+        raise NotImplementedError('Implement either the method itself or _cascading_dataset_method_called to handle'
+                                  'all method calls.')
+
+
+class CascadingDatastreamInterface:
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        return self._cascading_datastream_method_called('cut', start, stop, step)
+
+    def data_as_df(self) -> pd.DataFrame:
+        return self._cascading_datastream_method_called('data_as_df')
+
+    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
+        raise NotImplementedError('Implement either the method itself or _cascading_datastream_method_called to handle'
+                                  'all method calls.')
+
+
+class Dataset(CascadingDatasetInterface, CascadingDatastreamInterface):
     # TODO: Spalte mit Unix timestamp
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter
@@ -47,7 +93,7 @@ class Dataset:
             setattr(self, k, v)
 
     @classmethod
-    def from_bin_file(cls, path: path_t):
+    def from_bin_file(cls: T, path: path_t) -> T:
         path = Path(path)
         if not path.suffix == '.bin':
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
@@ -72,7 +118,7 @@ class Dataset:
         for i in self.ACTIVE_SENSORS:
             yield i, getattr(self, i)
 
-    def calibrate_imu(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+    def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Dataset.
 
         The calibration can either be provided directly or loaded from a calibration '.json' file.
@@ -82,7 +128,7 @@ class Dataset:
         s = s.calibrate_gyro(calibration, inplace=True)
         return s
 
-    def calibrate_acc(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+    def calibrate_acc(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
@@ -92,7 +138,7 @@ class Dataset:
             s.acc.is_calibrated = True
         return s
 
-    def calibrate_gyro(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> 'Dataset':
+    def calibrate_gyro(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
@@ -102,13 +148,13 @@ class Dataset:
             s.gyro.is_calibrated = True
         return s
 
-    def factory_calibrate_imu(self, inplace: bool = False) -> 'Dataset':
+    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
         s = self.factory_calibrate_acc(inplace=inplace)
         s = s.factory_calibrate_gyro(inplace=True)
 
         return s
 
-    def factory_calibrate_gyro(self, inplace: bool = False) -> 'Dataset':
+    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
         # Todo: Use correct static calibration values according to sensor range
         #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
@@ -117,7 +163,7 @@ class Dataset:
             s.gyro.is_calibrated = True
         return s
 
-    def factory_calibrate_acc(self, inplace: bool = False) -> 'Dataset':
+    def factory_calibrate_acc(self: T, inplace: bool = False) -> T:
         # Todo: Use correct static calibration values according to sensor range
         #       (this one is hardcoded for 2000dps and 16G)
         s = inplace_or_copy(self, inplace)
@@ -126,14 +172,14 @@ class Dataset:
             s.acc.is_calibrated = True
         return s
 
-    def factory_calibrate_baro(self, inplace: bool = False) -> 'Dataset':
+    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.baro, 'baro') is True:
             s.baro.data = (s.baro.data + 101325) / 100.0
             s.baro.is_calibrated = True
         return s
 
-    def factory_calibrate_battery(self, inplace: bool = False) -> 'Dataset':
+    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.battery, 'battery') is True:
             s.battery.data = (s.battery.data * 2.0) / 100.0
@@ -154,15 +200,15 @@ class Dataset:
     def ACTIVE_SENSORS(self):
         return tuple(self.info.enabled_sensors)
 
-    def downsample(self, factor, inplace=False) -> 'Dataset':
+    def downsample(self: T, factor, inplace=False) -> T:
         """Downsample all datastreams by a factor."""
         s = inplace_or_copy(self, inplace)
         for key, val in s._DATASTREAMS:
             setattr(s, key, val.downsample(factor))
         return s
 
-    def cut(self, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> 'Dataset':
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
         # TODO: should cut change the start and end date of recording in the header?
         s = inplace_or_copy(self, inplace)
 
@@ -171,14 +217,14 @@ class Dataset:
         s.counter = s.counter[start:stop:step]
         return s
 
-    def cut_to_syncregion(self, inplace=False) -> 'Dataset':
+    def cut_to_syncregion(self: T, inplace=False) -> T:
         if self.info.is_synchronised is False:
             raise ValueError('Only syncronised Datasets can be cut to the syncregion')
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
         return self.cut(self.info.sync_index_start, self.info.sync_index_stop, inplace=inplace)
 
-    def interpolate_dataset(self, dataset, inplace=False):
+    def interpolate_dataset(self: T, dataset, inplace=False) -> T:
         raise NotImplementedError('This is currently not working')
         # Todo: fix
         # counterTmp = np.copy(dataset_master_simple.counter)
@@ -217,7 +263,7 @@ class Dataset:
         dfs = [s.data_as_df() for _, s in self._DATASTREAMS]
         return pd.concat(dfs, axis=1)
 
-    def data_as_csv(self, path: path_t):
+    def data_as_csv(self, path: path_t) -> None:
         self.data_as_df().to_csv(path, index=False)
 
     def imu_data_as_df(self) -> pd.DataFrame:
@@ -226,35 +272,31 @@ class Dataset:
         gyro_df = self.gyro.data_as_df()
         return pd.concat([acc_df, gyro_df], axis=1)
 
-    def imu_data_as_csv(self, path: path_t):
+    def imu_data_as_csv(self, path: path_t) -> None:
         self.imu_data_as_df().to_csv(path, index=False)
 
 
-class ProxyDatasetMethod:
-    _callables: Iterable[Callable]
-
-    def __init__(self, callables: Iterable[Callable], ):
-        self._callables = callables
-
-    def __call__(self, *args, **kwargs) -> Union[Tuple[Any], 'ProxyDataset']:
-        return_vals = tuple(c(*args, **kwargs) for c in self._callables)
-        if all(isinstance(d, Dataset) for d in return_vals):
-            return ProxyDataset(return_vals)
-        return return_vals
-
-
-class ProxyDataset:
+class ProxyDataset(CascadingDatasetInterface, CascadingDatastreamInterface):
     _datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Tuple[Dataset]):
         self._datasets = datasets
+
+    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
+        return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self._datasets)
+        if all(isinstance(d, Dataset) for d in return_vals):
+            return ProxyDataset(return_vals)
+        return return_vals
+
+    def _cascading_datastream_method_called(self, name: str, *args, **kwargs):
+        return self._cascading_dataset_method_called(name, *args, **kwargs)
 
     def __getattribute__(self, name: str) -> Any:
         if name == '_datasets':
             return super().__getattribute__(name)
         attr_list = tuple([getattr(d, name) for d in self._datasets])
         if callable(getattr(self._datasets[0], name)) is True:
-            return ProxyDatasetMethod(attr_list)
+            return super().__getattribute__(name)
         return attr_list
 
     def __setattr__(self, name: str, value: Any) -> None:

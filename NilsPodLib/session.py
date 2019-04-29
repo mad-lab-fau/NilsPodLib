@@ -28,7 +28,7 @@ class Session:
     def info(self) -> ProxyHeader:
         return ProxyHeader(headers=tuple(self.datasets.info))
 
-    def calibrate(self, inplace: bool = False):
+    def calibrate_imu(self, inplace: bool = False):
         self.leftFoot.calibrate()
         self.rightFoot.calibrate()
 
