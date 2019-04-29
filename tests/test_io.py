@@ -49,6 +49,7 @@ def test_load_simple(dataset_master_simple):
     assert info.duration_s == 44
     assert info.num_samples == 9146
     assert info.version_firmware == 'v0.12.0'
+    assert info.version_hardware == '00'
     assert info.sync_role == 'master'
     assert info.is_synchronised is True
     assert info.sync_group == 9

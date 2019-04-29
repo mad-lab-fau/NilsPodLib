@@ -208,7 +208,7 @@ class Header:
         header_dict['sync_address'] = ''.join([hex(int(x))[-2:] for x in bin_array[40:45]][::-1])
         header_dict['sync_channel'] = bin_array[45]
 
-        header_dict['version_hardware'] = bin_array[46:48]
+        header_dict['version_hardware'] = ''.join((str(x) for x in bin_array[46:48]))
 
         header_dict['version_firmware'] = 'v{}.{}.{}'.format(*(int(x) for x in bin_array[-3:]))
 
