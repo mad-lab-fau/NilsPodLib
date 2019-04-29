@@ -14,19 +14,11 @@ from typing import Tuple, Any, List
 
 import numpy as np
 
+from NilsPodLib.interfaces import AnnotFieldMeta
 from NilsPodLib.utils import convert_little_endian, path_t
 
 
-# TODO: Put all Metainfos about the sensors into one object
-# TODO: Include metainformation for units of sensors
-class Header:
-    """Additional Infos of recording.
-
-    Note:
-        - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
-            any local conversions
-    """
-
+class HeaderFields(metaclass=AnnotFieldMeta):
     enabled_sensors: tuple
 
     motion_interrupt_enabled: bool
@@ -58,6 +50,7 @@ class Header:
     # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
     #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
     num_samples: int
+
 
     _SENSOR_FLAGS = {
         'acc': 0x01,
@@ -124,6 +117,53 @@ class Header:
         6: 'chest'
     }
 
+    @property
+    def _header_fields(self) -> List[str]:
+        return list(HeaderFields.__annotations__.keys())
+
+    @property
+    def duration_s(self) -> int:
+        return self.utc_stop - self.utc_start
+
+    @property
+    def utc_datetime_start(self) -> datetime.datetime:
+        return datetime.datetime.utcfromtimestamp(self.utc_start)
+
+    @property
+    def utc_datetime_stop(self) -> datetime.datetime:
+        return datetime.datetime.utcfromtimestamp(self.utc_stop)
+
+    @property
+    def datetime_start(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.utc_start)
+
+    @property
+    def datetime_stop(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.utc_stop)
+
+    @property
+    def is_synchronised(self) -> bool:
+        return not self.sync_role == 'disabled'
+
+    @property
+    def has_position_info(self) -> bool:
+        return not self.sensor_position == 'undefined'
+
+    @property
+    def sensor_id(self) -> str:
+        return ''.join(self.mac_address[-5:].split(':'))
+
+
+# TODO: Put all Metainfos about the sensors into one object
+# TODO: Include metainformation for units of sensors
+class Header(HeaderFields):
+    """Additional Infos of recording.
+
+    Note:
+        - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
+            any local conversions
+    """
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             if k in self._header_fields:
@@ -131,10 +171,6 @@ class Header:
             else:
                 # Should this be a error?
                 warnings.warn('Unexpected Argument {} for Header'.format(k))
-
-    @property
-    def _header_fields(self) -> List[str]:
-        return list(self.__class__.__annotations__.keys())
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray) -> 'Header':
@@ -213,40 +249,8 @@ class Header:
 
         return header_dict
 
-    @property
-    def duration_s(self) -> int:
-        return self.utc_stop - self.utc_start
 
-    @property
-    def utc_datetime_start(self) -> datetime.datetime:
-        return datetime.datetime.utcfromtimestamp(self.utc_start)
-
-    @property
-    def utc_datetime_stop(self) -> datetime.datetime:
-        return datetime.datetime.utcfromtimestamp(self.utc_stop)
-
-    @property
-    def datetime_start(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.utc_start)
-
-    @property
-    def datetime_stop(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(self.utc_stop)
-
-    @property
-    def is_synchronised(self) -> bool:
-        return not self.sync_role == 'disabled'
-
-    @property
-    def has_position_info(self) -> bool:
-        return not self.sensor_position == 'undefined'
-
-    @property
-    def sensor_id(self) -> str:
-        return ''.join(self.mac_address[-5:].split(':'))
-
-
-class ProxyHeader:
+class ProxyHeader(HeaderFields):
     _headers: Tuple[Header]
 
     def __init__(self, headers: Tuple[Header]):
