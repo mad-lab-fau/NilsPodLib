@@ -69,6 +69,7 @@ class Header:
         'battery': 0x80
     }
 
+    # Overall number of bytes, number of channels
     _SENSOR_SAMPLE_LENGTH = {
         'acc': (6, 3),
         'gyro': (6, 3),
