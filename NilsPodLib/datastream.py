@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Created on Thu Sep 28 11:32:22 2017
 
@@ -24,7 +23,7 @@ class CascadingDatastreamInterface:
             inplace: bool = False) -> T:
         return self._cascading_datastream_method_called('cut', start, stop, step)
 
-    def downsample(self: T, factor, inplace=False) -> T:
+    def downsample(self: T, factor: int, inplace: bool = False) -> T:
         return self._cascading_datastream_method_called('downsample', factor, inplace)
 
     def data_as_df(self) -> pd.DataFrame:
@@ -81,7 +80,7 @@ class Datastream(CascadingDatastreamInterface):
         s.data = s.data[sl]
         return s
 
-    def downsample(self: T, factor, inplace=False) -> T:
+    def downsample(self: T, factor: int, inplace: bool = False) -> T:
         """Downsample the datastreams by a factor using a iir filter."""
         s = inplace_or_copy(self, inplace)
         s.data = decimate(s.data, factor, axis=0)
