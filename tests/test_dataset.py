@@ -86,5 +86,6 @@ def test_cut_to_sync_slave(dataset_slave_simple):
     assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop])
 
+
 def test_datastreams():
     pass

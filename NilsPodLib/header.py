@@ -17,6 +17,7 @@ import numpy as np
 from NilsPodLib.utils import convert_little_endian, path_t
 
 
+# TODO: Fix type issues when using proxy header
 class HeaderFields:
     enabled_sensors: tuple
 
@@ -49,7 +50,6 @@ class HeaderFields:
     # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
     #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
     num_samples: int
-
 
     _SENSOR_FLAGS = {
         'acc': 0x01,

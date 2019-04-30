@@ -129,7 +129,7 @@ class SyncedSession(Session):
         s = inplace_or_copy(self, inplace)
 
         if only_to_master is True:
-            s.datasets = s.datasets.cut_to_syncregion()
+            s = super(SyncedSession, s).cut_to_syncregion()
             return s
 
         start_idx = [d.info.sync_index_start for d in s.slaves]
@@ -137,5 +137,5 @@ class SyncedSession(Session):
         if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
             raise ValueError('The provided datasets do not have a overlapping regions where all a synced!')
 
-        s.datasets = s.datasets.cut(np.max(start_idx), np.min(stop_idx))
+        s = super(SyncedSession, s).cut(np.max(start_idx), np.min(stop_idx))
         return s
