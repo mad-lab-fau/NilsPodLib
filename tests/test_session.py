@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
+from NilsPodLib.header import HeaderFields
 from NilsPodLib.session import Session
 
 
@@ -23,20 +24,22 @@ def test_init_from_file_paths(dataset_master_simple, dataset_slave_simple):
     assert len(session.datasets) == 2
 
 
-def test_init_from_folder(dataset_master_simple, dataset_slave_simple):
+def test_init_from_folder(dataset_master_simple, dataset_slave_simple, dataset_analog_simple):
     session = Session.from_folder_path(Path(dataset_master_simple[0].path).parent)
     assert dataset_master_simple[0].info.sensor_id in session.info.sensor_id
     assert dataset_slave_simple[0].info.sensor_id in session.info.sensor_id
-    assert len(session.datasets) == 2
+    assert dataset_analog_simple[0].info.sensor_id in session.info.sensor_id
+    assert len(session.datasets) == 3
 
 
-def test_info_access(basic_session):
+@pytest.mark.parametrize('name', [
+    *HeaderFields()._header_fields,
+    'duration_s',  # As example for a property
+])
+def test_info_access(name, basic_session):
     session = basic_session
 
-    assert session.info.sensor_id == ('9e82', '9433')  # Test a property
-    assert session.info.enabled_sensors == (('acc',), ('acc',))  # Test complex datatype
-    assert session.info.enabled_sensors == (('acc',), ('acc',))
-
+    assert getattr(session.info, name) == tuple((getattr(d.info, name) for d in session.datasets))
 
 def test_info_write(basic_session):
     with pytest.raises(NotImplementedError):

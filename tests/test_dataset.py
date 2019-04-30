@@ -21,9 +21,6 @@ def test_counter(dataset_master_simple):
 
 def test_data_as_df(dataset_master_simple):
     ds = dataset_master_simple[0]
-    # Add fake gyro
-    ds.gyro = copy.deepcopy(ds.acc)
-    ds.info.enabled_sensors = ('gyro', *ds.ACTIVE_SENSORS)
 
     df = ds.data_as_df()
     assert len(df.columns) == 6
@@ -34,9 +31,6 @@ def test_data_as_df(dataset_master_simple):
 
 def test_imu_data_as_df(dataset_master_simple):
     ds = dataset_master_simple[0]
-    # Add fake gyro
-    ds.gyro = copy.deepcopy(ds.acc)
-    ds.info.enabled_sensors = ('gyro', *ds.ACTIVE_SENSORS)
 
     df = ds.imu_data_as_df()
 

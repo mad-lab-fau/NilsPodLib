@@ -22,6 +22,12 @@ def dataset_slave_simple():
 
 
 @pytest.fixture()
+def dataset_analog_simple():
+    path = TEST_SESSION_DATA / 'NilsPodX-323C_20190430_0933.bin'
+    return Dataset.from_bin_file(path=path), path
+
+
+@pytest.fixture()
 def dataset_master_simple_json_header():
     return json.load((TEST_REGRESSION_DATA / 'NilsPodX-7FAD_20190430_0933_header.json').open('r'))
 
@@ -29,5 +35,3 @@ def dataset_master_simple_json_header():
 @pytest.fixture()
 def dataset_slave_simple_json_header():
     return json.load((TEST_REGRESSION_DATA / 'NilsPodX-922A_20190430_0933_header.json').open('r'))
-
-

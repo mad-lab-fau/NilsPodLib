@@ -4,8 +4,8 @@ from NilsPodLib.session import SyncedSession
 
 
 @pytest.fixture()
-def basic_synced_session(dataset_master_simple, dataset_slave_simple):
-    return SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+def basic_synced_session(dataset_master_simple, dataset_slave_simple, dataset_analog_simple):
+    return SyncedSession([dataset_master_simple[0], dataset_slave_simple[0], dataset_analog_simple[0]])
 
 
 def test_basic_init(dataset_master_simple, dataset_slave_simple):
@@ -15,14 +15,16 @@ def test_basic_init(dataset_master_simple, dataset_slave_simple):
 # TODO: Tests for different error cases
 
 
-def test_master(basic_synced_session):
-    assert basic_synced_session.master.info.sensor_id == '9e82'
+def test_master(basic_synced_session, dataset_master_simple):
+    assert basic_synced_session.master.info.sensor_id == dataset_master_simple[0].info.sensor_id
 
 
-def test_slaves(basic_synced_session):
+def test_slaves(basic_synced_session, dataset_slave_simple, dataset_analog_simple):
     slaves = basic_synced_session.slaves
-    assert len(slaves) == 1
-    assert slaves[0].info.sensor_id == '9433'
+    slave_ids = [d.info.sensor_id for d in slaves]
+    assert len(slaves) == 2
+    assert dataset_slave_simple[0].info.sensor_id in slave_ids
+    assert dataset_analog_simple[0].info.sensor_id in slave_ids
 
 
 def test_cut_to_sync(basic_synced_session):
