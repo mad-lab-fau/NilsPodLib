@@ -40,31 +40,31 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
 
     ACTIVE_SENSORS: Tuple[str]
 
-    def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_imu(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
 
-    def calibrate_acc(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_acc(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
 
-    def calibrate_gyro(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_gyro(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_gyro', calibration, inplace)
 
-    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
+    def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_imu', inplace)
 
-    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
+    def factory_calibrate_gyro(self: Type[T], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_gyro', inplace)
 
-    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
+    def factory_calibrate_baro(self: Type[T], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_baro', inplace)
 
-    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
+    def factory_calibrate_battery(self: Type[T], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_battery', inplace)
 
-    def cut_to_syncregion(self: T, end: bool = False, inplace: bool = False) -> T:
+    def cut_to_syncregion(self: Type[T], end: bool = False, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut_to_syncregion', end, inplace)
 
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+    def cut(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut', start, stop, step, inplace)
 
@@ -72,7 +72,7 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
             inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut_counter_val', start, stop, step, inplace)
 
-    def downsample(self: T, factor: int, inplace: bool = False) -> T:
+    def downsample(self: Type[T], factor: int, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('downsample', factor, inplace)
 
     def data_as_df(self, datastreams: Optional[Iterable[str]] = None) -> pd.DataFrame:
