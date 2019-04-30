@@ -190,12 +190,12 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
 
     idx = 0
     for sensor in session_header.enabled_sensors:
-        bits, channel = session_header._SENSOR_SAMPLE_LENGTH[sensor]
+        bits, channel, dtype = session_header._SENSOR_SAMPLE_LENGTH[sensor]
         bits_per_channel = bits // channel
         tmp = np.full((len(data), channel), np.nan)
         for i in range(channel):
             tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
-                                              dtype=np.uint32).astype(float)
+                                              dtype=dtype).astype(float)
             idx += bits_per_channel
         sensor_data[sensor] = tmp
 
@@ -208,7 +208,7 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
             'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
                 expected_cols, all_cols))
 
-    counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=np.uint32).astype(float)
+    counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
 
     return sensor_data, counter, session_header
 

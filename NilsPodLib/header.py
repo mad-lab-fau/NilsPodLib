@@ -64,14 +64,14 @@ class HeaderFields:
 
     # Overall number of bytes, number of channels
     _SENSOR_SAMPLE_LENGTH = {
-        'acc': (6, 3),
-        'gyro': (6, 3),
-        'mag': (6, 3),
-        'baro': (2, 1),
-        'analog': (3, 3),
-        'ecg': (None, None),  # Needs to be implement
-        'ppg': (None, None),  # Needs to be implement
-        'battery': (1, 1)
+        'acc': (6, 3, np.int16),
+        'gyro': (6, 3, np.int16),
+        'mag': (6, 3, np.int16),
+        'baro': (2, 1, np.int16),
+        'analog': (3, 3, np.uint8),
+        'ecg': (None, None, None),  # Needs to be implement
+        'ppg': (None, None, None),  # Needs to be implement
+        'battery': (1, 1, np.uint8)
 
     }
 

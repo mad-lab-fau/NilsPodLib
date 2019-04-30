@@ -14,11 +14,11 @@ T = TypeVar('T')
 
 
 def convert_little_endian(byte_list, dtype=int):
-    byte_list = np.array(byte_list).astype(dtype)
+    byte_list = np.array(byte_list).astype(np.uint32)
     number = byte_list[0]
     for i, v in enumerate(byte_list[1:]):
         number |= v << int(8 * (i + 1))
-    return number
+    return number.astype(dtype)
 
 
 def read_binary_file_uint8(path, packet_size, skip_header_bytes):
