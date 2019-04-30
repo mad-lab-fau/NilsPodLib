@@ -155,12 +155,20 @@ class Dataset(CascadingDatasetInterface):
         s.counter = s.counter[start:stop:step]
         return s
 
-    def cut_to_syncregion(self: T, inplace=False) -> T:
+    def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        """Cut the dataset based on values in the counter and not the index."""
+        start, stop = np.searchsorted(self.counter, [start, stop])
+        return self.cut(start, stop, step, inplace=inplace)
+
+    def cut_to_syncregion(self: T, end=False, inplace=False) -> T:
+        # TODO: Add warning if sync package occurs far from last value
         if self.info.is_synchronised is False:
             raise ValueError('Only synchronised Datasets can be cut to the syncregion')
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
-        return self.cut(self.info.sync_index_start, self.info.sync_index_stop + 1, inplace=inplace)
+        end = self.info.sync_index_stop + 1 if end is True else None
+        return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None) -> pd.DataFrame:
         datastreams = datastreams or self.ACTIVE_SENSORS

@@ -71,14 +71,50 @@ def test_cut_to_sync_master(dataset_master_simple):
     assert np.array_equal(ds.counter, ds_new.counter)
 
 
-def test_cut_to_sync_slave(dataset_slave_simple):
+def test_cut_to_sync_slave_with_end(dataset_slave_simple):
     ds = dataset_slave_simple[0]
-    ds_new = ds.cut_to_syncregion()
+    ds_new = ds.cut_to_syncregion(end=True)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
     assert ds_new.counter[-1] == ds.counter[ds.info.sync_index_stop]
     assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop])
+
+
+def test_cut_to_sync_slave_without_end(dataset_slave_simple):
+    ds = dataset_slave_simple[0]
+    ds_new = ds.cut_to_syncregion(end=False)
+
+    assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
+    assert ds_new.counter[-1] == ds.counter[-1]
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[-1])
+
+
+def test_cut_to_counter_value(dataset_master_simple):
+    ds = dataset_master_simple[0]
+    # Add fake counter and fake acc to easily check cut
+    ds.counter = np.arange(len(ds.counter)) + 10
+
+    ds_new = ds.cut_counter_val(10, 110)
+    assert ds_new.counter[0] == 10.
+    assert ds_new.counter[-1] == 109.
+    assert len(ds_new.counter) == 100
+
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[0])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[99])
+    assert len(ds_new.acc.data) == 100
+
+    # inplace
+    ds_new = copy.deepcopy(ds)
+    ds_new.cut_counter_val(10, 110, inplace=True)
+    assert ds_new.counter[0] == 10.
+    assert ds_new.counter[-1] == 109.
+    assert len(ds_new.counter) == 100
+
+    assert np.array_equal(ds_new.acc.data[0], ds.acc.data[0])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[99])
+    assert len(ds_new.acc.data) == 100
 
 
 def test_datastreams():
