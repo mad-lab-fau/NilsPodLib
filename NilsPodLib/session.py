@@ -115,7 +115,7 @@ class SyncedSession(Session):
     def slaves(self) -> Tuple[Dataset]:
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
-    def cut_to_syncregion(self, only_to_master: bool = False, inplace: bool = False) -> 'Session':
+    def cut_to_syncregion(self, only_to_master: bool = False, end: bool = False, inplace: bool = False) -> 'Session':
         """Cut all datasets to the regions where they were synchronised to the master.
 
         Args:
@@ -127,15 +127,15 @@ class SyncedSession(Session):
         s = inplace_or_copy(self, inplace)
 
         if only_to_master is True:
-            s = super(SyncedSession, s).cut_to_syncregion()
+            s = super(SyncedSession, s).cut_to_syncregion(end=end)
             return s
         # TODO: This is wrong!
-        start_idx = [d.info.sync_index_start for d in s.slaves]
-        stop_idx = [d.info.sync_index_stop for d in s.slaves]
+        start_idx = [d.counter[d.info.sync_index_start] for d in s.slaves]
+        stop_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
         if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
             raise ValueError('The provided datasets do not have a overlapping regions where all a synced!')
 
-        s = super(SyncedSession, s).cut(np.max(start_idx), np.min(stop_idx))
+        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), np.min(stop_idx))
         for d in s.slaves:
             d.counter = s.master.counter
         return s

@@ -29,22 +29,39 @@ def test_slaves(basic_synced_session, dataset_slave_simple, dataset_analog_simpl
     assert dataset_analog_simple[0].info.sensor_id in slave_ids
 
 
-def test_cut_to_sync_only_master(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(only_to_master=True, inplace=False)
+def test_cut_to_sync_only_master_with_end(basic_synced_session):
+    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=True, inplace=False)
 
     assert s.master.counter[0] == basic_synced_session.master.counter[0]
     assert s.slaves[0].counter[0] == basic_synced_session.slaves[0].counter[
-        basic_synced_session.info.sync_index_start[1]]
+        basic_synced_session.slaves[0].info.sync_index_start]
+    assert s.slaves[1].counter[0] == basic_synced_session.slaves[1].counter[
+        basic_synced_session.slaves[1].info.sync_index_start]
     assert s.master.counter[-1] == basic_synced_session.master.counter[-1]
     assert s.slaves[0].counter[-1] == basic_synced_session.slaves[0].counter[
-        basic_synced_session.info.sync_index_stop[1]]
+        basic_synced_session.slaves[0].info.sync_index_stop]
+    assert s.slaves[1].counter[-1] == basic_synced_session.slaves[1].counter[
+        basic_synced_session.slaves[1].info.sync_index_stop]
+
+
+def test_cut_to_sync_only_master_without_end(basic_synced_session):
+    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=True, inplace=False)
+
+    assert s.master.counter[0] == basic_synced_session.master.counter[0]
+    assert s.slaves[0].counter[0] == basic_synced_session.slaves[0].counter[
+        basic_synced_session.slaves[0].info.sync_index_start]
+    assert s.slaves[1].counter[0] == basic_synced_session.slaves[1].counter[
+        basic_synced_session.slaves[1].info.sync_index_start]
+    assert s.master.counter[-1] == basic_synced_session.master.counter[-1]
+    assert s.slaves[0].counter[-1] == basic_synced_session.slaves[0].counter[-1]
+    assert s.slaves[1].counter[-1] == basic_synced_session.slaves[1].counter[-1]
 
 
 def test_cut_to_sync(basic_synced_session):
     s = basic_synced_session.cut_to_syncregion(inplace=False)
 
-    start = np.array([d.info.sync_index_start for d in s.slaves]).max()
-    stop = np.array([d.info.sync_index_stop for d in s.slaves]).min()
+    start = np.array([d.counter[d.info.sync_index_start] for d in s.slaves]).max()
+    stop = np.array([d.counter[d.info.sync_index_stop] for d in s.slaves]).min()
 
     for d in s.datasets:
         assert len(d.counter) == stop - start

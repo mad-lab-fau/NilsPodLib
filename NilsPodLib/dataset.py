@@ -161,7 +161,7 @@ class Dataset(CascadingDatasetInterface):
         start, stop = np.searchsorted(self.counter, [start, stop])
         return self.cut(start, stop, step, inplace=inplace)
 
-    def cut_to_syncregion(self: T, end=False, inplace=False) -> T:
+    def cut_to_syncregion(self: T, end: bool = False, inplace: bool = False) -> T:
         # TODO: Add warning if sync package occurs far from last value
         if self.info.is_synchronised is False:
             raise ValueError('Only synchronised Datasets can be cut to the syncregion')

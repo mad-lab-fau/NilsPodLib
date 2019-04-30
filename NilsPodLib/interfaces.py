@@ -61,12 +61,16 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_battery', inplace)
 
-    def cut_to_syncregion(self: T, inplace=False) -> T:
-        return self._cascading_dataset_method_called('cut_to_syncregion', inplace)
+    def cut_to_syncregion(self: T, end: bool = False, inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('cut_to_syncregion', end, inplace)
 
     def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('cut', start, stop, step)
+        return self._cascading_dataset_method_called('cut', start, stop, step, inplace)
+
+    def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('cut_counter_val', start, stop, step, inplace)
 
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('downsample', factor, inplace)
