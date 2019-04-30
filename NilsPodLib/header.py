@@ -193,9 +193,10 @@ class Header(HeaderFields):
     def parse_header_package(cls, bin_array: np.ndarray):
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation
+        bin_array = bin_array.astype(np.uint32)
         header_dict = dict()
 
-        header_dict['sample_size'] = bin_array[0]
+        header_dict['sample_size'] = int(bin_array[0])
 
         sensors = bin_array[1]
         enabled_sensors = list()
@@ -211,13 +212,13 @@ class Header(HeaderFields):
 
         header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[4]]
 
-        header_dict['sync_distance_ms'] = bin_array[5] * 100.0
+        header_dict['sync_distance_ms'] = float(bin_array[5] * 100.0)
 
-        header_dict['sync_group'] = bin_array[6]
+        header_dict['sync_group'] = int(bin_array[6])
 
-        header_dict['acc_range_g'] = bin_array[7]
+        header_dict['acc_range_g'] = float(bin_array[7])
 
-        header_dict['gyro_range_dps'] = bin_array[8] * 125
+        header_dict['gyro_range_dps'] = float(bin_array[8] * 125)
 
         sensor_position = bin_array[9]
         header_dict['sensor_position'] = cls._SENSOR_POS.get(sensor_position, sensor_position)
@@ -226,21 +227,21 @@ class Header(HeaderFields):
         for para, val in cls._OPERATION_MODES.items():
             header_dict[para] = bool(operation_mode & val)
 
-        header_dict['custom_meta_data'] = tuple(bin_array[11:14])
+        header_dict['custom_meta_data'] = tuple(bin_array[11:14].astype(float))
 
         # Note: We ignore timezones and provide just the time info, which was stored in the sensor
-        header_dict['utc_start'] = convert_little_endian(bin_array[14:18])
-        header_dict['utc_stop'] = convert_little_endian(bin_array[18:22])
+        header_dict['utc_start'] = int(convert_little_endian(bin_array[14:18]))
+        header_dict['utc_stop'] = int(convert_little_endian(bin_array[18:22]))
 
-        header_dict['num_samples'] = convert_little_endian(bin_array[22:26])
+        header_dict['num_samples'] = int(convert_little_endian(bin_array[22:26]))
 
-        header_dict['sync_index_start'] = convert_little_endian(bin_array[26:30])
-        header_dict['sync_index_stop'] = convert_little_endian(bin_array[30:34])
+        header_dict['sync_index_start'] = int(convert_little_endian(bin_array[26:30]))
+        header_dict['sync_index_stop'] = int(convert_little_endian(bin_array[30:34]))
 
         header_dict['mac_address'] = ':'.join([hex(int(x))[-2:] for x in bin_array[34:40]][::-1])
 
         header_dict['sync_address'] = ''.join([hex(int(x))[-2:] for x in bin_array[40:45]][::-1])
-        header_dict['sync_channel'] = bin_array[45]
+        header_dict['sync_channel'] = int(bin_array[45])
 
         header_dict['version_hardware'] = ''.join((str(x) for x in bin_array[46:48]))
 
