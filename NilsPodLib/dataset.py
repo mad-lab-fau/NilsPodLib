@@ -158,7 +158,10 @@ class Dataset(CascadingDatasetInterface):
     def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> T:
         """Cut the dataset based on values in the counter and not the index."""
-        start, stop = np.searchsorted(self.counter, [start, stop])
+        if start:
+            start = np.searchsorted(self.counter, start)
+        if stop:
+            stop = np.searchsorted(self.counter, stop)
         return self.cut(start, stop, step, inplace=inplace)
 
     def cut_to_syncregion(self: T, end: bool = False, inplace: bool = False) -> T:

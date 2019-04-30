@@ -45,7 +45,7 @@ def test_cut_to_sync_only_master_with_end(basic_synced_session):
 
 
 def test_cut_to_sync_only_master_without_end(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=True, inplace=False)
+    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=False, inplace=False)
 
     assert s.master.counter[0] == basic_synced_session.master.counter[0]
     assert s.slaves[0].counter[0] == basic_synced_session.slaves[0].counter[
@@ -57,8 +57,8 @@ def test_cut_to_sync_only_master_without_end(basic_synced_session):
     assert s.slaves[1].counter[-1] == basic_synced_session.slaves[1].counter[-1]
 
 
-def test_cut_to_sync(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(inplace=False)
+def test_cut_to_sync_with_end(basic_synced_session):
+    s = basic_synced_session.cut_to_syncregion(end=True, inplace=False)
 
     start = np.array([d.counter[d.info.sync_index_start] for d in s.slaves]).max()
     stop = np.array([d.counter[d.info.sync_index_stop] for d in s.slaves]).min()
@@ -66,5 +66,17 @@ def test_cut_to_sync(basic_synced_session):
     for d in s.datasets:
         assert len(d.counter) == stop - start
         assert np.array_equal(d.counter, s.master.counter)
+
+
+def test_cut_to_sync_without_end(basic_synced_session):
+    s = basic_synced_session.cut_to_syncregion(end=False, inplace=False)
+
+    start = np.array([d.counter[d.info.sync_index_start] for d in basic_synced_session.slaves]).max()
+    length = np.array([len(d.counter) - np.where(d.counter == start)[0] for d in basic_synced_session.slaves]).min()
+
+    for d in s.datasets:
+        assert len(d.counter) == length
+        assert np.array_equal(d.counter, s.master.counter)
+
 
 

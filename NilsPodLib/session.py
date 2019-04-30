@@ -44,6 +44,7 @@ class Session(CascadingDatasetInterface):
         return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
     def calibrate_imu(self, inplace: bool = False):
+        # TODO: Get it working
         self.leftFoot.calibrate()
         self.rightFoot.calibrate()
 
@@ -127,15 +128,23 @@ class SyncedSession(Session):
         s = inplace_or_copy(self, inplace)
 
         if only_to_master is True:
-            s = super(SyncedSession, s).cut_to_syncregion(end=end)
+            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True)
             return s
-        # TODO: This is wrong!
+
         start_idx = [d.counter[d.info.sync_index_start] for d in s.slaves]
         stop_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
         if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
-            raise ValueError('The provided datasets do not have a overlapping regions where all a synced!')
+            raise ValueError('The provided datasets do not have a overlapping regions where all are synced!')
 
-        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), np.min(stop_idx))
+        end = np.min(stop_idx) if end is True else None
+        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), end, inplace=True)
+
+        # in case the cut is not to the sync end, cut all datasets to the same length
+        if not end:
+            min_len = np.min([len(d.counter) for d in s.datasets])
+            s = super(SyncedSession, s).cut(None, min_len, inplace=True)
+
+        # Finally set the master counter to all slaves to really ensure identical counters
         for d in s.slaves:
             d.counter = s.master.counter
         return s

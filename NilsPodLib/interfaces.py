@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING
+from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING, Type
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,7 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
             inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut', start, stop, step, inplace)
 
-    def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+    def cut_counter_val(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut_counter_val', start, stop, step, inplace)
 
