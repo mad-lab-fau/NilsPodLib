@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import pandas as pd
 
 import pytest
 from NilsPodLib.dataset import Dataset
@@ -35,3 +36,9 @@ def dataset_master_simple_json_header():
 @pytest.fixture()
 def dataset_slave_simple_json_header():
     return json.load((TEST_REGRESSION_DATA / 'NilsPodX-922A_20190430_0933_header.json').open('r'))
+
+
+@pytest.fixture()
+def dataset_master_data_csv():
+    df = pd.read_csv(TEST_REGRESSION_DATA / 'NilsPodX-7FAD_20190430_0933_data.csv')
+    return df.set_index('t')
