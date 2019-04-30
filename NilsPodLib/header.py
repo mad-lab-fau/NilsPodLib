@@ -25,7 +25,7 @@ class HeaderFields:
     motion_interrupt_enabled: bool
     dock_mode_enabled: bool
     sensor_position: str
-    session_termination: int
+    session_termination: str
     sample_size: int
 
     sampling_rate_hz: float
