@@ -9,6 +9,7 @@ import datetime
 import json
 import struct
 import warnings
+from collections import OrderedDict
 from itertools import chain
 from typing import Tuple, Any, List
 
@@ -51,16 +52,17 @@ class HeaderFields:
     #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
     num_samples: int
 
-    _SENSOR_FLAGS = {
-        'acc': 0x01,
-        'gyro': 0x02,
-        'mag': 0x04,
-        'baro': 0x08,
-        'analog': 0x10,
-        'ecg': 0x20,
-        'ppg': 0x40,
-        'battery': 0x80
-    }
+    # Note this must correspond to the order they appear in the datapackage when activated
+    _SENSOR_FLAGS = OrderedDict([
+        ('gyro', 0x02),
+        ('acc', 0x01),
+        ('mag', 0x04),
+        ('baro', 0x08),
+        ('analog', 0x10),
+        ('ecg', 0x20),
+        ('ppg', 0x40),
+        ('battery', 0x80)
+    ])
 
     # Overall number of bytes, number of channels
     _SENSOR_SAMPLE_LENGTH = {
@@ -261,7 +263,8 @@ class ProxyHeader(HeaderFields):
             return super().__getattribute__(name)
         if callable(getattr(self._headers[0], name)) is True:
             raise ValueError(
-                'ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(name))
+                'ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(
+                    name))
 
         return tuple([getattr(d, name) for d in self._headers])
 
@@ -284,4 +287,3 @@ def parse_header(path: path_t) -> Tuple[Header, int]:
     header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
     session_header = Header.from_bin_array(header_bytes[1:header_size])
     return session_header, header_size
-

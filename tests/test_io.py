@@ -33,9 +33,8 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header):
     assert dataset.analog is None
     assert dataset.ppg is None
     assert dataset.ecg is None
-    assert dataset.ACTIVE_SENSORS == ('acc', 'gyro')
 
-    ## Uncomment to update regression files
+    # # Uncomment to update regression files
     # with open(TEST_REGRESSION_DATA / (str(path.stem) + '_header.json'), 'w+') as f:
     #     f.write(dataset.info.to_json())
 
@@ -59,7 +58,7 @@ def test_sync_info(dataset_slave_simple, dataset_master_simple, dataset_slave_si
     dataset, path = dataset_slave_simple
     master = dataset_master_simple[0]
 
-    ## Uncomment to update regression files
+    # # Uncomment to update regression files
     # with open(TEST_REGRESSION_DATA / (str(path.stem) + '_header.json'), 'w+') as f:
     #     f.write(dataset.info.to_json())
 
