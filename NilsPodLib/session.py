@@ -123,8 +123,12 @@ class SyncedSession(Session):
             only_to_master: If True each slave will be cut to the region, where it was synchronised with the master.
                 Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
                 in sync
+            end: If True, the datastreams will be cut at the last sync package. If not only the start will be cut based
+                on the sync information
             inplace: If operation should be performed on the current Session object, or on a copy
         """
+        # TODO: Add warning if sync package occurs far from last value
+
         s = inplace_or_copy(self, inplace)
 
         if only_to_master is True:
