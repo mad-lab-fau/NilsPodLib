@@ -3,8 +3,8 @@
 
 @author: Nils Roth, Arne Küderle
 """
-
-from typing import Iterable, Tuple, TypeVar, Type,  Any
+import warnings
+from typing import Iterable, Tuple, TypeVar, Type, Any, Optional
 
 import numpy as np
 from pathlib import Path
@@ -13,11 +13,11 @@ from NilsPodLib.dataset import Dataset
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.header import ProxyHeader
 
-
 # TODO: Calibration for multiple sensors
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 T = TypeVar('T', bound='Session')
+
 
 # TODO: Create function to parse sessions from larger folder full of datasets
 # def identify_sessions(folder_path: path_t, filter_pattern: str = '*') -> Sequence[Sequence[path_t]]:
@@ -115,7 +115,8 @@ class SyncedSession(Session):
     def slaves(self) -> Tuple[Dataset]:
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
-    def cut_to_syncregion(self, only_to_master: bool = False, end: bool = False, inplace: bool = False) -> 'Session':
+    def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,
+                          warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
         """Cut all datasets to the regions where they were synchronised to the master.
 
         Args:
@@ -124,14 +125,20 @@ class SyncedSession(Session):
                 in sync
             end: If True, the datastreams will be cut at the last sync package. If not only the start will be cut based
                 on the sync information
+            warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
+                warn_thres before the end of the dataset, a warning is emitted. use warn_thres = None to silence.
             inplace: If operation should be performed on the current Session object, or on a copy
         """
-        # TODO: Add warning if sync package occurs far from last value
-
         s = inplace_or_copy(self, inplace)
+        if warn_thres is not None:
+            sync_warn = [d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres) is False]
+            if any(sync_warn):
+                warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
+                              'end of the dataset. The last section of this data should not be trusted.'.format(
+                    sync_warn, warn_thres))
 
         if only_to_master is True:
-            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True)
+            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
             return s
 
         start_idx = [d.counter[d.info.sync_index_start] for d in s.slaves]

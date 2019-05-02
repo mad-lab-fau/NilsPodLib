@@ -79,4 +79,42 @@ def test_cut_to_sync_without_end(basic_synced_session):
         assert np.array_equal(d.counter, s.master.counter)
 
 
+def test_cut_to_sync_warn(basic_synced_session):
+    s = basic_synced_session
+
+    with pytest.warns(None) as rec:
+        s.cut_to_syncregion(end=False)
+
+    assert len(rec) == 0
+
+    thres = 0
+    with pytest.warns(UserWarning) as rec:
+        s.cut_to_syncregion(end=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+    assert str([d.info.sensor_id for d in s.slaves]) in str(rec[0])
+
+    thres = 30
+    s.slaves[0].info.sync_index_stop -= int(30 * s.slaves[0].info.sampling_rate_hz)
+    with pytest.warns(UserWarning) as rec:
+        s.cut_to_syncregion(end=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+    assert str([s.slaves[0].info.sensor_id]) in str(rec[0])
+
+    thres = 30
+    s.slaves[0].info.sync_index_stop -= int(30 * s.slaves[0].info.sampling_rate_hz)
+    with pytest.warns(UserWarning) as rec:
+        s.cut_to_syncregion(end=False, warn_thres=thres, only_to_master=True)
+
+    assert len(rec) == 1
+
+    with pytest.warns(None) as rec:
+        s.cut_to_syncregion(end=False, warn_thres=None)
+
+    assert len(rec) == 0
+
+
 
