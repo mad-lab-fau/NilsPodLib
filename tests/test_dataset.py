@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 import pandas as pd
+import pytest
 
 
 def test_size(dataset_master_simple):
@@ -89,6 +90,35 @@ def test_cut_to_sync_slave_without_end(dataset_slave_simple):
     assert ds_new.counter[-1] == ds.counter[-1]
     assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[-1])
+
+
+def test_cut_to_sync_warning(dataset_slave_simple):
+    ds = dataset_slave_simple[0]
+
+    with pytest.warns(None) as rec:
+        ds.cut_to_syncregion(end=False)
+
+    assert len(rec) == 0
+
+    thres = 0
+    with pytest.warns(UserWarning) as rec:
+        ds.cut_to_syncregion(end=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+
+    thres = 30
+    ds.info.sync_index_stop -= int(30 * ds.info.sampling_rate_hz)
+    with pytest.warns(UserWarning) as rec:
+        ds.cut_to_syncregion(end=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+
+    with pytest.warns(None) as rec:
+        ds.cut_to_syncregion(end=False, warn_thres=None)
+
+    assert len(rec) == 0
 
 
 def test_cut_to_counter_value(dataset_master_simple):

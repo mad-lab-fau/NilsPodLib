@@ -3,7 +3,7 @@
 
 @author: Nils Roth, Arne Küderle
 """
-
+import warnings
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence
 
@@ -164,12 +164,14 @@ class Dataset(CascadingDatasetInterface):
             stop = np.searchsorted(self.counter, stop)
         return self.cut(start, stop, step, inplace=inplace)
 
-    def cut_to_syncregion(self: T, end: bool = False, inplace: bool = False) -> T:
-        # TODO: Add warning if sync package occurs far from last value
+    def cut_to_syncregion(self: Type[T], end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
         if self.info.is_synchronised is False:
             raise ValueError('Only synchronised Datasets can be cut to the syncregion')
         if self.info.sync_role == 'master':
             return inplace_or_copy(self, inplace)
+        if warn_thres is not None and self._check_sync_packages(warn_thres) is False:
+            warnings.warn('The last sync package occured more than {} s before the end of the measurement.'
+                          'The last region of the data should not be trusted.'.format(warn_thres))
         end = self.info.sync_index_stop + 1 if end is True else None
         return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
@@ -186,6 +188,18 @@ class Dataset(CascadingDatasetInterface):
 
     def imu_data_as_csv(self, path: path_t) -> None:
         self.imu_data_as_df().to_csv(path, index=False)
+
+    def _check_sync_packages(self, threshold_s: int = 30) -> bool:
+        """Check if the last sync package occurred far from the actual end of the recording.
+
+        This can be the case, if the master stopped sending packages, or if the sensor could not receive any new sync
+        info for a prelonged period of time.
+        In particular in the latter case, careful review of the data is advised.
+        """
+        if self.info.sync_role == 'slave':
+            if len(self.counter) - self.info.sync_index_stop > threshold_s * self.info.sampling_rate_hz:
+                return False
+        return True
 
 
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
