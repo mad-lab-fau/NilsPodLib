@@ -14,13 +14,12 @@ from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.header import ProxyHeader
 
 
-# TODO: Concept of inplace for sessions
 # TODO: Calibration for multiple sensors
-# TODO: Helper to create from folder/multiple names
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 T = TypeVar('T', bound='Session')
 
+# TODO: Create function to parse sessions from larger folder full of datasets
 # def identify_sessions(folder_path: path_t, filter_pattern: str = '*') -> Sequence[Sequence[path_t]]:
 #     files = Path(folder_path).glob(filter_pattern)
 #     props = dict()

@@ -26,7 +26,6 @@ class Datastream:
     _unit: str
 
     # TODO: Representatation
-    # TODO: Implement inplace vs copy
     # TODO: implement the concept of units
 
     def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
