@@ -17,7 +17,7 @@ from NilsPodLib.utils import inplace_or_copy
 
 T = TypeVar('T')
 
-
+# Datastream should be aware of its name
 class Datastream:
     data: np.ndarray
     sampling_rate_hz: float
