@@ -59,7 +59,7 @@ class Dataset(CascadingDatasetInterface):
         return tuple(self.info.enabled_sensors)
 
     @property
-    def _datastreams(self) -> Iterable[Datastream]:
+    def datastreams(self) -> Iterable[Datastream]:
         """Iterate through all available datastreams."""
         for i in self.ACTIVE_SENSORS:
             yield i, getattr(self, i)
@@ -141,7 +141,7 @@ class Dataset(CascadingDatasetInterface):
     def downsample(self: T, factor, inplace=False) -> T:
         """Downsample all datastreams by a factor."""
         s = inplace_or_copy(self, inplace)
-        for key, val in s._datastreams:
+        for key, val in s.datastreams:
             setattr(s, key, val.downsample(factor))
         return s
 
@@ -150,7 +150,7 @@ class Dataset(CascadingDatasetInterface):
         # TODO: should cut change the start and end date of recording in the header?
         s = inplace_or_copy(self, inplace)
 
-        for key, val in s._datastreams:
+        for key, val in s.datastreams:
             setattr(s, key, val.cut(start, stop, step))
         s.counter = s.counter[start:stop:step]
         return s
@@ -177,7 +177,7 @@ class Dataset(CascadingDatasetInterface):
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None) -> pd.DataFrame:
         datastreams = datastreams or self.ACTIVE_SENSORS
-        dfs = [s.data_as_df() for k, s in self._datastreams if k in datastreams]
+        dfs = [s.data_as_df() for k, s in self.datastreams if k in datastreams]
         return pd.concat(dfs, axis=1)
 
     def data_as_csv(self, path: path_t, datastreams: Optional[Iterable[str]] = None) -> None:
