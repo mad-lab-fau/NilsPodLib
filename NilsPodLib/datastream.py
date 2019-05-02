@@ -70,9 +70,9 @@ class Datastream:
         s.sampling_rate_hz /= factor
         return s
 
-    def filter_butterworth(self, fc, order, filterType='low'):
+    def filter_butterworth(self, fc, order, filter_type='low'):
         fn = fc / (self.sampling_rate_hz / 2.0)
-        b, a = signal.butter(order, fn, btype=filterType)
+        b, a = signal.butter(order, fn, btype=filter_type)
         return signal.filtfilt(b, a, self.data.T, padlen=150).T
 
     def data_as_df(self, index_as_time: bool = True) -> pd.DataFrame:

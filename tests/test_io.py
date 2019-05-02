@@ -3,8 +3,8 @@ import json
 from unittest.mock import patch
 
 import pandas as pd
+
 from NilsPodLib.datastream import Datastream
-from tests.conftest import TEST_SESSION_DATA, TEST_REGRESSION_DATA
 
 
 class MockDate(datetime.datetime):

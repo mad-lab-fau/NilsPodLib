@@ -22,7 +22,6 @@ class AnnotFieldMeta(type):
 
 
 class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
-
     path: path_t
     acc: Optional['Datastream'] = None
     gyro: Optional['Datastream'] = None
@@ -68,8 +67,9 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
             inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut', start, stop, step, inplace)
 
-    def cut_counter_val(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
+    def cut_counter_val(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None,
+                        step: Optional[int] = None,
+                        inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut_counter_val', start, stop, step, inplace)
 
     def downsample(self: Type[T], factor: int, inplace: bool = False) -> T:
@@ -94,5 +94,3 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
 
     def _cascading_dataset_attribute_access(self, name: str) -> Any:
         raise NotImplementedError('Implement either the method itself to handle all attribute access.')
-
-

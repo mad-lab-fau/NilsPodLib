@@ -3,15 +3,15 @@ import pytest
 import numpy as np
 
 
-@pytest.mark.parametrize('bytes, ints', [
+@pytest.mark.parametrize('byte_vals, ints', [
     ([0, ], 0),
     ([0, 0, 0, 0], 0),
     ([1, 0], 1),
     ([0, 1], 256),
     ([1, 1], 257),
 ])
-def test_little_endian_simple(bytes, ints):
-    assert convert_little_endian(bytes) == ints
+def test_little_endian_simple(byte_vals, ints):
+    assert convert_little_endian(byte_vals) == ints
 
 
 @pytest.mark.parametrize('bytes, ints', [

@@ -4,16 +4,14 @@
 @author: Nils Roth, Arne Küderle
 """
 import warnings
+from pathlib import Path
 from typing import Iterable, Tuple, TypeVar, Type, Any, Optional
 
 import numpy as np
-from pathlib import Path
 
 from NilsPodLib.dataset import Dataset
-from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.header import ProxyHeader
-
-# TODO: Calibration for multiple sensors
+from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 T = TypeVar('T', bound='Session')
@@ -43,7 +41,7 @@ class Session(CascadingDatasetInterface):
         return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
     def calibrate_imu(self, inplace: bool = False):
-        # TODO: Get it working
+        # TODO: Calibration for multiple sensors
         self.leftFoot.calibrate()
         self.rightFoot.calibrate()
 

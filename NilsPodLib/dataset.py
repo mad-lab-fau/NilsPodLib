@@ -156,7 +156,7 @@ class Dataset(CascadingDatasetInterface):
         return s
 
     def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
+                        inplace: bool = False) -> T:
         """Cut the dataset based on values in the counter and not the index."""
         if start:
             start = np.searchsorted(self.counter, start)
@@ -205,7 +205,6 @@ class Dataset(CascadingDatasetInterface):
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                                         np.ndarray,
                                         Header]:
-
     session_header, header_size = parse_header(path)
 
     sample_size = session_header.sample_size
@@ -236,4 +235,3 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
     counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
 
     return sensor_data, counter, session_header
-
