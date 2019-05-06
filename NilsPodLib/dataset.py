@@ -4,6 +4,7 @@
 @author: Nils Roth, Arne Küderle
 """
 import warnings
+from distutils.version import StrictVersion
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING
 
@@ -245,5 +246,9 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                 expected_cols, all_cols))
 
     counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
+
+    if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
+        warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
+                      'This might indicate a corrupted file')
 
     return sensor_data, counter, session_header
