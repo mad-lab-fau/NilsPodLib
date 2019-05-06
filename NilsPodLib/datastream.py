@@ -27,7 +27,6 @@ class Datastream:
     _unit: str
     _columns: Optional[List]
 
-    # TODO: Representatation
     def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
                  sensor_type: Optional[str] = None, unit: Optional[str] = None):
         self.data = data
@@ -35,6 +34,12 @@ class Datastream:
         self.sensor = sensor_type
         self._columns = list(columns) if columns else columns
         self._unit = unit
+
+    def __repr__(self):
+        return 'Datastream(sensor={}, sampling_rate_hz={}, is_calibrated={}, data={}'.format(self.sensor,
+                                                                                             self.sampling_rate_hz,
+                                                                                             self.is_calibrated,
+                                                                                             self.data)
 
     @property
     def unit(self):
