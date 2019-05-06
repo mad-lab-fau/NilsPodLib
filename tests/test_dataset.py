@@ -1,4 +1,5 @@
 import copy
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -146,6 +147,32 @@ def test_cut_to_counter_value(dataset_master_simple):
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[99])
     assert len(ds_new.acc.data) == 100
 
+
+def test_utc_counter(dataset_master_simple):
+    ds = dataset_master_simple[0]
+
+    assert int(ds.utc_counter[0]) == int(ds.info.utc_start)
+    # As the last page is not transmitted, the values will not be exactly the same, but they should be close
+    assert int(ds.utc_counter[-1] // 10) == int(ds.info.utc_stop // 10)
+    assert len(ds.utc_counter) == len(ds.counter)
+
+
+def test_utc_datetime_counter(dataset_master_simple):
+    ds = dataset_master_simple[0]
+
+    assert ds.utc_datetime_counter[0].astype('datetime64[s]') == np.datetime64(ds.info.utc_datetime_start)
+    # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
+    assert np.abs(ds.utc_datetime_counter[-1].astype('datetime64[s]') - np.datetime64(ds.info.utc_datetime_stop).astype('datetime64[s]')) <= np.timedelta64(2, 's')
+    assert len(ds.utc_datetime_counter) == len(ds.counter)
+
+#
+# def test_datetime_counter(dataset_master_simple):
+#     ds = dataset_master_simple[0]
+#
+#     assert ds.datetime_counter[0].astype('datetime64[s]') == np.datetime64(ds.info.datetime_start)
+#     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
+#     assert np.abs(ds.datetime_counter[-1].astype('datetime64[s]') - np.datetime64(ds.info.datetime_stop).astype('datetime64[s]')) <= np.timedelta64(2, 's')
+#     assert len(ds.datetime_counter) == len(ds.counter)
 
 def test_datastreams():
     pass

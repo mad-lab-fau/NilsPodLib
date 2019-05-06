@@ -3,6 +3,7 @@
 
 @author: Nils Roth, Arne Küderle
 """
+import datetime
 import warnings
 from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence
@@ -26,6 +27,7 @@ class Dataset(CascadingDatasetInterface):
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
     # TODO: Docu all the things
+    # TODO: Make imucal optional by making it local import
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
@@ -63,6 +65,14 @@ class Dataset(CascadingDatasetInterface):
         """Iterate through all available datastreams."""
         for i in self.ACTIVE_SENSORS:
             yield i, getattr(self, i)
+
+    @property
+    def utc_counter(self) -> np.ndarray:
+        return self.info.utc_datetime_start_day_midnight.timestamp() + self.counter / self.info.sampling_rate_hz
+
+    @property
+    def utc_datetime_counter(self) -> np.ndarray:
+        return pd.to_datetime(pd.Series(self.utc_counter * 1000000), utc=True, unit='us').values
 
     def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Dataset.

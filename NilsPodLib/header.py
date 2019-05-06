@@ -139,6 +139,10 @@ class HeaderFields:
         return datetime.datetime.fromtimestamp(self.utc_start)
 
     @property
+    def utc_datetime_start_day_midnight(self) -> datetime.datetime:
+        return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=datetime.timezone.utc)
+
+    @property
     def datetime_stop(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(self.utc_stop)
 

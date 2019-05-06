@@ -23,3 +23,14 @@ def test_json_roundtrip(dataset_master_simple):
     new_header = Header.from_json(header.to_json())
     for k in header._header_fields:
         assert getattr(header, k) == getattr(new_header, k)
+
+
+def test_start_midnight_daytime(dataset_master_simple):
+    header = dataset_master_simple[0].info
+
+    start = header.utc_datetime_start_day_midnight
+
+    assert start.hour == 0
+    assert start.minute == 0
+    assert start.second == 0
+    assert start.date() == header.utc_datetime_start.date()
