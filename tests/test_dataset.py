@@ -35,7 +35,7 @@ def test_data_as_df(dataset_master_simple):
     assert np.array_equal(df.index, ds.counter)
 
     df = ds.data_as_df(index='time')
-    assert np.array_equal(df.index.values, ds.counter / ds.info.sampling_rate_hz)
+    assert np.array_equal(df.index.values, ds.time_counter)
 
     df = ds.data_as_df(index='utc')
     assert np.array_equal(df.index.values, ds.utc_counter)

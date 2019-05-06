@@ -24,7 +24,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     # # Uncomment to update regression files
     # with open(TEST_REGRESSION_DATA / (str(path.stem) + '_header.json'), 'w+') as f:
     #     f.write(dataset.info.to_json())
-    # dataset.data_as_df().to_csv(TEST_REGRESSION_DATA / (str(path.stem) + '_data.csv'))
+    # dataset.data_as_df(index='time').to_csv(TEST_REGRESSION_DATA / (str(path.stem) + '_data.csv'))
 
     # Toplevel Stuff
     assert dataset.path == path
@@ -39,7 +39,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     assert dataset.ppg is None
     assert dataset.ecg is None
 
-    pd.testing.assert_frame_equal(dataset.data_as_df(), dataset_master_data_csv)
+    pd.testing.assert_frame_equal(dataset.data_as_df(index='time'), dataset_master_data_csv)
 
     # Header
     # Check all direct values
