@@ -32,7 +32,7 @@ class Dataset(CascadingDatasetInterface):
         self.counter = counter
         self.info = info
         for k, v in sensor_data.items():
-            v = Datastream(v, self.info.sampling_rate_hz, self.info._SENSOR_LEGENDS.get(k, None))
+            v = Datastream(v, self.info.sampling_rate_hz, columns=self.info._SENSOR_LEGENDS.get(k, None), sensor_type=k)
             setattr(self, k, v)
 
     @classmethod
@@ -73,7 +73,7 @@ class Dataset(CascadingDatasetInterface):
     def utc_datetime_counter(self) -> np.ndarray:
         return pd.to_datetime(pd.Series(self.utc_counter * 1000000), utc=True, unit='us').values
 
-    def calibrate_imu(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_imu(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Dataset.
 
         The calibration can either be provided directly or loaded from a calibration '.json' file.
@@ -83,7 +83,7 @@ class Dataset(CascadingDatasetInterface):
         s = s.calibrate_gyro(calibration, inplace=True)
         return s
 
-    def calibrate_acc(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_acc(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
@@ -93,7 +93,7 @@ class Dataset(CascadingDatasetInterface):
             s.acc.is_calibrated = True
         return s
 
-    def calibrate_gyro(self: T, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_gyro(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         # TODO: Allow option to specifiy the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:

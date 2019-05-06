@@ -54,3 +54,22 @@ def test_downsample(simple_ds, factor):
 
 def test_len(simple_ds):
     assert len(simple_ds) == len(simple_ds.data)
+
+
+def test_columns():
+    ds = Datastream(np.zeros((100, 3)))
+
+    assert ds.columns == [0, 1, 2]
+
+    ds = Datastream(np.zeros((100, 2)))
+
+    assert ds.columns == [0, 1]
+
+    ds = Datastream(np.zeros((100, 3)), sensor_type='acc')
+
+    assert ds.columns == ['acc_x', 'acc_y', 'acc_z']
+
+    ds = Datastream(np.zeros((100, 3)), columns=['col1', 'col2', 'col3'])
+
+    assert ds.columns == ['col1', 'col2', 'col3']
+

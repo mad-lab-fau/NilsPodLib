@@ -17,33 +17,40 @@ from NilsPodLib.utils import inplace_or_copy
 
 T = TypeVar('T')
 
-# Datastream should be aware of its name
+
 class Datastream:
     data: np.ndarray
     sampling_rate_hz: float
-    columns: List
     is_calibrated: bool = False
+    sensor: Optional[str]
     _unit: str
+    _columns: Optional[List]
 
     # TODO: Representatation
     # TODO: implement the concept of units
 
     def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
-                 unit: Optional[str] = None):
+                 sensor_type: Optional[str] = None):
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
-        self._unit = unit
-        if columns:
-            self.columns = list(columns)
-        else:
-            self.columns = list(range(data.shape[-1]))
+        self.sensor = sensor_type
+        self._columns = list(columns) if columns else columns
 
     @property
     def unit(self):
         warnings.warn('Units are not really supported at this point')
-        if self.is_calibrated is True:
-            return self._unit
+        # if self.is_calibrated is True:
+        #     return self._unit
         return 'a.u.'
+
+    @property
+    def columns(self):
+        if self._columns:
+            return self._columns
+        elif self.sensor:
+            return [self.sensor + '_' + x for x in 'xyz'[:self.data.shape[-1]]]
+        else:
+            return list(range(self.data.shape[-1]))
 
     def __len__(self):
         return len(self.data)
