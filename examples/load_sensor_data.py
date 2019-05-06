@@ -14,8 +14,8 @@ dataset = Dataset.from_bin_file(FILEPATH)
 # You can access the metainformation about your dataset using the `info` attr.
 # For a full list of available attributes see NilsPodLib.header.HeaderFields
 print('Sensor ID:', dataset.info.sensor_id)
-print('Start Date:', dataset.info.datetime_start)
-print('Stop Date:', dataset.info.datetime_stop)
+print('Start Date (UTC):', dataset.info.utc_datetime_start)
+print('Stop Date (UTC):', dataset.info.utc_datetime_stop)
 print('Enabled Sensors:', dataset.info.enabled_sensors)
 
 # You can access the individual sensor data directly from the dataset object using the names provided
