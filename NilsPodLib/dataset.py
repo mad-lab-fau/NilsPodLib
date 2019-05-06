@@ -25,9 +25,8 @@ T = TypeVar('T')
 
 
 class Dataset(CascadingDatasetInterface):
-    # TODO: Potential warning if samplingrate does not fit to rtc
+    # TODO: Potential warning if samplingrate does not fit to rtc -> Not possible because stop is not correct
     # TODO: Warning non monotounus counter
-    # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
     # TODO: Docu all the things
 
@@ -75,6 +74,10 @@ class Dataset(CascadingDatasetInterface):
     @property
     def utc_datetime_counter(self) -> np.ndarray:
         return pd.to_datetime(pd.Series(self.utc_counter * 1000000), utc=True, unit='us').values
+
+    @property
+    def time_counter(self) -> np.ndarray:
+        return self.counter / self.info.sampling_rate_hz
 
     def calibrate_imu(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Dataset.
@@ -187,13 +190,28 @@ class Dataset(CascadingDatasetInterface):
         end = self.info.sync_index_stop + 1 if end is True else None
         return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None) -> pd.DataFrame:
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:
+        allowed_index = ['counter', 'time', 'utc', 'utc_datetime']
+        if index and index not in allowed_index:
+            raise ValueError(
+                'Supplied value for index ({}) is not allowed. Allowed values: {}'.format(index, allowed_index))
+
         datastreams = datastreams or self.ACTIVE_SENSORS
         dfs = [s.data_as_df() for k, s in self.datastreams if k in datastreams]
-        return pd.concat(dfs, axis=1)
+        df = pd.concat(dfs, axis=1)
 
-    def data_as_csv(self, path: path_t, datastreams: Optional[Iterable[str]] = None) -> None:
-        self.data_as_df(datastreams).to_csv(path, index=False)
+        if index:
+            if index != 'counter':
+                index += '_counter'
+            index = getattr(self, index, None)
+            df.index = index
+        else:
+            df = df.reset_index(drop=True)
+        return df
+
+    def data_as_csv(self, path: path_t, datastreams: Optional[Iterable[str]] = None,
+                    index: Optional[str] = None) -> None:
+        self.data_as_df(datastreams, index).to_csv(path, index=False)
 
     def imu_data_as_df(self) -> pd.DataFrame:
         return self.data_as_df(['acc', 'gyro'])

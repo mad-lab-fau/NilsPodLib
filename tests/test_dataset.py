@@ -26,9 +26,22 @@ def test_data_as_df(dataset_master_simple):
 
     df = ds.data_as_df()
     assert len(df.columns) == 6
+    assert np.array_equal(df.index.values, np.arange(len(ds.counter)))
 
     df = ds.data_as_df(datastreams=('gyro',))
     assert len(df.columns) == 3
+
+    df = ds.data_as_df(index='counter')
+    assert np.array_equal(df.index, ds.counter)
+
+    df = ds.data_as_df(index='time')
+    assert np.array_equal(df.index.values, ds.counter / ds.info.sampling_rate_hz)
+
+    df = ds.data_as_df(index='utc')
+    assert np.array_equal(df.index.values, ds.utc_counter)
+
+    df = ds.data_as_df(index='utc_datetime')
+    assert np.array_equal(df.index.values, ds.utc_datetime_counter)
 
 
 def test_imu_data_as_df(dataset_master_simple):
