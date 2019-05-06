@@ -40,9 +40,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     info = dataset.info
     assert dataset_master_simple_json_header == json.loads(info.to_json())
     assert info.utc_datetime_start == datetime.datetime(2019, 4, 30, 7, 33, 12)
-    assert info.datetime_start == datetime.datetime(2019, 4, 30, 9, 33, 12)
     assert info.utc_datetime_stop == datetime.datetime(2019, 4, 30, 7, 33, 59)
-    assert info.datetime_stop == datetime.datetime(2019, 4, 30, 9, 33, 59)
     assert info.is_synchronised is True
     assert info.has_position_info is False
     assert info.sensor_id == '7fad'

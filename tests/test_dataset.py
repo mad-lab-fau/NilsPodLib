@@ -165,14 +165,6 @@ def test_utc_datetime_counter(dataset_master_simple):
     assert np.abs(ds.utc_datetime_counter[-1].astype('datetime64[s]') - np.datetime64(ds.info.utc_datetime_stop).astype('datetime64[s]')) <= np.timedelta64(2, 's')
     assert len(ds.utc_datetime_counter) == len(ds.counter)
 
-#
-# def test_datetime_counter(dataset_master_simple):
-#     ds = dataset_master_simple[0]
-#
-#     assert ds.datetime_counter[0].astype('datetime64[s]') == np.datetime64(ds.info.datetime_start)
-#     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-#     assert np.abs(ds.datetime_counter[-1].astype('datetime64[s]') - np.datetime64(ds.info.datetime_stop).astype('datetime64[s]')) <= np.timedelta64(2, 's')
-#     assert len(ds.datetime_counter) == len(ds.counter)
 
 def test_datastreams():
     pass
