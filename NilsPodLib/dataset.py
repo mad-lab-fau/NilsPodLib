@@ -3,10 +3,9 @@
 
 @author: Nils Roth, Arne Küderle
 """
-import datetime
 import warnings
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence
+from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -15,19 +14,19 @@ from NilsPodLib.header import Header, parse_header
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
-from imucal import CalibrationInfo
+
+if TYPE_CHECKING:
+    from imucal import CalibrationInfo
 
 T = TypeVar('T')
 
 
 class Dataset(CascadingDatasetInterface):
-    # TODO: Spalte mit Unix timestamp
     # TODO: Potential warning if samplingrate does not fit to rtc
     # TODO: Warning non monotounus counter
     # TODO: Warning if access to not calibrated datastreams
     # TODO: Test calibration
     # TODO: Docu all the things
-    # TODO: Make imucal optional by making it local import
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
