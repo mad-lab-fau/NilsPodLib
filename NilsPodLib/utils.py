@@ -21,12 +21,14 @@ def convert_little_endian(byte_list, dtype=int):
     return number.astype(dtype)
 
 
-def read_binary_file_uint8(path, packet_size, skip_header_bytes):
+def read_binary_file_uint8(path, packet_size, skip_header_bytes, expected_samples):
     with open(path, 'rb') as f:
         f.seek(skip_header_bytes)  # skip Header bytes
         data = np.fromfile(f, dtype=np.dtype('B'))
-    data = data[0:(int(len(data) / packet_size) * packet_size)]
-    data = np.reshape(data, (int(len(data) / packet_size), int(packet_size)))
+    if expected_samples * packet_size > len(data):
+        expected_samples = len(data) // packet_size
+    data = data[:expected_samples * packet_size]
+    data = np.reshape(data, (expected_samples, int(packet_size)))
     return data
 
 

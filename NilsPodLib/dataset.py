@@ -219,8 +219,9 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
     session_header, header_size = parse_header(path)
 
     sample_size = session_header.sample_size
+    n_samples = session_header.n_samples
 
-    data = read_binary_file_uint8(path, sample_size, header_size)
+    data = read_binary_file_uint8(path, sample_size, header_size, n_samples)
     sensor_data = dict()
 
     idx = 0

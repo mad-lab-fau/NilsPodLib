@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pandas as pd
 
 from NilsPodLib.datastream import Datastream
+from tests.conftest import TEST_REGRESSION_DATA
 
 
 class MockDate(datetime.datetime):
@@ -19,6 +20,11 @@ class MockDate(datetime.datetime):
 @patch('datetime.datetime', MockDate)
 def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, dataset_master_data_csv):
     dataset, path = dataset_master_simple
+
+    # # Uncomment to update regression files
+    # with open(TEST_REGRESSION_DATA / (str(path.stem) + '_header.json'), 'w+') as f:
+    #     f.write(dataset.info.to_json())
+    # dataset.data_as_df().to_csv(TEST_REGRESSION_DATA / (str(path.stem) + '_data.csv'))
 
     # Toplevel Stuff
     assert dataset.path == path
@@ -47,12 +53,6 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
 
     assert info.sync_index_start == 0
     assert info.sync_index_stop == 0
-
-
-    # # Uncomment to update regression files
-    # with open(TEST_REGRESSION_DATA / (str(path.stem) + '_header.json'), 'w+') as f:
-    #     f.write(dataset.info.to_json())
-    # dataset.data_as_df().to_csv(TEST_REGRESSION_DATA / (str(path.stem) + '_data.csv'))
 
 
 def test_sync_info(dataset_slave_simple, dataset_master_simple, dataset_slave_simple_json_header):

@@ -51,7 +51,7 @@ class HeaderFields:
     custom_meta_data: tuple
     # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
     #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
-    num_samples: int
+    n_samples: int
 
     # Note this must correspond to the order they appear in the datapackage when activated
     _SENSOR_FLAGS = OrderedDict([
@@ -203,7 +203,7 @@ class Header(HeaderFields):
         header_dict['utc_start'] = int(convert_little_endian(bin_array[14:18]))
         header_dict['utc_stop'] = int(convert_little_endian(bin_array[18:22]))
 
-        header_dict['num_samples'] = int(convert_little_endian(bin_array[22:26]))
+        header_dict['n_samples'] = int(convert_little_endian(bin_array[22:26]))
 
         header_dict['sync_index_start'] = int(convert_little_endian(bin_array[26:30]))
         header_dict['sync_index_stop'] = int(convert_little_endian(bin_array[30:34]))
