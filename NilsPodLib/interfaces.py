@@ -2,7 +2,6 @@ from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-from imucal import CalibrationInfo
 from NilsPodLib.header import Header
 
 from NilsPodLib.utils import path_t
@@ -11,6 +10,7 @@ T = TypeVar('T')
 
 if TYPE_CHECKING:
     from NilsPodLib.datastream import Datastream
+    from imucal import CalibrationInfo
 
 
 class AnnotFieldMeta(type):
@@ -39,13 +39,13 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
 
     ACTIVE_SENSORS: Tuple[str]
 
-    def calibrate_imu(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_imu(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
 
-    def calibrate_acc(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_acc(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_imu', calibration, inplace)
 
-    def calibrate_gyro(self: Type[T], calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> T:
+    def calibrate_gyro(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('calibrate_gyro', calibration, inplace)
 
     def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:
