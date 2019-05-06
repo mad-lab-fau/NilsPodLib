@@ -73,3 +73,28 @@ def test_columns():
 
     assert ds.columns == ['col1', 'col2', 'col3']
 
+
+def test_unit():
+    ds = Datastream(np.zeros((100, 3)))
+
+    assert ds.unit == 'a.u.'
+    ds.is_calibrated = True
+    assert ds.unit == 'a.u.'
+
+    ds = Datastream(np.zeros((100, 3)), sensor_type='acc')
+
+    assert ds.unit == 'a.u.'
+    ds.is_calibrated = True
+    assert ds.unit == 'g'
+
+    ds = Datastream(np.zeros((100, 3)), unit='test', sensor_type='acc')
+
+    assert ds.unit == 'a.u.'
+    ds.is_calibrated = True
+    assert ds.unit == 'test'
+
+    ds = Datastream(np.zeros((100, 3)), sensor_type='not_sensor')
+
+    assert ds.unit == 'a.u.'
+    ds.is_calibrated = True
+    assert ds.unit == 'a.u.'

@@ -15,6 +15,7 @@ from typing import Tuple, Any, List
 
 import numpy as np
 
+from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH, SENSOR_POS
 from NilsPodLib.utils import convert_little_endian, path_t
 
 
@@ -64,24 +65,6 @@ class HeaderFields:
         ('battery', 0x80)
     ])
 
-    # Overall number of bytes, number of channels
-    _SENSOR_SAMPLE_LENGTH = {
-        'acc': (6, 3, np.int16),
-        'gyro': (6, 3, np.int16),
-        'mag': (6, 3, np.int16),
-        'baro': (2, 1, np.int16),
-        'analog': (3, 3, np.uint8),
-        'ecg': (None, None, None),  # Needs to be implement
-        'ppg': (None, None, None),  # Needs to be implement
-        'battery': (1, 1, np.uint8)
-
-    }
-
-    _SENSOR_LEGENDS = {
-        'acc': tuple('acc_' + x for x in 'xyz'),
-        'gyro': tuple('gyr_' + x for x in 'xyz')
-    }
-
     _OPERATION_MODES = {
         'motion_interrupt_enabled': 0x80,
         'dock_mode_enabled': 0x40,
@@ -106,16 +89,6 @@ class HeaderFields:
         0: 'disabled',
         1: 'slave',
         2: 'master'
-    }
-
-    _SENSOR_POS = {
-        0: 'undefined',
-        1: 'left foot',
-        2: 'right foot',
-        3: 'hip',
-        4: 'left wrist',
-        5: 'right wrist',
-        6: 'chest'
     }
 
     @property
@@ -151,7 +124,6 @@ class HeaderFields:
         return ''.join(self.mac_address[-5:].split(':'))
 
 
-# TODO: Put all Metainfos about the sensors into one object
 # TODO: Include metainformation for units of sensors
 class Header(HeaderFields):
     """Additional Infos of recording.
@@ -219,7 +191,7 @@ class Header(HeaderFields):
         header_dict['gyro_range_dps'] = float(bin_array[8] * 125)
 
         sensor_position = bin_array[9]
-        header_dict['sensor_position'] = cls._SENSOR_POS.get(sensor_position, sensor_position)
+        header_dict['sensor_position'] = SENSOR_POS.get(sensor_position, sensor_position)
 
         operation_mode = bin_array[10]
         for para, val in cls._OPERATION_MODES.items():

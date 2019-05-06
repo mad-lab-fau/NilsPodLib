@@ -13,6 +13,7 @@ import pandas as pd
 from scipy import signal
 from scipy.signal import decimate
 
+from NilsPodLib.consts import SENSOR_LEGENDS, SENSOR_UNITS
 from NilsPodLib.utils import inplace_or_copy
 
 T = TypeVar('T')
@@ -27,20 +28,21 @@ class Datastream:
     _columns: Optional[List]
 
     # TODO: Representatation
-    # TODO: implement the concept of units
-
     def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
-                 sensor_type: Optional[str] = None):
+                 sensor_type: Optional[str] = None, unit: Optional[str] = None):
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
         self.sensor = sensor_type
         self._columns = list(columns) if columns else columns
+        self._unit = unit
 
     @property
     def unit(self):
-        warnings.warn('Units are not really supported at this point')
-        # if self.is_calibrated is True:
-        #     return self._unit
+        if self.is_calibrated is True:
+            if self._unit:
+                return self._unit
+            if self.sensor and SENSOR_UNITS.get(self.sensor, None):
+                return SENSOR_UNITS[self.sensor]
         return 'a.u.'
 
     @property
@@ -48,9 +50,9 @@ class Datastream:
         if self._columns:
             return self._columns
         elif self.sensor:
-            return [self.sensor + '_' + x for x in 'xyz'[:self.data.shape[-1]]]
-        else:
-            return list(range(self.data.shape[-1]))
+            if SENSOR_LEGENDS.get(self.sensor, None):
+                return list(SENSOR_LEGENDS[self.sensor])
+        return list(range(self.data.shape[-1]))
 
     def __len__(self):
         return len(self.data)

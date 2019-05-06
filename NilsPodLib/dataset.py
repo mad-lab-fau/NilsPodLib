@@ -9,6 +9,8 @@ from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequen
 
 import numpy as np
 import pandas as pd
+
+from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header, parse_header
 from NilsPodLib.interfaces import CascadingDatasetInterface
@@ -32,7 +34,7 @@ class Dataset(CascadingDatasetInterface):
         self.counter = counter
         self.info = info
         for k, v in sensor_data.items():
-            v = Datastream(v, self.info.sampling_rate_hz, columns=self.info._SENSOR_LEGENDS.get(k, None), sensor_type=k)
+            v = Datastream(v, self.info.sampling_rate_hz, sensor_type=k)
             setattr(self, k, v)
 
     @classmethod
@@ -223,7 +225,7 @@ def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
 
     idx = 0
     for sensor in session_header.enabled_sensors:
-        bits, channel, dtype = session_header._SENSOR_SAMPLE_LENGTH[sensor]
+        bits, channel, dtype = SENSOR_SAMPLE_LENGTH[sensor]
         bits_per_channel = bits // channel
         tmp = np.full((len(data), channel), np.nan)
         for i in range(channel):
