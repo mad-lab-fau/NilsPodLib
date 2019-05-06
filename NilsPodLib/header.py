@@ -10,6 +10,7 @@ import json
 import struct
 import warnings
 from collections import OrderedDict
+from distutils.version import StrictVersion
 from itertools import chain
 from typing import Tuple, Any, List
 
@@ -122,6 +123,10 @@ class HeaderFields:
     @property
     def sensor_id(self) -> str:
         return ''.join(self.mac_address[-5:].split(':'))
+
+    @property
+    def strict_version_firmware(self) -> StrictVersion:
+        return StrictVersion(self.version_firmware[1:])
 
 
 # TODO: Include metainformation for units of sensors

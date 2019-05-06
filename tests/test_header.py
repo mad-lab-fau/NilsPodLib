@@ -1,3 +1,5 @@
+from distutils.version import StrictVersion
+
 import pytest
 from NilsPodLib.header import Header
 
@@ -34,3 +36,10 @@ def test_start_midnight_daytime(dataset_master_simple):
     assert start.minute == 0
     assert start.second == 0
     assert start.date() == header.utc_datetime_start.date()
+
+
+def test_strict_version():
+    h = Header()
+    h.version_firmware = 'v1.0.5'
+
+    assert h.strict_version_firmware == StrictVersion('1.0.5')
