@@ -24,5 +24,10 @@ setup(
 
     packages=find_packages(exclude=('tests', 'examples')),
 
-    install_requires=['scipy', 'matplotlib', 'pandas', 'numpy']
+    install_requires=[
+        'scipy',
+        'pandas',
+        'numpy',
+        'imucal @ git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git'
+    ]
 )
