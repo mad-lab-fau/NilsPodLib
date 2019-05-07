@@ -47,6 +47,8 @@ pages:
   stage: pages
   dependencies:
     - docs
+  tags:
+    - docker
   script:
   - mkdir .public
   - cp -r html_docs/* .public
