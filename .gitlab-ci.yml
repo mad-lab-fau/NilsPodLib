@@ -3,38 +3,36 @@ stages:
   - deploy
   - pages
 
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
-cache:
-  paths:
-    - "$CI_PROJECT_DIR/pip-cache"
-  key: "$CI_PROJECT_ID"
-before_script:
-  - pip install tox
-  - sed -i -e 's/git+https:\/\/mad-srv.informatik.uni-erlangen.de/git+https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@mad-srv.informatik.uni-erlangen.de/g' requirements.txt
+.python_base: &python_base
+  tags:
+    - docker
+  image: python:3.6
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+  cache:
+    paths:
+      - "$CI_PROJECT_DIR/pip-cache"
+    key: "$CI_PROJECT_ID"
+  before_script:
+    - pip install tox
+    - sed -i -e 's/git+https:\/\/mad-srv.informatik.uni-erlangen.de/git+https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@mad-srv.informatik.uni-erlangen.de/g' requirements.txt
 
 test:
   stage: testing
-  image: python:3.6
-  tags:
-    - docker
+  <<: *python_base
   script:
     - tox -e test
 
 lint:
   stage: testing
-  image: python:3.6
-  tags:
-    - docker
+  <<: *python_base
   script:
     - tox -e lint
   allow_failure: true
 
 docs:
   stage: deploy
-  image: python:3.6
-  tags:
-    - docker
+  <<: *python_base
   script:
     - tox -e docs
     - mv docs/_build/html html_docs
