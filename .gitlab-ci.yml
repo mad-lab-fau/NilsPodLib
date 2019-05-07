@@ -55,5 +55,5 @@ pages:
     paths:
     - public
   only:
-  - refactor
+  - master
 
