@@ -1,214 +1,509 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 28 11:32:22 2017
+"""Dataset represents a measurement session of a single sensor.
 
-@author: nils
+@author: Nils Roth, Arne Küderle
 """
-
-import copy
-import os
+import warnings
+from distutils.version import StrictVersion
+from pathlib import Path
+from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
-import scipy
-from scipy import signal
+from scipy.signal import decimate
 
-from NilsPodLib.calibrationData import calibrationData
-from NilsPodLib.dataStream import dataStream
-from NilsPodLib.parseBinary import parseBinary
+from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
+from NilsPodLib.datastream import Datastream
+from NilsPodLib.header import Header, parse_header
+from NilsPodLib.interfaces import CascadingDatasetInterface
+from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
+
+if TYPE_CHECKING:
+    from imucal import CalibrationInfo
+
+T = TypeVar('T')
 
 
-class dataset:
-    path = ""
-    acc = None
-    gyro = None
-    baro = None
-    pressure = None
-    battery = None
-    counter = None
-    rtc = None
-    sync = None
-    header = None
-    calibrationData = None
-    size = 0
-    isCalibrated = False
+class Dataset(CascadingDatasetInterface):
+    def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
+        self.counter = counter
+        self.info = info
+        for k, v in sensor_data.items():
+            v = Datastream(v, self.info.sampling_rate_hz, sensor_type=k)
+            setattr(self, k, v)
 
-    def __init__(self, path):
-        self.path = path
-        if path.endswith(".bin"):
-            [accData, gyrData, baro, pressure, battery, self.counter, self.sync, self.header] = parseBinary(path)
-            self.acc = dataStream(accData, self.header.samplingRate_Hz)
-            self.gyro = dataStream(gyrData, self.header.samplingRate_Hz)
-            self.baro = dataStream(baro, self.header.samplingRate_Hz)
-            self.pressure = dataStream(pressure.astype('float'), self.header.samplingRate_Hz)
-            self.battery = dataStream(battery, self.header.samplingRate_Hz)
-            self.rtc = np.linspace(self.header.unixTime_start, self.header.unixTime_stop, len(self.counter))
-            self.size = len(self.counter)
+    @classmethod
+    def from_bin_file(cls: Type[T], path: path_t) -> T:
+        """Create a new Dataset from a valid .bin file.
 
-            # todo: add list of calibration files to repository. Ideal Case: For each existing NilPod at least one calibration file exists!
-            calibrationFileName = os.path.join(os.path.dirname(__file__), "Calibration/CalibrationFiles/")
-            if "84965C0" in self.path:
-                calibrationFileName += "NRF52-84965C0.pickle"
-                self.calibrationData = calibrationData(calibrationFileName)
-            if "92338C81" in self.path:
-                calibrationFileName += "NRF52-92338C81.pickle"
-                self.calibrationData = calibrationData(calibrationFileName)
-        else:
-            print("Invalid file tpye")
+        Args:
+            path: Path to the file
+        """
+        path = Path(path)
+        if not path.suffix == '.bin':
+            ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
-    def calibrate(self):
-        try:
-            self.acc.data = (self.calibrationData.Ta * self.calibrationData.Ka * (
-                        self.acc.data.T - self.calibrationData.ba)).T
-            self.acc.data = np.asarray(self.acc.data)
-            self.gyro.data = (self.calibrationData.Tg * self.calibrationData.Kg * (
-                        self.gyro.data.T - self.calibrationData.bg)).T
-            self.gyro.data = np.asarray(self.gyro.data)
-        except:
-            # Todo: Use correct static calibration values according to sensor range (this one is hardcoded for 2000dps and 16G)
-            self.acc.data = self.acc.data / 2048.0
-            self.gyro.data = self.gyro.data / 16.4
-            print("No Calibration Data found - Using static Datasheet values for calibration!!!")
-        self.isCalibrated = True
+        sensor_data, counter, info = parse_binary(path)
+        s = cls(sensor_data, counter, info)
 
-    def rotateAxis(self, sensor, x, y, z, sX, sY, sZ):
-        if sensor == 'gyro':
-            tmp = np.copy(self.gyro.data)
-            dX = tmp[:, 0]
-            dY = tmp[:, 1]
-            dZ = tmp[:, 2]
-            self.gyro.data[:, x] = dX
-            self.gyro.data[:, y] = dY
-            self.gyro.data[:, z] = dZ
-            self.gyro.data[:, 0] = self.gyro.data[:, 0] * np.sign(sX)
-            self.gyro.data[:, 1] = self.gyro.data[:, 1] * np.sign(sY)
-            self.gyro.data[:, 2] = self.gyro.data[:, 2] * np.sign(sZ)
-        elif sensor == 'acc':
-            tmp = np.copy(self.acc.data)
-            dX = tmp[:, 0]
-            dY = tmp[:, 1]
-            dZ = tmp[:, 2]
-            self.acc.data[:, x] = dX
-            self.acc.data[:, y] = dY
-            self.acc.data[:, z] = dZ
-            self.acc.data[:, 0] = self.acc.data[:, 0] * np.sign(sX)
-            self.acc.data[:, 1] = self.acc.data[:, 1] * np.sign(sY)
-            self.acc.data[:, 2] = self.acc.data[:, 2] * np.sign(sZ)
-        elif sensor == 'pressure':
-            if 'left' in self.header.sensorPosition:
-                print('switching pressure sensors')
-                self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-        elif sensor == 'default':
-            if 'left' in self.header.sensorPosition:
-                self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-                self.acc.data[:, 1] = self.acc.data[:, 1] * -1
-                self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-            # if('right' in self.header.sensorPosition):
-            # print "rotating nothing"
-            else:
-                print("No Position Definition found - Using Name Fallback")
-                try:
-                    if "92338C81" in self.path:
-                        self.pressure.data[:, [0, 1, 2]] = self.pressure.data[:, [2, 1, 0]]
-                        self.acc.data[:, 1] = self.acc.data[:, 1] * -1
-                        self.gyro.data[:, 0] = self.gyro.data[:, 0] * -1
-                except:
-                    print("Rotation FAILED")
-        else:
-            print('unknown sensor, no rotation possible')
-
-    def downSample(self, q):
-        dX = scipy.signal.decimate(self.acc.data[:, 0], q)
-        dY = scipy.signal.decimate(self.acc.data[:, 1], q)
-        dZ = scipy.signal.decimate(self.acc.data[:, 2], q)
-        self.acc.data = np.column_stack((dX, dY, dZ))
-        dX = scipy.signal.decimate(self.gyro.data[:, 0], q)
-        dY = scipy.signal.decimate(self.gyro.data[:, 1], q)
-        dZ = scipy.signal.decimate(self.gyro.data[:, 2], q)
-        self.gyro.data = np.column_stack((dX, dY, dZ))
-
-    def filterData(self, data, order, fc, fType='lowpass'):
-        fn = fc / (self.header.samplingRate_Hz / 2.0)
-        b, a = signal.butter(order, fn, btype=fType)
-        return signal.filtfilt(b, a, data.T, padlen=150).T
-
-    def cutDataset(self, start, stop):
-        s = copy.copy(self)
-        s.sync = s.sync[start:stop]
-        s.counter = s.counter[start:stop]
-        s.acc.data = s.acc.data[start:stop]
-        s.gyro.data = s.gyro.data[start:stop]
-        s.baro.data = s.baro.data[start:stop]
-        s.pressure.data = s.pressure.data[start:stop]
-        s.battery.data = s.battery.data[start:stop]
-        s.rtc = s.rtc[start:stop]
-        s.size = len(s.counter)
+        s.path = path
         return s
 
-    def norm(self, data):
-        return np.apply_along_axis(np.linalg.norm, 1, data)
+    @classmethod
+    def from_csv_file(cls, path: path_t):
+        """Create a new Dataset from a valid .csv file.
 
-    def exportCSV(self, path):
-        if self.isCalibrated:
-            accFrame = pd.DataFrame(self.acc.data, columns=['AX [g]', 'AY [g]', 'AZ [g]'])
-            gyroFrame = pd.DataFrame(self.gyro.data, columns=['GX [dps]', 'GY [dps]', 'GZ [dps]'])
+        Args:
+            path: Path to the file
+
+        Notes:
+            This is planned but not yet supported
+        """
+        raise NotImplementedError('CSV importer coming soon')
+
+    @property
+    def size(self) -> int:
+        """Number of samples in the Dataset."""
+        return len(self.counter)
+
+    @property
+    def ACTIVE_SENSORS(self) -> Tuple[str]:
+        """Enabled sensors in the dataset."""
+        return tuple(self.info.enabled_sensors)
+
+    @property
+    def datastreams(self) -> Iterable[Datastream]:
+        """Iterate through all available datastreams."""
+        for i in self.ACTIVE_SENSORS:
+            yield i, getattr(self, i)
+
+    @property
+    def utc_counter(self) -> np.ndarray:
+        """Counter as utc timestamps."""
+        return self.info.utc_datetime_start_day_midnight.timestamp() + self.counter / self.info.sampling_rate_hz
+
+    @property
+    def utc_datetime_counter(self) -> np.ndarray:
+        """Counter as np.datetime64 in UTC timezone."""
+        return pd.to_datetime(pd.Series(self.utc_counter * 1000000), utc=True, unit='us').values
+
+    @property
+    def time_counter(self) -> np.ndarray:
+        """Counter in seconds since first sample."""
+        return (self.counter - self.counter[0]) / self.info.sampling_rate_hz
+
+    def calibrate_imu(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+        """Apply a calibration to the Acc and Gyro datastreams.
+
+        The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
+        for the Acc and "dps" (degrees per second) for the Gyro.
+
+        Args:
+            calibration: calibration object or path to .json file, that can be used to create one.
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                datastream objects is created
+
+        Notes:
+            This just combines `calibrate_acc` and `calibrate_gyro`.
+        """
+        calibration = load_and_check_cal_info(calibration)
+        s = self.calibrate_acc(calibration, inplace)
+        s = s.calibrate_gyro(calibration, inplace=True)
+        return s
+
+    def calibrate_acc(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+        """Apply a calibration to the Acc datastream.
+
+        The final units of the datastream will depend on the used calibration values, but must likely they will be "g"
+        for Acc.
+
+        Args:
+            calibration: calibration object or path to .json file, that can be used to create one.
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                datastream objects is created
+        """
+        # TODO: Allow option to specifiy the unit of the final ds
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.acc, 'acc') is True:
+            calibration = load_and_check_cal_info(calibration)
+            acc = calibration.calibrate_acc(s.acc.data)
+            s.acc.data = acc
+            s.acc.is_calibrated = True
+        return s
+
+    def calibrate_gyro(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+        """Apply a calibration to the Gyro datastream.
+
+        The final units of the datastreams will depend on the used calibration values, but must likely they will be
+        "dps" (degrees per second) for the Gyro.
+
+        Args:
+            calibration: calibration object or path to .json file, that can be used to create one.
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                datastream objects is created
+        """
+        # TODO: Allow option to specifiy the unit of the final ds
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.gyro, 'gyro') is True:
+            calibration = load_and_check_cal_info(calibration)
+            gyro = calibration.calibrate_gyro(s.gyro.data)
+            s.gyro.data = gyro
+            s.gyro.is_calibrated = True
+        return s
+
+    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
+        """Apply a calibration to the Acc and Gyro datastreams.
+
+        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
+        For any tasks requiring precise sensor outputs, `calibrate_imu` should be used with measured calibration
+        values.
+
+        The final units of the output will be "g" for the Acc and "dps" (degrees per second) for the Gyro.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+
+        Notes:
+            This just combines `factory_calibrate_acc` and `factory_calibrate_gyro`.
+         """
+        s = self.factory_calibrate_acc(inplace=inplace)
+        s = s.factory_calibrate_gyro(inplace=True)
+
+        return s
+
+    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
+        """Apply a factory calibration to the Gyro datastream.
+
+        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
+        For any tasks requiring precise sensor outputs, `calibrate_gyro` should be used with measured calibration
+        values.
+
+        The final units of the output will be "dps" (degrees per second) for the Gyro.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+         """
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.gyro, 'gyro') is True:
+            s.gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
+            s.gyro.is_calibrated = True
+        return s
+
+    def factory_calibrate_acc(self: T, inplace: bool = False) -> T:
+        """Apply a factory calibration to the Acc datastream.
+
+        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
+        For any tasks requiring precise sensor outputs, `calibrate_acc` should be used with measured calibration
+        values.
+
+        The final units of the output will be "g" for the Acc.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+         """
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.acc, 'acc') is True:
+            s.acc.data /= 2 ** 16 / self.info.acc_range_g / 2
+            s.acc.is_calibrated = True
+        return s
+
+    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
+        """Apply a calibration to the Baro datastream.
+
+        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
+        In general, if baro measurements are used to estimate elevation, the estimation should be calibrated relative to
+        a reference altitude.
+
+        The final units of the output will be "millibar" (equivalent to Hectopacal) for the Baro.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.baro, 'baro') is True:
+            s.baro.data = (s.baro.data + 101325) / 100.0
+            s.baro.is_calibrated = True
+        return s
+
+    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
+        """Apply a calibration to the Battery datastream.
+
+        The battery values are only a rough estimation for the actual battery level and will also not correlate linearly
+        with it. These values should not be used to estimate battery runtime.
+
+        The final units of the output will be "V" for the battery.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.battery, 'battery') is True:
+            s.battery.data = (s.battery.data * 2.0) / 100.0
+            s.battery.is_calibrated = True
+        return s
+
+    @staticmethod
+    def _check_calibration(ds: Optional[Datastream], name: str):
+        """Check if a specific datastream is already marked as calibrated, or if the datastream does not exist.
+
+        In case the datastream is already calibrated a `RepeatedCalibrationError` is raised.
+        In case the datastream does not exist, a warning is raised.
+
+        Args:
+            ds: datastream object or None
+            name: name of the datastream object. Used to provide additional info in error messages.
+        """
+        if ds is not None:
+            if ds.is_calibrated is True:
+                raise RepeatedCalibrationError(name)
+            return True
         else:
-            accFrame = pd.DataFrame(self.acc.data, columns=['AX [no unit]', 'AY [no unit]]', 'AZ [no unit]'])
-            gyroFrame = pd.DataFrame(self.gyro.data, columns=['GX [no unit]', 'GY [no unit]', 'GZ [no unit]'])
+            datastream_does_not_exist_warning(name, 'calibration')
+            return False
 
-        frame = pd.concat([accFrame, gyroFrame], axis=1)
-        frame.to_csv(path, index=False, sep=';')
+    def downsample(self: T, factor: int, inplace: bool = False) -> T:
+        """Downsample all datastreams by a factor.
 
-    @staticmethod
-    def interpolate3D(array, idx, num):
-        xx = ((array[idx + 1, 0] - array[idx, 0]) / (num + 1.0))
-        yy = ((array[idx + 1, 1] - array[idx, 1]) / (num + 1.0))
-        zz = ((array[idx + 1, 2] - array[idx, 2]) / (num + 1.0))
-        for i in range(1, num + 1):
-            x = (xx * i) + array[idx, 0]
-            y = (yy * i) + array[idx, 1]
-            z = (zz * i) + array[idx, 2]
-            a = [x, y, z]
-            array = np.insert(array, idx + i, a, axis=0)
-        return array
+        This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
+        See `Datastream.downsample` for details.
 
-    @staticmethod
-    def interpolate1D(array, idx, num):
-        xx = ((array[idx + 1] - array[idx]) / (num + 1.0))
-        for i in range(1, num + 1):
-            a = (xx * i) + array[idx]
-            array = np.insert(array, idx + i, a)
-        return array
+        Warnings:
+            This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
+            sync index values. Using methods that rely on these values might result in unexpected behaviour.
+            For example `cut_to_syncregion` will not work correctly, if `cut`, `cut_counter_val`, or `downsample` was
+            used before.
 
-    def interpolateDataset(self, dataset):
-        counterTmp = np.copy(dataset.counter)
-        accTmp = np.copy(dataset.acc.data)
-        gyroTmp = np.copy(dataset.gyro.data)
-        baroTmp = np.copy(dataset.baro.data)
-        pressureTmp = np.copy(dataset.pressure.data)
-        batteryTmp = np.copy(dataset.battery.data)
+        Args:
+            factor: Factor by which the dataset should be downsampled.
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        s = inplace_or_copy(self, inplace)
+        for key, val in s.datastreams:
+            setattr(s, key, val.downsample(factor))
+        s.counter = decimate(s.counter, factor, axis=0)
+        return s
 
-        c = 0
+    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+            inplace: bool = False) -> T:
+        """Cut all datastreams of the dataset.
 
-        for i in range(1, len(counterTmp)):
-            delta = counterTmp[i] - counterTmp[i - 1]
-            if 1 < delta < 30000:
-                c = c + 1
-                counterTmp = self.interpolate1D(counterTmp, i - 1, delta - 1)
-                baroTmp = self.interpolate1D(baroTmp, i - 1, delta - 1)
-                batteryTmp = self.interpolate1D(batteryTmp, i - 1, delta - 1)
-                accTmp = self.interpolate3D(accTmp, i - 1, delta - 1)
-                gyroTmp = self.interpolate3D(gyroTmp, i - 1, delta - 1)
-                pressureTmp = self.interpolate3D(pressureTmp, i - 1, delta - 1)
+        This is equivalent to applying the following slicing to all datastreams and the counter: array[start:stop:step]
 
-        if c > 0:
-            print(
-                "ATTENTION: Dataset was interpolated due to synchronization Error! " + str(c) + " Samples were added!")
+        Warnings:
+            This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
+            sync index values. Using methods that rely on these values might result in unexpected behaviour.
+            For example `cut_to_syncregion` will not work correctly, if `cut` or `cut_counter_val` was used before.
 
-        dataset.counter = counterTmp
-        dataset.gyro.data = gyroTmp
-        dataset.pressure.data = pressureTmp
-        dataset.baro.data = baroTmp
-        dataset.battery.data = batteryTmp
-        return dataset
+        Args:
+            start: Start index
+            stop: Stop index
+            step: Step size of the cut
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        s = inplace_or_copy(self, inplace)
+
+        for key, val in s.datastreams:
+            setattr(s, key, val.cut(start, stop, step))
+        s.counter = s.counter[start:stop:step]
+        return s
+
+    def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
+                        inplace: bool = False) -> T:
+        """Cut the dataset based on values in the counter and not the index.
+
+        Instead of just cutting the datastream based on its index, it is cut based on the counter value.
+        This is equivalent to applying the following pandas style slicing to all datastreams and the counter:
+        array.loc[start:stop:step]
+
+        Warnings:
+            This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
+            sync index values. Using methods that rely on these values might result in unexpected behaviour.
+            For example `cut_to_syncregion` will not work correctly, if `cut` or `cut_counter_val` was used before.
+
+        Notes:
+            The method searches the respective index for the start and the stop value in the `counter` and calls `cut`
+            with these values.
+            The step size will be passed directly and not modified (i.e. the step size will not respect downsampling or
+            similar operations done beforehand).
+
+        Args:
+            start: Start value in counter
+            stop: Stop value in counter
+            step: Step size of the cut
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        if start:
+            start = np.searchsorted(self.counter, start)
+        if stop:
+            stop = np.searchsorted(self.counter, stop)
+        return self.cut(start, stop, step, inplace=inplace)
+
+    def cut_to_syncregion(self: Type[T], end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
+        """Cut the dataset to the region indicated by the first and last sync package received from master.
+
+        This cuts the dataset to the values indicated by `info.sync_index_start` and `info.sync_index_stop`.
+        In case the dataset was a sync-master (`info.sync_role = 'master'`) this will have no effect and the dataset
+        will be returned unmodified.
+
+        Notes:
+            Usually to work with multiple syncronised datasets, a `SyncedSession` should be used instead of cutting
+            the datasets manually. `SyncedSession.cut_to_syncregion` will cover multiple edge cases involving multiple
+            datasets, which can not be handled by this method.
+
+        Warnings:
+            This function should not be used after any other methods that can modify the counter (e.g. `cut` or
+            `downsample`).
+
+            This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
+            sync index values. Using methods that rely on these values might result in unexpected behaviour.
+
+        Args:
+            end: Whether the dataset should be cut at the `info.last_sync_index`. Usually it can be assumed that the
+                data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
+                acceptable to just ignore the last syncpackage and just cut the start of the dataset.
+            warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
+                warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
+                This is not relevant if the end of the dataset is cut (e.g. `end=True`)
+            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+
+        Raises:
+            ValueError: If the dataset does not have any sync infos
+
+        Warns:
+            If a syncpackage occurred far before the last sample in the dataset. See arg `warn_thres`.
+        """
+        if self.info.is_synchronised is False:
+            raise ValueError('Only synchronised Datasets can be cut to the syncregion')
+        if self.info.sync_role == 'master':
+            return inplace_or_copy(self, inplace)
+        if warn_thres is not None and end is not True and self._check_sync_packages(warn_thres) is False:
+            warnings.warn('The last sync package occured more than {} s before the end of the measurement.'
+                          'The last region of the data should not be trusted.'.format(warn_thres))
+        end = self.info.sync_index_stop + 1 if end is True else None
+        return self.cut(self.info.sync_index_start, end, inplace=inplace)
+
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:
+        """Export the datastreams of the dataset in a single pandas DataFrame.
+
+        Args:
+            datastreams: Optional list of datastream names, if only specific ones should be included. Datastreams that
+                are not part of the current dataset will be silently ignored.
+            index: Specify which index should be used for the dataset. The options are:
+                "counter": For the actual counter
+                "time": For the time in seconds since the first sample
+                "utc": For the utc time stamp of each sample
+                "utc_datetime": for a pandas DateTime index in UTC time
+                None: For a simple index (0...N)
+
+        Notes:
+            This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+            Therefore, it will use the column information of each datastream.
+
+        Raises:
+            ValueError: If any other than the allowed `index` values are used.
+        """
+        index_names = {None: 'n_samples', 'counter': 'n_samples', 'time': 't', 'utc': 'utc', 'utc_datetime': 'date'}
+        if index and index not in index_names.keys():
+            raise ValueError(
+                'Supplied value for index ({}) is not allowed. Allowed values: {}'.format(index, index_names.keys()))
+
+        index_name = index_names[index]
+
+        datastreams = datastreams or self.ACTIVE_SENSORS
+        dfs = [s.data_as_df() for k, s in self.datastreams if k in datastreams]
+        df = pd.concat(dfs, axis=1)
+
+        if index:
+            if index != 'counter':
+                index += '_counter'
+            index = getattr(self, index, None)
+            df.index = index
+        else:
+            df = df.reset_index(drop=True)
+        df.index.name = index_name
+        return df
+
+    def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
+        """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
+
+        See Also:
+            data_as_df
+
+        Args:
+            index: Specify which index should be used for the dataset. The options are:
+                "counter": For the actual counter
+                "time": For the time in seconds since the first sample
+                "utc": For the utc time stamp of each sample
+                "utc_datetime": for a pandas DateTime index in UTC time
+                None: For a simple index (0...N)
+
+        Notes:
+            This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+            Therefore, it will use the column information of each datastream.
+
+        Raises:
+            ValueError: If any other than the allowed `index` values are used.
+        """
+        return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
+
+    def _check_sync_packages(self, threshold_s: int = 30) -> bool:
+        """Check if the last sync package occurred far from the actual end of the recording.
+
+        This can be the case, if the master stopped sending packages, or if the sensor could not receive any new sync
+        info for a prelonged period of time.
+        In particular in the latter case, careful review of the data is advised.
+        """
+        if self.info.sync_role == 'slave':
+            if len(self.counter) - self.info.sync_index_stop > threshold_s * self.info.sampling_rate_hz:
+                return False
+        return True
+
+
+def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
+                                        np.ndarray,
+                                        Header]:
+    session_header, header_size = parse_header(path)
+
+    sample_size = session_header.sample_size
+    n_samples = session_header.n_samples
+
+    data = read_binary_file_uint8(path, sample_size, header_size, n_samples)
+    sensor_data = dict()
+
+    idx = 0
+    for sensor in session_header.enabled_sensors:
+        bits, channel, dtype = SENSOR_SAMPLE_LENGTH[sensor]
+        bits_per_channel = bits // channel
+        tmp = np.full((len(data), channel), np.nan)
+        for i in range(channel):
+            tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
+                                              dtype=dtype).astype(float)
+            idx += bits_per_channel
+        sensor_data[sensor] = tmp
+
+    # Sanity Check:
+    if not idx + 4 == data.shape[-1]:
+        # TODO: Test if this works as expected
+        expected_cols = idx
+        all_cols = data.shape[-1] - 4
+        raise InvalidInputFileError(
+            'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
+                expected_cols, all_cols))
+
+    counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
+
+    if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
+        warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
+                      'This might indicate a corrupted file')
+
+    return sensor_data, counter, session_header

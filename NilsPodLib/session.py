@@ -1,194 +1,186 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 28 11:32:22 2017
+"""Session groups multiple Datasets from sensors recorded at the same time
 
-@author: nils
+@author: Nils Roth, Arne Küderle
 """
-
-import copy
-import os
+import warnings
+from pathlib import Path
+from typing import Iterable, Tuple, TypeVar, Type, Any, Optional
 
 import numpy as np
-import pandas as pd
 
-from NilsPodLib.dataset import dataset
-from NilsPodLib.header import header
+from NilsPodLib.dataset import Dataset
+from NilsPodLib.header import ProxyHeader
+from NilsPodLib.interfaces import CascadingDatasetInterface
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
-leftFootFileNames = ["NRF52-92", "Left"]
-rightFootFileNames = ["NRF52-84", "Right"]
-
-
-def getFileNames(folderPath, fileEnding):
-    fileNames = list()
-    for file in os.listdir(folderPath):
-        if file.endswith(fileEnding):
-            print(os.path.join(folderPath, file))
-            fileNames.append(os.path.join(folderPath, file))
-    return fileNames
+T = TypeVar('T', bound='Session')
 
 
-def getFilesNamesPerFoot(path):
-    leftFootPath = ""
-    rightFootPath = ""
-    for file in os.listdir(path):
-        if file.endswith(".bin"):
-            fullFileName = os.path.join(path, file)
-            for filename in leftFootFileNames:
-                if filename in fullFileName:
-                    leftFootPath = fullFileName
-            for filename in rightFootFileNames:
-                if filename in fullFileName:
-                    rightFootPath = fullFileName
-    return [leftFootPath, rightFootPath]
+# TODO: Create function to parse sessions from larger folder full of datasets
+# def identify_sessions(folder_path: path_t, filter_pattern: str = '*') -> Sequence[Sequence[path_t]]:
+#     files = Path(folder_path).glob(filter_pattern)
+#     props = dict()
+#     for f in files:
+#         props[f] =
 
 
-class session:
-    leftFoot = None
-    rightFoot = None
+class Session(CascadingDatasetInterface):
+    datasets: Tuple[Dataset]
 
-    def __init__(self, leftFoot, rightFoot):
-        self.leftFoot = leftFoot
-        self.rightFoot = rightFoot
+    def __init__(self, datasets: Iterable[Dataset]):
+        self.datasets = tuple(datasets)
 
     @classmethod
-    def from_filePaths(cls, leftFootPath, rightFootPath):
-        leftFoot = dataset(leftFootPath, header, freeRTOS)
-        rightFoot = dataset(rightFootPath, header, freeRTOS)
-        session = cls(leftFoot, rightFoot)
-        return session
+    def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
+        """Create a new session from a list of files pointing to valid .bin files.
+
+        Args:
+            paths: List of paths pointing to files to be included
+        """
+        ds = (Dataset.from_bin_file(p) for p in paths)
+        return cls(ds)
 
     @classmethod
-    def from_folderPath(cls, folderPath):
-        [leftFootPath, rightFootPath] = getFilesNamesPerFoot(folderPath)
-        leftFoot = dataset(leftFootPath)
-        rightFoot = dataset(rightFootPath)
-        session = cls(leftFoot, rightFoot)
-        return session
+    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*') -> T:
+        """Create a new session from a folder path containing valid .bin files.
 
-    def synchronizeFallback(self):
-        # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
-        inSync = (np.argwhere(self.leftFoot.sync > 0)[0])[0]
-        self.leftFoot = self.leftFoot.cutDataset(inSync, len(self.leftFoot.counter))
+        Args:
+            base_path: Path to the folder
+            filter_pattern: regex that can be used to filter the files in the folder. This is passed to Pathlib.glob()
+        """
+        return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
-        # cut away all sample at the beginning until both data streams are synchronized (MASTER)
-        inSync = (np.argwhere(self.rightFoot.counter >= self.leftFoot.counter[0])[0])[0]
-        self.rightFoot = self.rightFoot.cutDataset(inSync, len(self.rightFoot.counter))
+    def calibrate_imu(self, inplace: bool = False):
+        raise NotImplementedError('Calibration for multiple Sensors at once is not supported at the moment.')
 
-        # cut both streams to the same lenght
-        if len(self.rightFoot.counter) >= len(self.leftFoot.counter):
-            length = len(self.leftFoot.counter) - 1
-        else:
-            length = len(self.rightFoot.counter) - 1
 
-        self.leftFoot = self.leftFoot.cutDataset(0, length)
-        self.rightFoot = self.rightFoot.cutDataset(0, length)
+    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
+        return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self.datasets)
+        if all(isinstance(d, Dataset) for d in return_vals):
+            inplace = kwargs.get('inplace', False)
+            s = inplace_or_copy(self, inplace)
+            s.datasets = return_vals
+            return s
+        return return_vals
 
-    def synchronize(self):
-        if self.leftFoot.header.syncRole == 'disabled' or self.rightFoot.header.syncRole == 'disabled':
-            print("No header information found using fallback sync")
-            self.synchronizeFallback()
-            return
-        try:
-            if self.leftFoot.header.syncRole == self.rightFoot.header.syncRole:
-                print("ERROR: no master/slave pair found - synchronization FAILED")
-                return
+    def _cascading_dataset_attribute_access(self, name: str) -> Any:
+        return_val = tuple([getattr(d, name) for d in self.datasets])
+        if name == 'info':
+            return ProxyHeader(return_val)
+        return return_val
 
-            if self.rightFoot.header.syncRole == 'master':
-                master = self.rightFoot
-                slave = self.leftFoot
-            else:
-                master = self.leftFoot
-                slave = self.rightFoot
 
-            try:
-                inSync = (np.argwhere(slave.sync > 0)[0])[0]
-            except:
-                print("No Synchronization signal found - synchronization FAILED")
-                return
+class SyncedSession(Session):
 
-            # cut away all sample at the beginning until both data streams are synchronized (SLAVE)
-            inSync = (np.argwhere(slave.sync > 0)[0])[0]
-            slave = slave.cutDataset(inSync, len(slave.counter))
+    def __init__(self, datasets: Iterable[Dataset]):
+        super().__init__(datasets)
+        self.validate()
 
-            # cut away all sample at the beginning until both data streams are synchronized (MASTER)
-            inSync = (np.argwhere(master.counter >= slave.counter[0])[0])[0]
-            master = master.cutDataset(inSync, len(master.counter))
+    def validate(self) -> None:
+        """Check if basic properties of a synced session are fulfilled.
 
-            # cut both streams to the same lenght
-            if len(master.counter) >= len(slave.counter):
-                length = len(slave.counter) - 1
-            else:
-                length = len(master.counter) - 1
+        Raises:
+            ValueError: This raises a ValueError in the following cases:
+                - One or more of the datasets are not part of the same syncgroup/same sync channel
+                - Multiple datasets are marked as "master"
+                - One or more datasets indicate that they are not syncronised
+                - One or more dataset has a different sampling rate than the others
+                - If the recording times of provided datasets do not have any overlap
+        """
+        if not self._validate_sync_groups():
+            raise ValueError('The provided datasets are not part of the same sync_group')
+        master_valid, slaves_valid = self._validate_sync_role()
+        if not master_valid:
+            raise ValueError('SyncedSessions require exactly 1 master.')
+        if not slaves_valid:
+            raise ValueError('One of the provided sessions is not correctly set to either slave or master')
+        if not self._validate_sampling_rate():
+            raise ValueError('All provided sessions need to have the same sampling rate')
+        if not self._validate_overlapping_record_time():
+            raise ValueError('The provided datasets do not have any overlapping time period.')
 
-            slave = slave.cutDataset(0, length)
-            master = master.cutDataset(0, length)
+    def _validate_sync_groups(self) -> bool:
+        """Check that all _headers belong to the same sync group."""
+        sync_group = set(self.info.sync_group)
+        sync_channel = set(self.info.sync_channel)
+        sync_address = set(self.info.sync_address)
+        return all((True for i in [sync_group, sync_channel, sync_address] if len(i) == 1))
 
-            if self.rightFoot.header.syncRole == 'master':
-                self.rightFoot = master
-                self.leftFoot = slave
-            else:
-                self.rightFoot = slave
-                self.leftFoot = master
-            # check if synchronization is valid
-            # test synchronization
-            deltaCounter = abs(self.leftFoot.counter - self.rightFoot.counter)
-            sumDelta = np.sum(deltaCounter)
-            if sumDelta != 0.0:
-                print("ATTENTION: Error in synchronization. Check Data!")
-        except Exception as e:
-            print(e)
-            print("synchronization failed with ERROR")
+    def _validate_sync_role(self) -> Tuple[bool, bool]:
+        """Check that there is only 1 master and all other sensors were configured as slaves."""
+        roles = self.info.sync_role
+        master_valid = len([i for i in roles if i == 'master']) == 1
+        slaves_valid = len([i for i in roles if i == 'slave']) == len(roles) - 1
+        return master_valid, slaves_valid
 
-    def calibrate(self):
-        self.leftFoot.calibrate()
-        self.rightFoot.calibrate()
+    def _validate_sampling_rate(self) -> bool:
+        """Check that all sensors had the same sampling rate."""
+        sr = set(self.info.sampling_rate_hz)
+        return len(sr) == 1
 
-    def rotateAxis(self, system):
-        if system == 'egait':
-            self.leftFoot.rotateAxis('gyro', 2, 0, 1, -1, -1, 1)  # swap axis Z,X,Y, change sign -X-Y+Z
-            self.leftFoot.rotateAxis('acc', 2, 0, 1, -1, -1, 1)
-            self.rightFoot.rotateAxis('gyro', 2, 0, 1, 1, 1, -1)
-            self.rightFoot.rotateAxis('acc', 2, 0, 1, 1, -1, -1)
-            self.leftFoot.rotateAxis('pressure', 0, 0, 0, 0, 0, 0)
-            self.rightFoot.rotateAxis('pressure', 0, 0, 0, 0, 0, 0)
-        elif system == 'default':
-            self.rightFoot.rotateAxis('default', 0, 0, 0, 0, 0, 0)
-            self.leftFoot.rotateAxis('default', 0, 0, 0, 0, 0, 0)
-        else:
-            print('unknown system, you need to handle axis rotation per foot yourself!')
+    def _validate_overlapping_record_time(self) -> bool:
+        """Check if all provided sessions have overlapping recording times."""
+        start_times = np.array(self.info.utc_start)
+        stop_times = np.array(self.info.utc_stop)
+        return validate_existing_overlap(start_times, stop_times)
 
-    def cutData(self, start, stop):
-        session = copy.copy(self)
-        session.leftFoot = session.leftFoot.cutDataset(start, stop)
-        session.rightFoot = session.rightFoot.cutDataset(start, stop)
-        return session
+    @property
+    def master(self) -> Dataset:
+        """Returns the master dataset of the session."""
+        return next(d for d in self.datasets if d.info.sync_role == 'master')
 
-    def convertToDataFrame(self, session):
-        # create pandas dataframe
-        dataset = session.leftFoot
-        baro = np.reshape(dataset.baro.data, (dataset.size, 1))
-        battery = np.reshape(dataset.battery.data, (dataset.size, 1))
-        rtc = np.reshape(dataset.rtc, (dataset.size, 1))
-        dfLeft = pd.DataFrame(
-            np.hstack((rtc, dataset.acc.data, dataset.gyro.data, dataset.pressure.data, baro, battery)))
-        foot = 'L'
-        dfLeft.columns = ['utc' + foot, 'aX' + foot, 'aY' + foot, 'aZ' + foot, 'gX' + foot, 'gY' + foot, 'gZ' + foot,
-                          'p1' + foot, 'p2' + foot, 'p3' + foot, 'b' + foot, 'bat' + foot]
+    @property
+    def slaves(self) -> Tuple[Dataset]:
+        """Returns a list of all slave datasets in the session."""
+        return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
-        dataset = session.rightFoot
-        baro = np.reshape(dataset.baro.data, (dataset.size, 1))
-        battery = np.reshape(dataset.battery.data, (dataset.size, 1))
-        rtc = np.reshape(dataset.rtc, (dataset.size, 1))
-        dfRight = pd.DataFrame(
-            np.hstack((rtc, dataset.acc.data, dataset.gyro.data, dataset.pressure.data, baro, battery)))
-        foot = 'R'
-        dfRight.columns = ['utc' + foot, 'aX' + foot, 'aY' + foot, 'aZ' + foot, 'gX' + foot, 'gY' + foot, 'gZ' + foot,
-                           'p1' + foot, 'p2' + foot, 'p3' + foot, 'b' + foot, 'bat' + foot]
-        dfCombined = pd.concat([dfLeft, dfRight], axis=1)
+    def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,
+                          warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
+        """Cut all datasets to the regions where they were synchronised to the master.
 
-        return dfCombined
+        Args:
+            only_to_master: If True each slave will be cut to the region, where it was synchronised with the master.
+                Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
+                in sync. Only in the latter case all datasets will have the same length and are guarantied to have the
+                same counter.
+            end: Whether the dataset should be cut at the `info.last_sync_index`. Usually it can be assumed that the
+                data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
+                acceptable to just ignore the last syncpackage and just cut the start of the dataset.
+            warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
+                warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
+                This is not relevant if the end of the dataset is cut (e.g. `end=True`)
+            inplace: If operation should be performed on the current Session object, or on a copy
 
-    def saveToCSV(self, filename, sep=';', compression=None, index=False):
-        df = self.convertToDataFrame(self)
-        df.to_csv(filename, sep=sep, compression=compression)
+        Warns:
+            If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
+        """
+        s = inplace_or_copy(self, inplace)
+        if warn_thres is not None and end is not True:
+            sync_warn = [d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres) is False]
+            if any(sync_warn):
+                warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
+                              'end of the dataset. The last section of this data should not be trusted.'.format(
+                    sync_warn, warn_thres))
+
+        if only_to_master is True:
+            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
+            return s
+
+        start_idx = [d.counter[d.info.sync_index_start] for d in s.slaves]
+        stop_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
+        if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
+            raise ValueError('The provided datasets do not have a overlapping regions where all are synced!')
+
+        end = np.min(stop_idx) if end is True else None
+        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), end, inplace=True)
+
+        # in case the cut is not to the sync end, cut all datasets to the same length
+        if not end:
+            min_len = np.min([len(d.counter) for d in s.datasets])
+            s = super(SyncedSession, s).cut(None, min_len, inplace=True)
+
+        # Finally set the master counter to all slaves to really ensure identical counters
+        for d in s.slaves:
+            d.counter = s.master.counter
+        return s

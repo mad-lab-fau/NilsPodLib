@@ -22,10 +22,7 @@ setup(
     version='0.1.0',
     description='A library to work with NilsPod data',
 
-    packages=find_packages(),  # Required
+    packages=find_packages(exclude=('tests', 'examples')),
 
-    install_requires=['scipy', 'matplotlib', 'pandas', 'numpy'],  # Optional
-
-    package_data={'NilsPodLib': ['Calibration/CalibrationFiles/*.pickle']},
-    include_package_data=True
+    install_requires=['scipy', 'matplotlib', 'pandas', 'numpy']
 )
