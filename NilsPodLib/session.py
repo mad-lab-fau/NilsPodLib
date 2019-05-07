@@ -33,17 +33,27 @@ class Session(CascadingDatasetInterface):
 
     @classmethod
     def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
+        """Create a new session from a list of files pointing to valid .bin files.
+
+        Args:
+            paths: List of paths pointing to files to be included
+        """
         ds = (Dataset.from_bin_file(p) for p in paths)
         return cls(ds)
 
     @classmethod
     def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*') -> T:
+        """Create a new session from a folder path containing valid .bin files.
+
+        Args:
+            base_path: Path to the folder
+            filter_pattern: regex that can be used to filter the files in the folder. This is passed to Pathlib.glob()
+        """
         return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
     def calibrate_imu(self, inplace: bool = False):
-        # TODO: Calibration for multiple sensors
-        self.leftFoot.calibrate()
-        self.rightFoot.calibrate()
+        raise NotImplementedError('Calibration for multiple Sensors at once is not supported at the moment.')
+
 
     def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
         return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self.datasets)
@@ -68,6 +78,15 @@ class SyncedSession(Session):
         self.validate()
 
     def validate(self) -> None:
+        """Check if basic properties of a synced session are fulfilled.
+
+        This raises a value error in the following cases:
+            - One or more of the datasets are not part of the same syncgroup/same sync channel
+            - Multiple datasets are marked as "master"
+            - One or more datasets indicate that they are not syncronised
+            - One or more dataset has a different sampling rate than the others
+            - If the recording times of provided datasets do not have any overlap
+        """
         if not self._validate_sync_groups():
             raise ValueError('The provided datasets are not part of the same sync_group')
         master_valid, slaves_valid = self._validate_sync_role()
@@ -81,7 +100,7 @@ class SyncedSession(Session):
             raise ValueError('The provided datasets do not have any overlapping time period.')
 
     def _validate_sync_groups(self) -> bool:
-        """Check that all _headers belong to the same sync group"""
+        """Check that all _headers belong to the same sync group."""
         sync_group = set(self.info.sync_group)
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
@@ -107,10 +126,12 @@ class SyncedSession(Session):
 
     @property
     def master(self) -> Dataset:
+        """Returns the master dataset of the session."""
         return next(d for d in self.datasets if d.info.sync_role == 'master')
 
     @property
     def slaves(self) -> Tuple[Dataset]:
+        """Returns a list of all slave datasets in the session."""
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
     def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,
