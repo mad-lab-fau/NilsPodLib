@@ -1,5 +1,7 @@
 stages:
   - testing
+  - deploy
+  - pages
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
@@ -27,3 +29,30 @@ lint:
   script:
     - tox -e lint
   allow_failure: true
+
+docs:
+  stage: deploy
+  dependencies:
+    - build:docker
+  script:
+    - tox -e docs
+    - mv docs/_build/html html_docs
+  artifacts:
+    paths:
+      - html_docs
+    expire_in: 2 month
+
+pages:
+  stage: pages
+  dependencies:
+    - docs
+  script:
+  - mkdir .public
+  - cp -r html_docs/* .public
+  - mv .public public
+  artifacts:
+    paths:
+    - public
+  only:
+  - refactor
+
