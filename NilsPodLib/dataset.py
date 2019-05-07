@@ -10,6 +10,7 @@ from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequen
 
 import numpy as np
 import pandas as pd
+from scipy.signal import decimate
 
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
@@ -286,7 +287,7 @@ class Dataset(CascadingDatasetInterface):
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
             setattr(s, key, val.downsample(factor))
-        # TODO: downsample counter
+        s.counter = decimate(s.counter, factor, axis=0)
         return s
 
     def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,

@@ -179,5 +179,12 @@ def test_utc_datetime_counter(dataset_master_simple):
     assert len(ds.utc_datetime_counter) == len(ds.counter)
 
 
-def test_datastreams():
-    pass
+@pytest.mark.parametrize('factor', [2, 4, 5])
+def test_downsample(dataset_master_simple, factor):
+    ds = dataset_master_simple[0]
+    ds.data = np.arange(100.)
+    s = ds.downsample(factor)
+    for k, d in s.datastreams:
+        assert len(d.data) == int(np.ceil(len(getattr(ds, k).data) / factor))
+        assert d.sampling_rate_hz == getattr(ds, k).sampling_rate_hz / factor
+    assert len(s.counter) == int(np.ceil(len(ds.counter) / factor))
