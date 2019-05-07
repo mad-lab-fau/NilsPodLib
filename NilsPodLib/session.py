@@ -80,12 +80,13 @@ class SyncedSession(Session):
     def validate(self) -> None:
         """Check if basic properties of a synced session are fulfilled.
 
-        This raises a value error in the following cases:
-            - One or more of the datasets are not part of the same syncgroup/same sync channel
-            - Multiple datasets are marked as "master"
-            - One or more datasets indicate that they are not syncronised
-            - One or more dataset has a different sampling rate than the others
-            - If the recording times of provided datasets do not have any overlap
+        Raises:
+            ValueError: This raises a ValueError in the following cases:
+                - One or more of the datasets are not part of the same syncgroup/same sync channel
+                - Multiple datasets are marked as "master"
+                - One or more datasets indicate that they are not syncronised
+                - One or more dataset has a different sampling rate than the others
+                - If the recording times of provided datasets do not have any overlap
         """
         if not self._validate_sync_groups():
             raise ValueError('The provided datasets are not part of the same sync_group')
@@ -141,15 +142,21 @@ class SyncedSession(Session):
         Args:
             only_to_master: If True each slave will be cut to the region, where it was synchronised with the master.
                 Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
-                in sync
-            end: If True, the datastreams will be cut at the last sync package. If not only the start will be cut based
-                on the sync information
+                in sync. Only in the latter case all datasets will have the same length and are guarantied to have the
+                same counter.
+            end: Whether the dataset should be cut at the `info.last_sync_index`. Usually it can be assumed that the
+                data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
+                acceptable to just ignore the last syncpackage and just cut the start of the dataset.
             warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
-                warn_thres before the end of the dataset, a warning is emitted. use warn_thres = None to silence.
+                warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
+                This is not relevant if the end of the dataset is cut (e.g. `end=True`)
             inplace: If operation should be performed on the current Session object, or on a copy
+
+        Warns:
+            If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
         """
         s = inplace_or_copy(self, inplace)
-        if warn_thres is not None:
+        if warn_thres is not None and end is not True:
             sync_warn = [d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres) is False]
             if any(sync_warn):
                 warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '

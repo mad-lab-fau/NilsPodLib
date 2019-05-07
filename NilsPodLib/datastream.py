@@ -5,7 +5,6 @@ Created on Thu Sep 28 11:32:22 2017
 @author: Nils Roth, Arne Küderle
 """
 import copy
-import warnings
 from typing import Optional, Iterable, List, TypeVar
 
 import numpy as np
