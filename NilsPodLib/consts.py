@@ -1,7 +1,9 @@
 """Basic constants/names used throughout the lib"""
 import numpy as np
 
-# Overall number of bytes, number of channels
+#: Byte information of each sensor in one sample.
+#:
+#: Format: Overall number of bytes, number of channels, datatype
 SENSOR_SAMPLE_LENGTH = {
         'acc': (6, 3, np.int16),
         'gyro': (6, 3, np.int16),
@@ -14,6 +16,7 @@ SENSOR_SAMPLE_LENGTH = {
 
     }
 
+#: Default legends for all sensors
 SENSOR_LEGENDS = {
     'acc': tuple('acc_' + x for x in 'xyz'),
     'gyro': tuple('gyr_' + x for x in 'xyz'),
@@ -22,6 +25,7 @@ SENSOR_LEGENDS = {
     'analog': tuple('analog_' + str(x) for x in range(3))
 }
 
+#: Default units for all sensors
 SENSOR_UNITS = {
     'acc': 'g',
     'gyro': 'dps',
@@ -29,6 +33,7 @@ SENSOR_UNITS = {
     'battery': 'V'
 }
 
+#: Available sensor positions
 SENSOR_POS = {
     0: 'undefined',
     1: 'left foot',
