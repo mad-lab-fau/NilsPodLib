@@ -32,8 +32,9 @@ lint:
 
 docs:
   stage: deploy
-  dependencies:
-    - build:docker
+  image: python:3.6
+  tags:
+    - docker
   script:
     - tox -e docs
     - mv docs/_build/html html_docs
