@@ -25,11 +25,6 @@ T = TypeVar('T')
 
 
 class Dataset(CascadingDatasetInterface):
-    # TODO: Potential warning if samplingrate does not fit to rtc -> Not possible because stop is not correct
-    # TODO: Warning non monotounus counter
-    # TODO: Test calibration
-    # TODO: Docu all the things
-
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         self.counter = counter
         self.info = info
@@ -162,7 +157,6 @@ class Dataset(CascadingDatasetInterface):
 
     def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
             inplace: bool = False) -> T:
-        # TODO: should cut change the start and end date of recording in the header?
         s = inplace_or_copy(self, inplace)
 
         for key, val in s.datastreams:

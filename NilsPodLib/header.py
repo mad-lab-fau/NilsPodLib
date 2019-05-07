@@ -16,7 +16,7 @@ from typing import Tuple, Any, List
 
 import numpy as np
 
-from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH, SENSOR_POS
+from NilsPodLib.consts import SENSOR_POS
 from NilsPodLib.utils import convert_little_endian, path_t
 
 
@@ -129,7 +129,6 @@ class HeaderFields:
         return StrictVersion(self.version_firmware[1:])
 
 
-# TODO: Include metainformation for units of sensors
 class Header(HeaderFields):
     """Additional Infos of recording.
 
