@@ -78,15 +78,6 @@ source_parsers = {
    '.md': 'recommonmark.parser.CommonMarkParser',
 }
 
-autodoc_default_options = {
-    'members': True,
-    'undoc-members': True,
-    'show-inheritance': True,
-    'inherited-members': True,
-}
-autodoc_member_order = 'groupwise'
-autoclass_content = 'both'
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -98,7 +89,11 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+
+html_theme_options = {
+    'logo_only': False,
+    'display_version': True,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -107,10 +102,6 @@ html_static_path = ['_static']
 html_logo = "logo_portabiles.svg"
 html_favicon = "favicon_portabiles.ico"
 
-html_theme_options = {
-    'logo_only': False,
-    'display_version': True,
-}
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -201,6 +192,17 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- Options for autodoc -----------------------------------------------------
+
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'show-inheritance': True,
+    'inherited-members': True,
+}
+autodoc_member_order = 'groupwise'
+autoclass_content = 'both'
 
 # -- Options for todo extension ----------------------------------------------
 
