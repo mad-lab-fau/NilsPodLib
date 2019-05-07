@@ -432,11 +432,6 @@ class Dataset(CascadingDatasetInterface):
         df.index.name = index_name
         return df
 
-    # TODO DELETE
-    def data_as_csv(self, path: path_t, datastreams: Optional[Iterable[str]] = None,
-                    index: Optional[str] = None) -> None:
-        self.data_as_df(datastreams=datastreams, index=index).to_csv(path, index=False)
-
     def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
@@ -459,10 +454,6 @@ class Dataset(CascadingDatasetInterface):
             ValueError: If any other than the allowed `index` values are used.
         """
         return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
-
-    # TODO DELETE
-    def imu_data_as_csv(self, path: path_t, index: Optional[str] = None) -> None:
-        self.imu_data_as_df(index=index).to_csv(path, index=False)
 
     def _check_sync_packages(self, threshold_s: int = 30) -> bool:
         """Check if the last sync package occurred far from the actual end of the recording.
