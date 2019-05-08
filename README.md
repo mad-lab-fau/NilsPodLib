@@ -25,7 +25,7 @@ pip install -e . --upgrade
 ## Documentation
 
 The documentation is available as SphinxDoc, which can be downloaded from the [pipelines page](https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib/-/jobs/artifacts/master/download?job=docs) for each commit.
-The documentation is also available [online](http://lo94zeny.mad-pages.informatik.uni-erlangen.de/nilspodpythonlib/) (only from the FAU university network).
+The documentation is also available [online](http://lo94zeny.mad-pages.informatik.uni-erlangen.de/nilspodpythonlib/README.html) (only from the FAU university network).
 
 Supplementary examples can be found in the [examples folder](https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib/tree/master/examples) of the git project.
 
