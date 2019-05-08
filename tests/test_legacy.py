@@ -1,8 +1,8 @@
 import pytest
 
-from NilsPodLib.legacy import fix_little_endian_counter
-from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian, \
-    read_binary_uint8
+from NilsPodLib.header import Header
+from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2
+from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA
 import numpy as np
 
@@ -21,3 +21,13 @@ def test_endian_conversion(test_session_11_2):
     counter_after = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
     assert np.all(np.diff(counter_after) == 1.)
 
+
+def test_sensor_enabled_flag_conversion(test_session_11_2):
+    _, header, _ = test_session_11_2
+    sensors = convert_sensor_enabled_flag_11_2(header[2])
+    enabled_sensors = list()
+    for para, val in Header._SENSOR_FLAGS.items():
+        if bool(sensors & val) is True:
+            enabled_sensors.append(para)
+
+    assert enabled_sensors == ['gyro', 'acc']
