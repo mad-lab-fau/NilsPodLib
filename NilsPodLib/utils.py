@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 import copy
 import warnings
-from typing import TypeVar, Union
+from typing import TypeVar, Union, TYPE_CHECKING
 
 import numpy as np
 from pathlib import Path
 
-from imucal import CalibrationInfo
+if TYPE_CHECKING:
+    from imucal import CalibrationInfo
+
 
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
@@ -65,7 +67,8 @@ def datastream_does_not_exist_warning(sensor_name, operation):
     return warnings.warn(message)
 
 
-def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> CalibrationInfo:
+def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
+    from imucal import CalibrationInfo
     if isinstance(calibration, (Path, str)):
         calibration = CalibrationInfo.from_json_file(calibration)
     if not isinstance(calibration, CalibrationInfo):
