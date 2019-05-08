@@ -14,10 +14,11 @@ from scipy.signal import decimate
 
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
-from NilsPodLib.header import Header, parse_header
+from NilsPodLib.header import Header
 from NilsPodLib.interfaces import CascadingDatasetInterface
-from NilsPodLib.utils import path_t, read_binary_file_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info
+from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
+    get_header_and_data_bytes
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo
@@ -472,12 +473,13 @@ class Dataset(CascadingDatasetInterface):
 def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
                                         np.ndarray,
                                         Header]:
-    session_header, header_size = parse_header(path)
+    header_bytes, data_bytes = get_header_and_data_bytes(path)
+    session_header = Header.from_bin_array(header_bytes[1:])
 
     sample_size = session_header.sample_size
     n_samples = session_header.n_samples
 
-    data = read_binary_file_uint8(path, sample_size, header_size, n_samples)
+    data = read_binary_uint8(data_bytes, sample_size, n_samples)
     sensor_data = dict()
 
     idx = 0
