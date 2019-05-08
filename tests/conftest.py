@@ -6,6 +6,7 @@ import pytest
 from NilsPodLib.dataset import Dataset
 
 HERE = Path(__file__).parent
+TEST_LEGACY_DATA = HERE / 'test_data/11_2_legacy_sample'
 TEST_SESSION_DATA = HERE / 'test_data/sample_session'
 TEST_REGRESSION_DATA = HERE / 'test_data/sample_session_regression'
 
