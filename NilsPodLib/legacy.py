@@ -21,8 +21,11 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
     data_bytes = fix_little_endian_counter(data_bytes, packet_size).flatten()
 
     header = insert_missing_bytes_11_2(header)
-    header[4:6] = split_sampling_rate_byte_11_2(header[3])
+    header[3:5] = split_sampling_rate_byte_11_2(header[3])
     header[2] = convert_sensor_enabled_flag_11_2(header[2])
+
+    # adapt to new header size:
+    header[0] = len(header)
 
     with open(out_path, 'wb+') as f:
         f.write(bytearray(header))
@@ -56,9 +59,9 @@ def convert_sensor_enabled_flag_11_2(byte):
 
 
 def insert_missing_bytes_11_2(header_bytes):
-    header_bytes = np.insert(header_bytes, 3, 0x00)
+    header_bytes = np.insert(header_bytes, 4, 0x00)
 
-    header_bytes = np.insert(header_bytes, 46, [0x00] * 2)
+    header_bytes = np.insert(header_bytes, 47, [0x00] * 2)
 
     return header_bytes
 
