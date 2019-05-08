@@ -1,7 +1,8 @@
 import pytest
 
 from NilsPodLib.header import Header
-from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2
+from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2, insert_missing_bytes_11_2, \
+    split_sampling_rate_byte_11_2
 from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA
 import numpy as np
@@ -31,3 +32,18 @@ def test_sensor_enabled_flag_conversion(test_session_11_2):
             enabled_sensors.append(para)
 
     assert enabled_sensors == ['gyro', 'acc']
+
+
+def test_insert_missing_bytes(test_session_11_2):
+    _, header, _ = test_session_11_2
+    new_header = insert_missing_bytes_11_2(header)
+
+    assert len(new_header) == 52
+
+
+@pytest.mark.parametrize('in_byte,out', [
+    (0x00, (0x00, 0x00)),
+    (0x1A, (0x0A, 0x10))
+])
+def test_split_sampling_rate(in_byte, out):
+    assert split_sampling_rate_byte_11_2(in_byte) == out
