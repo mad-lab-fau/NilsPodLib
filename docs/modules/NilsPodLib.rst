@@ -13,6 +13,7 @@ Submodules
    NilsPodLib.interfaces
    NilsPodLib.session
    NilsPodLib.utils
+   NilsPodLib.legacy
 
 Module contents
 ---------------
