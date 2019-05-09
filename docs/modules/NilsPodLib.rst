@@ -14,6 +14,7 @@ Submodules
    NilsPodLib.session
    NilsPodLib.utils
    NilsPodLib.legacy
+   NilsPodLib.calibration_utils
 
 Module contents
 ---------------
