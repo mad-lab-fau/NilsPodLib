@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import copy
+import struct
 import warnings
-from typing import TypeVar, Union
+from distutils.version import StrictVersion
+from typing import TypeVar, Union, TYPE_CHECKING, Tuple
 
 import numpy as np
 from pathlib import Path
 
-from imucal import CalibrationInfo
+if TYPE_CHECKING:
+    from imucal import CalibrationInfo
+
 
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
@@ -21,24 +25,33 @@ def convert_little_endian(byte_list, dtype=int):
     return number.astype(dtype)
 
 
-def read_binary_file_uint8(path, packet_size, skip_header_bytes, expected_samples):
-    with open(path, 'rb') as f:
-        f.seek(skip_header_bytes)  # skip Header bytes
-        data = np.fromfile(f, dtype=np.dtype('B'))
-    if expected_samples * packet_size > len(data):
-        expected_samples = len(data) // packet_size
-    data = data[:expected_samples * packet_size]
-    data = np.reshape(data, (expected_samples, int(packet_size)))
+def read_binary_uint8(data_bytes, packet_size, expected_samples):
+    if expected_samples * packet_size > len(data_bytes):
+        expected_samples = len(data_bytes) // packet_size
+    data_bytes = data_bytes[:expected_samples * packet_size]
+    data = np.reshape(data_bytes, (expected_samples, int(packet_size)))
     return data
 
 
-def read_binary_file_int16(path, packet_size, skip_header_bytes):
+def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
     with open(path, 'rb') as f:
-        f.seek(skip_header_bytes)  # skip Header bytes
-        data = np.fromfile(f, dtype=np.dtype('i2'))
-    data = data[0:(int(len(data) / int(packet_size / 2)) * int(packet_size / 2))]
-    data = np.reshape(data, (int(len(data) / (packet_size / 2)), int(packet_size / 2)))
-    return data
+        header = f.read(1)
+        header_size = header[0]
+        header += f.read(header_size - 1)
+        data_bytes = np.fromfile(f, dtype=np.dtype('B'))
+
+    header = bytearray(header)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', header[0:header_size]), dtype=np.uint8)
+
+    return header_bytes, data_bytes
+
+
+def get_sample_size_from_header_bytes(header_bytes: np.ndarray) -> int:
+    return int(header_bytes[1])
+
+
+def get_strict_version_from_header_bytes(header_bytes: np.ndarray) -> StrictVersion:
+    return StrictVersion('{}.{}.{}'.format(*(int(x) for x in header_bytes[-3:])))
 
 
 def inplace_or_copy(obj: T, inplace: bool) -> T:
@@ -65,7 +78,8 @@ def datastream_does_not_exist_warning(sensor_name, operation):
     return warnings.warn(message)
 
 
-def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> CalibrationInfo:
+def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
+    from imucal import CalibrationInfo
     if isinstance(calibration, (Path, str)):
         calibration = CalibrationInfo.from_json_file(calibration)
     if not isinstance(calibration, CalibrationInfo):
