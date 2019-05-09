@@ -5,7 +5,7 @@
 """
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, TypeVar, Type, Any, Optional
+from typing import Iterable, Tuple, TypeVar, Type, Any, Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
@@ -13,6 +13,9 @@ from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import ProxyHeader
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
+
+if TYPE_CHECKING:
+    from imucal import CalibrationInfo
 
 T = TypeVar('T', bound='Session')
 
@@ -23,6 +26,8 @@ T = TypeVar('T', bound='Session')
 #     props = dict()
 #     for f in files:
 #         props[f] =
+# STrep1: pool by syncgroup
+# Step2: pool by overlapping dates
 
 
 class Session(CascadingDatasetInterface):
@@ -51,9 +56,50 @@ class Session(CascadingDatasetInterface):
         """
         return cls.from_file_paths(Path(base_path).glob(filter_pattern))
 
-    def calibrate_imu(self, inplace: bool = False):
-        raise NotImplementedError('Calibration for multiple Sensors at once is not supported at the moment.')
+    def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+        """Calibrate the imus of all datasets by providing a list of calibration infos.
 
+        Args:
+            calibrations: List of calibration infos in the same order than `self.datasets`
+            inplace: If True this methods modifies the current session object. If False, a copy of the sesion and all
+                dataset objects is created
+
+        See Also:
+            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_imu`
+        """
+        s = inplace_or_copy(self, inplace)
+        s.datasets = [d.calibrate_imu(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
+        return s
+
+    def calibrate_acc(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+        """Calibrate the accs of all datasets by providing a list of calibration infos.
+
+        Args:
+            calibrations: List of calibration infos in the same order than `self.datasets`
+            inplace: If True this methods modifies the current session object. If False, a copy of the sesion and all
+                dataset objects is created
+
+        See Also:
+            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+        """
+        s = inplace_or_copy(self, inplace)
+        s.datasets = [d.calibrate_acc(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
+        return s
+
+    def calibrate_gyro(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+        """Calibrate the gyros of all datasets by providing a list of calibration infos.
+
+        Args:
+            calibrations: List of calibration infos in the same order than `self.datasets`
+            inplace: If True this methods modifies the current session object. If False, a copy of the sesion and all
+                dataset objects is created
+
+        See Also:
+            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+        """
+        s = inplace_or_copy(self, inplace)
+        s.datasets = [d.calibrate_gyro(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
+        return s
 
     def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
         return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self.datasets)
