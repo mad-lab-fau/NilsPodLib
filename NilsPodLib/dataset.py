@@ -279,7 +279,7 @@ class Dataset(CascadingDatasetInterface):
         """Downsample all datastreams by a factor.
 
         This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
-        See `Datastream.downsample` for details.
+        See :py:meth:`NilsPodLib.datastream.Datastream.downsample` for details.
 
         Warnings:
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
