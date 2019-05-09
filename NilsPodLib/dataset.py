@@ -446,7 +446,7 @@ class Dataset(CascadingDatasetInterface):
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
         See Also:
-            data_as_df
+            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
 
         Args:
             index: Specify which index should be used for the dataset. The options are:
@@ -467,8 +467,27 @@ class Dataset(CascadingDatasetInterface):
 
     def find_closest_calibration(self, folder: path_t, recursive: bool = False, filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None) -> Path:
-        """Find the closest calibration info to the start of the measurement."""
+        """Find the closest calibration info to the start of the measurement.
+
+        As this only checks the filenames, this might return a false positive depending on your folder structure and
+        naming.
+
+        Args:
+            folder: Basepath of the folder to search
+            recursive: If the folder should be searched recursive or not.
+            filter_cal_type: Whether only files obtain with a certain calibration type should be found.
+                This will look for the `CalType` inside the json file and hence cause performance problems.
+                If None, all found files will be returned.
+                For possible values, see the `imucal` library.
+            before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
+                either before or after the specified date.
+
+        See Also:
+            :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
+            :py:func:`NilsPodLib.calibration_utils.find_closest_calibration_to_date`
+        """
         # TODO: Test
+        # TODO: Make folder path optional once there is a way to get default calibrations
         return find_closest_calibration_to_date(
             sensor_id=self.info.sensor_id,
             cal_time=self.info.utc_datetime_start,

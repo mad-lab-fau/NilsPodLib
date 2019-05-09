@@ -77,7 +77,7 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
                                     filter_cal_type: Optional[str] = None, before_after: Optional[str] = None) -> Path:
     """Find the calibration file for a sensor, that is closes to a given date.
 
-    As this only checks the filenames, this might return false positives depending on your folder structure and naming.
+    As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
 
     Args:
         sensor_id: The for 4 letter/digit identfier of a sensor, as obtained from
