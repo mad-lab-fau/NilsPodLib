@@ -9,7 +9,8 @@ from NilsPodLib import Dataset
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2, insert_missing_bytes_11_2, \
     split_sampling_rate_byte_11_2, convert_11_2
-from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
+from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian, \
+    VersionError
 from tests.conftest import TEST_LEGACY_DATA
 
 
@@ -83,3 +84,20 @@ def test_full_conversion(simple_session_11_2, simple_session_11_2_json_header, s
     # Check all direct values
     info = ds.info
     assert simple_session_11_2_json_header == json.loads(info.to_json())
+
+
+def test_legacy_error(simple_session_11_2):
+    path = simple_session_11_2[0]
+
+    with pytest.raises(VersionError) as e:
+        Dataset.from_bin_file(path)
+
+    assert 'legacy support' in str(e)
+
+    with pytest.warns(UserWarning) as e:
+        try:
+            Dataset.from_bin_file(path, legacy_error=False)
+        except:
+            pass
+
+    assert 'legacy support' in str(e[0])

@@ -18,7 +18,7 @@ from NilsPodLib.header import Header
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
-    get_header_and_data_bytes
+    get_header_and_data_bytes, get_strict_version_from_header_bytes, legacy_support_check
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo
@@ -35,17 +35,23 @@ class Dataset(CascadingDatasetInterface):
             setattr(self, k, v)
 
     @classmethod
-    def from_bin_file(cls: Type[T], path: path_t) -> T:
+    def from_bin_file(cls: Type[T], path: path_t, legacy_error: bool = True) -> T:
         """Create a new Dataset from a valid .bin file.
 
         Args:
             path: Path to the file
+            legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
+                If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
+                If `legacy_error` is False, only a warning will be displayed.
+
+        Raises:
+             VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
         """
         path = Path(path)
         if not path.suffix == '.bin':
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
-        sensor_data, counter, info = parse_binary(path)
+        sensor_data, counter, info = parse_binary(path, legacy_error=legacy_error)
         s = cls(sensor_data, counter, info)
 
         s.path = path
@@ -470,10 +476,31 @@ class Dataset(CascadingDatasetInterface):
         return True
 
 
-def parse_binary(path: path_t) -> Tuple[Dict[str, np.ndarray],
-                                        np.ndarray,
-                                        Header]:
+def parse_binary(path: path_t, legacy_error: bool = True) -> Tuple[Dict[str, np.ndarray],
+                                                                   np.ndarray,
+                                                                   Header]:
+    """
+
+    Args:
+        path: Path to the file
+        legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
+            If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
+            If `legacy_error` is False, only a warning will be displayed.
+
+    Returns:
+        The sensor data as dictionary
+        The counter values
+        The session header
+
+    Raises:
+        VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
+
+    """
     header_bytes, data_bytes = get_header_and_data_bytes(path)
+
+    version = get_strict_version_from_header_bytes(header_bytes)
+    legacy_support_check(version, as_warning=not legacy_error)
+
     session_header = Header.from_bin_array(header_bytes[1:])
 
     sample_size = session_header.sample_size
