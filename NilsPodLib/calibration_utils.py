@@ -1,6 +1,7 @@
 import datetime
+import json
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 import re
 
 from NilsPodLib.utils import path_t
@@ -37,7 +38,8 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
     return f_name
 
 
-def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive=False) -> List[Path]:
+def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool = False,
+                                 filter_cal_type: Optional[str] = None) -> List[Path]:
     """Find possible calibration files based on the filename.
 
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
@@ -47,6 +49,10 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive=False
             :py:meth:`NilePodLib.header.Header.sensor_id`
         folder: Basepath of the folder to search
         recursive: If the folder should be searched recursive or not.
+        filter_cal_type: Whether only files obtain with a certain calibration type should be found.
+            This will look for the `CalType` inside the json file and hence cause performance problems.
+            If None, all found files will be returned.
+            For possible values, see the `imucal` library.
     """
     # TODO: Test
     method = 'glob'
@@ -55,5 +61,12 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive=False
 
     r = r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_' + sensor_id.lower()
 
-    return [f for f in getattr(Path(folder), method)('*_{}.json'.format(sensor_id)) if re.fullmatch(f.stem, r)]
+    potential_matches = [f for f in getattr(Path(folder), method)('*_{}.json'.format(sensor_id)) if
+                         re.fullmatch(f.stem, r)]
 
+    if filter_cal_type is None:
+        return potential_matches
+
+    return [f for f in potential_matches if json.load(f.open())['cal_type'] == filter_cal_type]
+
+# def find_closes_calibration_to()
