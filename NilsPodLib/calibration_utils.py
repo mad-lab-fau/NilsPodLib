@@ -27,7 +27,8 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
         calibration: The CalibrationInfo object ot be saved
         sensor_id: The for 4 letter/digit identfier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
-        cal_time: The date and time (min precision) when the calibration was performed
+        cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
+            value in UTC timezone, as this is in line with the time handling in the rest of the library.
         folder: Basepath of the folder, where the file will be stored.
     """
     # TODO: Test
@@ -71,7 +72,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
     return [f for f in potential_matches if json.load(f.open())['cal_type'] == filter_cal_type]
 
 
-def find_closes_calibration_to_date(sensor_id: str, cal_time: datetime.datetime, folder: path_t,
+def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime, folder: path_t,
                                     recursive: bool = False,
                                     filter_cal_type: Optional[str] = None, before_after: Optional[str] = None) -> Path:
     """Find the calibration file for a sensor, that is closes to a given date.
@@ -95,6 +96,7 @@ def find_closes_calibration_to_date(sensor_id: str, cal_time: datetime.datetime,
         :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
     """
     # TODO: Test
+    # TODO: Potential warning if distance is large
     if before_after not in ('before', 'after', None):
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')
 

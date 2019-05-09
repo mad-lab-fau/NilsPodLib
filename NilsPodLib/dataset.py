@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.signal import decimate
 
+from NilsPodLib.calibration_utils import find_closest_calibration_to_date
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
@@ -463,6 +464,19 @@ class Dataset(CascadingDatasetInterface):
             ValueError: If any other than the allowed `index` values are used.
         """
         return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
+
+    def find_closest_calibration(self, folder: path_t, recursive: bool = False, filter_cal_type: Optional[str] = None,
+                                 before_after: Optional[str] = None) -> Path:
+        """Find the closest calibration info to the start of the measurement."""
+        # TODO: Test
+        return find_closest_calibration_to_date(
+            sensor_id=self.info.sensor_id,
+            cal_time=self.info.utc_datetime_start,
+            folder=folder,
+            recursive=recursive,
+            filter_cal_type=filter_cal_type,
+            before_after=before_after
+        )
 
     def _check_sync_packages(self, threshold_s: int = 30) -> bool:
         """Check if the last sync package occurred far from the actual end of the recording.
