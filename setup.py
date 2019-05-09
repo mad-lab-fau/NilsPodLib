@@ -22,7 +22,7 @@ setup(
     version='0.1.0',
     description='A library to work with NilsPod data',
 
-    packages=find_packages(exclude=('tests', 'examples')),
+    packages=find_packages(exclude=('tests', 'examples', 'docs')),
 
     install_requires=[
         'scipy',
