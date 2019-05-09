@@ -18,7 +18,8 @@ from NilsPodLib.header import Header
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
-    get_header_and_data_bytes, get_strict_version_from_header_bytes, legacy_support_check
+    get_header_and_data_bytes, get_strict_version_from_header_bytes
+from NilsPodLib.legacy import legacy_support_check
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo

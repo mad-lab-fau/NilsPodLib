@@ -64,10 +64,6 @@ class InvalidInputFileError(Exception):
     pass
 
 
-class VersionError(Exception):
-    pass
-
-
 class RepeatedCalibrationError(Exception):
     MESSAGE = 'The sensor "{}" is already calibrated. Repeated calibration will lead to wrong values.'
 
@@ -95,18 +91,3 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
     if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError('The start values need to be smaller then their respective end values!')
     return np.max(start_vals) < np.min(end_vals)
-
-
-def legacy_support_check(version: StrictVersion, as_warning: bool = False):
-    msg = None
-    if version < StrictVersion('0.11.2'):
-        msg = 'You are using a version ({}) previous to 0.11.2. This version is not supported!'.format(version)
-    elif StrictVersion('0.11.2') <= version < StrictVersion('0.12.0'):
-        msg = 'You are using a version ({}) which is only supported by legacy support.' \
-              'Use `NilsPodLib.legacy.convert_11_2` to update the binary format to a newer version.'.format(version)
-
-    if msg:
-        if as_warning is True:
-            warnings.warn(msg)
-        else:
-            raise VersionError(msg)

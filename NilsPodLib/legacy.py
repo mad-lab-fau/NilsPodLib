@@ -9,6 +9,15 @@ from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_versi
 
 
 def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
+    """Convert a session recorded with a 0.11.<2 firmware to the most up to date format.
+
+    This will update the firmware version to 0.11.255 to identify converted sessions.
+    Potential version checks in the library will use <0.11.255 to check for compatibility.
+
+    Args:
+        in_path: path to 0.11.2 file
+        out_path: path to converted 0.11.255 file
+    """
     header, data_bytes = get_header_and_data_bytes(in_path)
     version = get_strict_version_from_header_bytes(header)
 
@@ -26,6 +35,9 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
 
     # adapt to new header size:
     header[0] = len(header)
+
+    # Update firmware version
+    header[-1] = 255
 
     with open(out_path, 'wb+') as f:
         f.write(bytearray(header))
@@ -68,3 +80,22 @@ def insert_missing_bytes_11_2(header_bytes):
 
 def split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
     return sampling_rate_byte & 0x0F, sampling_rate_byte & 0xF0
+
+
+def legacy_support_check(version: StrictVersion, as_warning: bool = False):
+    msg = None
+    if version < StrictVersion('0.11.2'):
+        msg = 'You are using a version ({}) previous to 0.11.2. This version is not supported!'.format(version)
+    elif StrictVersion('0.11.2') <= version < StrictVersion('0.11.255'):
+        msg = 'You are using a version ({}) which is only supported by legacy support.' \
+              'Use `NilsPodLib.legacy.convert_11_2` to update the binary format to a newer version.'.format(version)
+
+    if msg:
+        if as_warning is True:
+            warnings.warn(msg)
+        else:
+            raise VersionError(msg)
+
+
+class VersionError(Exception):
+    pass

@@ -8,9 +8,8 @@ import pytest
 from NilsPodLib import Dataset
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2, insert_missing_bytes_11_2, \
-    split_sampling_rate_byte_11_2, convert_11_2
-from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian, \
-    VersionError
+    split_sampling_rate_byte_11_2, convert_11_2, VersionError
+from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA
 
 
@@ -101,3 +100,10 @@ def test_legacy_error(simple_session_11_2):
             pass
 
     assert 'legacy support' in str(e[0])
+
+    # test converted session:
+    path = simple_session_11_2[0]
+    with tempfile.NamedTemporaryFile() as tmp:
+        convert_11_2(path, tmp.name)
+        Dataset.from_bin_file(tmp.name)
+
