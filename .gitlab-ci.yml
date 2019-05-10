@@ -16,6 +16,7 @@ stages:
   before_script:
     - pip install tox
     - sed -i -e 's/git+https:\/\/mad-srv.informatik.uni-erlangen.de/git+https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@mad-srv.informatik.uni-erlangen.de/g' requirements.txt
+    - sed -i -e 's/git+https:\/\/mad-srv.informatik.uni-erlangen.de/git+https:\/\/gitlab-ci-token:${CI_JOB_TOKEN}@mad-srv.informatik.uni-erlangen.de/g' setup.py
 
 test:
   stage: testing
