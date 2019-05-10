@@ -28,8 +28,6 @@ lint:
   stage: testing
   <<: *python_base
   script:
-    - cat setup.py
-    - cat requirements.txt
     - tox -e lint
   allow_failure: true
 
