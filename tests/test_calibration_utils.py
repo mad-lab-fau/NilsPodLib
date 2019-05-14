@@ -122,3 +122,15 @@ def test_find_closest_before_after(dummy_cal_folder):
     cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, before_after='before')
 
     assert cal.name == 'tes1_2000-10-03_13-14.json'
+
+
+def test_find_closest_warning(dummy_cal_folder):
+    with pytest.warns(UserWarning) as rec:
+        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, warn_thres=datetime.timedelta(hours=2))
+
+    assert len(rec) == 1
+
+    with pytest.warns(None) as rec:
+        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder, warn_thres=datetime.timedelta(hours=2))
+
+    assert len(rec) == 0

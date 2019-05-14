@@ -1,5 +1,6 @@
 import datetime
 import json
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 import re
@@ -77,9 +78,13 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
     return [f for f in potential_matches if json.load(f.open())['cal_type'] == filter_cal_type]
 
 
-def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime, folder: path_t,
+def find_closest_calibration_to_date(sensor_id: str,
+                                     cal_time: datetime.datetime,
+                                     folder: path_t,
                                      recursive: bool = False,
-                                     filter_cal_type: Optional[str] = None, before_after: Optional[str] = None) -> Path:
+                                     filter_cal_type: Optional[str] = None,
+                                     before_after: Optional[str] = None,
+                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:
     """Find the calibration file for a sensor, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
@@ -97,6 +102,7 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
         before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
             either before or after the specified date. If None the closest value ignoring if it was before or after the
             measurement.
+        warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
 
     Notes:
         If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
@@ -126,5 +132,11 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
 
     if np.all(diffs) == np.nan:
         raise ValueError('No calibrations {} {} were found.'.format(before_after, cal_time))
+
+    min_dist = np.min(np.abs(diffs))
+    if warn_thres < datetime.timedelta(min_dist):
+        warnings.warn('For the sensor {} no calibration could be located that was in {} of the {}.'
+                      'The closest calibration is {} away.'.format(sensor_id, warn_thres, cal_time,
+                                                                   datetime.timedelta(min_dist)))
 
     return potential_list[int(np.nanargmin(np.abs(diffs)))]
