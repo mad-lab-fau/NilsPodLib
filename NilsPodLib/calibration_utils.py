@@ -132,7 +132,7 @@ def find_closest_calibration_to_date(sensor_id: str,
     if np.all(diffs) == np.nan:
         raise ValueError('No calibrations {} {} were found.'.format(before_after, cal_time))
 
-    min_dist = np.min(np.abs(diffs))
+    min_dist = np.nanmin(np.abs(diffs))
     if warn_thres < datetime.timedelta(min_dist):
         warnings.warn('For the sensor {} no calibration could be located that was in {} of the {}.'
                       'The closest calibration is {} away.'.format(sensor_id, warn_thres, cal_time,
