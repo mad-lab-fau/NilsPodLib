@@ -111,7 +111,6 @@ def find_closest_calibration_to_date(sensor_id: str,
     See Also:
         :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
     """
-    # TODO: Potential warning if distance is large
     if before_after not in ('before', 'after', None):
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')
 
