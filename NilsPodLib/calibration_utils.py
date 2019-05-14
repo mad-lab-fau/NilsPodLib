@@ -95,23 +95,29 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
             If None, all found files will be returned.
             For possible values, see the `imucal` library.
         before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
-            either before or after the specified date.
+            either before or after the specified date. If None the closest value ignoring if it was before or after the
+            measurement.
+
+    Notes:
+        If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
+        the calibration before the measurement will be chosen. This can be overwritten using the `before_after` para.
 
     See Also:
         :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
     """
-    # TODO: Test
     # TODO: Potential warning if distance is large
     if before_after not in ('before', 'after', None):
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')
 
     potential_list = find_calibrations_for_sensor(sensor_id=sensor_id, folder=folder, recursive=recursive,
                                                   filter_cal_type=filter_cal_type)
-    dates = [datetime.datetime.strptime('_'.join(d.stem.split('_')[:2]), '%Y-%m-%d_%H-%M') for d in potential_list]
+    dates = [datetime.datetime.strptime('_'.join(d.stem.split('_')[1:]), '%Y-%m-%d_%H-%M') for d in potential_list]
 
-    dates = np.array(dates, dtype=np.datetime64)
+    dates = np.array(dates, dtype='datetime64[s]')
+    potential_list, _ = zip(*sorted(zip(potential_list, dates), key=lambda x: x[1]))
+    dates.sort()
 
-    diffs = dates - cal_time
+    diffs = (dates - np.datetime64(cal_time, 's')).astype(float)
 
     if before_after == 'after':
         diffs[diffs < 0] = np.nan
@@ -121,4 +127,4 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
     if np.all(diffs) == np.nan:
         raise ValueError('No calibrations {} {} were found.'.format(before_after, cal_time))
 
-    return potential_list[int(np.nanargmin(diffs))]
+    return potential_list[int(np.nanargmin(np.abs(diffs)))]

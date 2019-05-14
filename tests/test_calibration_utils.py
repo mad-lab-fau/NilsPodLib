@@ -7,7 +7,8 @@ import pytest
 import numpy as np
 from imucal import FerrarisCalibrationInfo
 
-from NilsPodLib.calibration_utils import save_calibration, find_calibrations_for_sensor
+from NilsPodLib.calibration_utils import save_calibration, find_calibrations_for_sensor, \
+    find_closest_calibration_to_date
 
 
 @pytest.fixture()
@@ -45,10 +46,11 @@ def test_save_cal_id_validation(dummy_cal, sensor_id):
 def dummy_cal_folder(dummy_cal):
     with tempfile.TemporaryDirectory() as f:
         for sid in ['tes1', 'tes2', 'tes3']:
-            for day in range(10, 20):
-                date = datetime.datetime(2000, 10, 3, 13, day)
+            for min in range(10, 30, 2):
+                date = datetime.datetime(2000, 10, 3, 13, min)
                 save_calibration(dummy_cal, sid, date, f)
         yield f
+
 
 @pytest.fixture()
 def dummy_cal_folder_recursive(dummy_cal):
@@ -57,8 +59,8 @@ def dummy_cal_folder_recursive(dummy_cal):
             new_cal = copy.deepcopy(dummy_cal)
             new_cal.CAL_TYPE = s
             for sid in ['tes1', 'tes2', 'tes3']:
-                for day in range(10, 20):
-                    date = datetime.datetime(2000, 10, 3, 13, day)
+                for min in range(10, 30, 2):
+                    date = datetime.datetime(2000, 10, 3, 13, min)
                     save_calibration(new_cal, sid, date, Path(f) / s)
         yield f
 
@@ -86,3 +88,37 @@ def test_find_calibration_type_filer(dummy_cal_folder_recursive):
 
     assert len(cals) == 10
     assert all(['tes1' in str(x) for x in cals])
+
+
+def test_find_closest(dummy_cal_folder):
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder)
+
+    assert cal.name == 'tes1_2000-10-03_13-14.json'
+
+    # Test that before and after still return the correct one if there is an exact match
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder,
+                                           before_after='before')
+
+    assert cal.name == 'tes1_2000-10-03_13-14.json'
+
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder,
+                                           before_after='after')
+
+    assert cal.name == 'tes1_2000-10-03_13-14.json'
+
+
+def test_find_closest_before_after(dummy_cal_folder):
+    # Default to earlier if same distance before and after.
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder)
+
+    assert cal.name == 'tes1_2000-10-03_13-14.json'
+
+    # Return later if after.
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, before_after='after')
+
+    assert cal.name == 'tes1_2000-10-03_13-16.json'
+
+    # Return later if before.
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, before_after='before')
+
+    assert cal.name == 'tes1_2000-10-03_13-14.json'
