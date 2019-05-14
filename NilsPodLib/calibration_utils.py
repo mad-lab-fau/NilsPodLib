@@ -23,9 +23,11 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
     However, following the naming convention will allow to use other calibration utils to search for suitable
     calibration files.
 
+    Note: If the folder does not exist it will be created.
+
     Args:
         calibration: The CalibrationInfo object ot be saved
-        sensor_id: The for 4 letter/digit identfier of a sensor, as obtained from
+        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
         cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
             value in UTC timezone, as this is in line with the time handling in the rest of the library.
@@ -35,8 +37,9 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
         raise ValueError(
             'The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}'.format(
                 sensor_id))
+    Path(folder).mkdir(parents=True, exist_ok=True)
     f_name = Path(folder) / '{}_{}.json'.format(
-        sensor_id,
+        sensor_id.lower(),
         cal_time.strftime('%Y-%m-%d_%H-%M')
     )
     calibration.to_json_file(f_name)
@@ -50,7 +53,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
 
     Args:
-        sensor_id: The for 4 letter/digit identfier of a sensor, as obtained from
+        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
         folder: Basepath of the folder to search
         recursive: If the folder should be searched recursive or not.
@@ -59,15 +62,14 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
             If None, all found files will be returned.
             For possible values, see the `imucal` library.
     """
-    # TODO: Test
     method = 'glob'
     if recursive is True:
         method = 'rglob'
 
-    r = r'\d{4}-\d{2}-\d{2}_\d{2}-\d{2}_' + sensor_id.lower()
+    r = sensor_id.lower() + r'_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}'
 
-    potential_matches = [f for f in getattr(Path(folder), method)('*_{}.json'.format(sensor_id)) if
-                         re.fullmatch(f.stem, r)]
+    potential_matches = [f for f in getattr(Path(folder), method)('{}_*.json'.format(sensor_id)) if
+                         re.fullmatch(r, f.stem)]
 
     if filter_cal_type is None:
         return potential_matches
@@ -83,7 +85,7 @@ def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
 
     Args:
-        sensor_id: The for 4 letter/digit identfier of a sensor, as obtained from
+        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
         cal_time: time and date to look for
         folder: Basepath of the folder to search
