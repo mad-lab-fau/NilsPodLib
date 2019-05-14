@@ -31,7 +31,6 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
             value in UTC timezone, as this is in line with the time handling in the rest of the library.
         folder: Basepath of the folder, where the file will be stored.
     """
-    # TODO: Test
     if not re.fullmatch(r'\w{4}', sensor_id):
         raise ValueError(
             'The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}'.format(
