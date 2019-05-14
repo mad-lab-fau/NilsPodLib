@@ -32,9 +32,13 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
         folder: Basepath of the folder, where the file will be stored.
     """
     # TODO: Test
+    if not re.fullmatch(r'\w{4}', sensor_id):
+        raise ValueError(
+            'The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}'.format(
+                sensor_id))
     f_name = Path(folder) / '{}_{}.json'.format(
-        cal_time.strftime('%Y-%m-%d_%H-%M'),
-        sensor_id
+        sensor_id,
+        cal_time.strftime('%Y-%m-%d_%H-%M')
     )
     calibration.to_json_file(f_name)
     return f_name
@@ -73,8 +77,8 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
 
 
 def find_closest_calibration_to_date(sensor_id: str, cal_time: datetime.datetime, folder: path_t,
-                                    recursive: bool = False,
-                                    filter_cal_type: Optional[str] = None, before_after: Optional[str] = None) -> Path:
+                                     recursive: bool = False,
+                                     filter_cal_type: Optional[str] = None, before_after: Optional[str] = None) -> Path:
     """Find the calibration file for a sensor, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
