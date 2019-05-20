@@ -5,13 +5,13 @@ A python package to parse logged NilsPod Binary files.
 ## Installation
 
 ```
-pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git --upgrade
+pip install git+https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib.git --upgrade
 ```
 
 With ssh access:
 
 ```
-pip install git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git --upgrade
+pip install git+ssh://git@mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib.git --upgrade
 ```
 
 For development:
