@@ -41,6 +41,7 @@ def test_info_access(name, basic_session):
 
     assert getattr(session.info, name) == tuple((getattr(d.info, name) for d in session.datasets))
 
+
 def test_info_write(basic_session):
     with pytest.raises(NotImplementedError):
         basic_session.info.test = 4

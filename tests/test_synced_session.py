@@ -13,6 +13,38 @@ def test_basic_init(dataset_master_simple, dataset_slave_simple):
     session = SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
     assert session.datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
 
+@pytest.mark.parametrize('para', [
+    'sync_group',
+    'sync_channel'
+])
+def test_validate_sync_group(dataset_master_simple, dataset_slave_simple, para):
+    ds1 = dataset_slave_simple[0]
+    ds2 = dataset_master_simple[0]
+
+    setattr(ds1.info, para, getattr(ds2.info, para) + 1)
+    with pytest.raises(ValueError) as e:
+        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+
+    assert 'sync_group' in str(e)
+
+    ds1.info.sync_address = ds2.info.sync_address + 'a'
+    with pytest.raises(ValueError) as e:
+        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+
+    assert 'sync_group' in str(e)
+
+
+def test_disable_validation(dataset_master_simple, dataset_slave_simple):
+    ds1 = dataset_slave_simple[0]
+    ds2 = dataset_master_simple[0]
+
+    ds1.info.sync_address = ds2.info.sync_address + 'a'
+    with pytest.raises(ValueError):
+        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+
+    SyncedSession.VALIDATE_ON_INIT = False
+    SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+
 
 # TODO: Tests for different error cases
 

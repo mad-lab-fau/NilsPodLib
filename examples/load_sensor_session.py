@@ -35,6 +35,11 @@ print('The enabled sensor are:', session.info.enabled_sensors)
 
 session = SyncedSession.from_folder_path(FILEPATH)
 
+# This will also validate that all datasets are compatible to be syncronised.
+# If you need to switch off this validation, you can disable it using:
+SyncedSession.VALIDATE_ON_INIT = False
+session = SyncedSession.from_folder_path(FILEPATH)
+
 # For synced sessions you can get the datasets of the master and the slaves separately
 
 print('The master of the session is', session.master.info.sensor_id)

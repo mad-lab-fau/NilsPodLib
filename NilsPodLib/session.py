@@ -118,10 +118,12 @@ class Session(CascadingDatasetInterface):
 
 
 class SyncedSession(Session):
+    VALIDATE_ON_INIT = True
 
     def __init__(self, datasets: Iterable[Dataset]):
         super().__init__(datasets)
-        self.validate()
+        if self.VALIDATE_ON_INIT:
+            self.validate()
 
     def validate(self) -> None:
         """Check if basic properties of a synced session are fulfilled.
@@ -151,7 +153,7 @@ class SyncedSession(Session):
         sync_group = set(self.info.sync_group)
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
-        return all((True for i in [sync_group, sync_channel, sync_address] if len(i) == 1))
+        return all((len(i) == 1 for i in [sync_group, sync_channel, sync_address]))
 
     def _validate_sync_role(self) -> Tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""
