@@ -23,15 +23,60 @@ def test_validate_sync_group(dataset_master_simple, dataset_slave_simple, para):
 
     setattr(ds1.info, para, getattr(ds2.info, para) + 1)
     with pytest.raises(ValueError) as e:
-        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+        SyncedSession([ds1, ds2])
 
     assert 'sync_group' in str(e)
 
     ds1.info.sync_address = ds2.info.sync_address + 'a'
     with pytest.raises(ValueError) as e:
-        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+        SyncedSession([ds1, ds2])
 
     assert 'sync_group' in str(e)
+
+
+def test_start_end_validation(dataset_master_simple, dataset_slave_simple):
+    ds1 = dataset_slave_simple[0]
+    ds2 = dataset_master_simple[0]
+
+    ds1.info.utc_start = ds2.info.utc_start - 10000
+    ds1.info.utc_stop = ds2.info.utc_stop - 5000
+
+    with pytest.raises(ValueError) as e:
+        SyncedSession([ds1, ds2])
+
+    assert 'overlapping time period' in str(e)
+
+
+@pytest.mark.parametrize('roles, err', [
+    (('master', 'master', 'slave'), 'exactly 1 master'),
+    (('slave', 'slave', 'slave'), 'exactly 1 master'),
+    (('master', 'slave', 'disabled'), 'either slave or master')
+])
+def test_two_master_validation(dataset_master_simple, dataset_slave_simple, dataset_analog_simple, roles, err):
+    ds1 = dataset_slave_simple[0]
+    ds2 = dataset_master_simple[0]
+    ds3 = dataset_analog_simple[0]
+
+    ds1.info.sync_role = roles[0]
+    ds2.info.sync_role = roles[1]
+    ds3.info.sync_role = roles[2]
+
+    with pytest.raises(ValueError) as e:
+        SyncedSession([ds1, ds2, ds3])
+
+    assert err in str(e)
+
+
+def test_validate_sampling_rate(dataset_master_simple, dataset_slave_simple):
+    ds1 = dataset_slave_simple[0]
+    ds2 = dataset_master_simple[0]
+
+    ds1.info.sampling_rate_hz = ds2.info.sampling_rate_hz + 5
+
+    with pytest.raises(ValueError) as e:
+        SyncedSession([ds1, ds2])
+
+    assert 'same sampling rate' in str(e)
 
 
 def test_disable_validation(dataset_master_simple, dataset_slave_simple):
@@ -40,10 +85,10 @@ def test_disable_validation(dataset_master_simple, dataset_slave_simple):
 
     ds1.info.sync_address = ds2.info.sync_address + 'a'
     with pytest.raises(ValueError):
-        SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+        SyncedSession([ds1, ds2])
 
     SyncedSession.VALIDATE_ON_INIT = False
-    SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
+    SyncedSession([ds1, ds2])
 
 
 # TODO: Tests for different error cases
