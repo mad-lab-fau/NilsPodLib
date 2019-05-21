@@ -248,6 +248,23 @@ class Dataset(CascadingDatasetInterface):
             s.baro.is_calibrated = True
         return s
 
+    def factory_calibrate_temperature(self: Type[T], inplace: bool = False):
+        """Apply a factory calibration to the temperature datastream.
+
+        The values used for that are taken from the datasheet of the sensor
+
+        The final unit is Celsius.
+
+        Args:
+             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+                 datastream objects is created
+        """
+        s = inplace_or_copy(self, inplace)
+        if self._check_calibration(s.temperature, 'temperature') is True:
+            s.temperature.data = s.temperature.data * (2 ** -9) + 23
+            s.temperature.is_calibrated = True
+        return s
+
     @staticmethod
     def _check_calibration(ds: Optional[Datastream], name: str):
         """Check if a specific datastream is already marked as calibrated, or if the datastream does not exist.

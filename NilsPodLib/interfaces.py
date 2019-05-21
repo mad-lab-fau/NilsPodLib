@@ -58,8 +58,8 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def factory_calibrate_baro(self: Type[T], inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('factory_calibrate_baro', inplace)
 
-    def factory_calibrate_battery(self: Type[T], inplace: bool = False) -> T:
-        return self._cascading_dataset_method_called('factory_calibrate_battery', inplace)
+    def factory_calibrate_temperature(self: Type[T], inplace: bool = False) -> T:
+        return self._cascading_dataset_method_called('factory_calibrate_temperature', inplace)
 
     def cut_to_syncregion(self: Type[T], end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
         return self._cascading_dataset_method_called('cut_to_syncregion', end, warn_thres, inplace)
