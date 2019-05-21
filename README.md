@@ -34,7 +34,7 @@ Supplementary examples can be found in the [examples folder](https://mad-srv.inf
 The library aims to support the files recorded with the following NilsPod Firmware versions:
 
 | Firmware      | Support           |
-| ------------- |:-----------------:|
+| ------------- |:------------------|
 | 0.14.x        | full              |
 | 0.13.x        | full *            |
 | 0.12.x        | full *            |
