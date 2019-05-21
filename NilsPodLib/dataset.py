@@ -248,25 +248,6 @@ class Dataset(CascadingDatasetInterface):
             s.baro.is_calibrated = True
         return s
 
-    def factory_calibrate_battery(self: T, inplace: bool = False) -> T:
-        """Apply a calibration to the Battery datastream.
-
-        The battery values are only a rough estimation for the actual battery level and will also not correlate linearly
-        with it. These values should not be used to estimate battery runtime.
-
-        The final units of the output will be "V" for the battery.
-
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created.
-
-        """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.battery, 'battery') is True:
-            s.battery.data = (s.battery.data * 2.0) / 100.0
-            s.battery.is_calibrated = True
-        return s
-
     @staticmethod
     def _check_calibration(ds: Optional[Datastream], name: str):
         """Check if a specific datastream is already marked as calibrated, or if the datastream does not exist.

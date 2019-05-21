@@ -31,7 +31,7 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     analog: Optional['Datastream'] = None
     ecg: Optional['Datastream'] = None
     ppg: Optional['Datastream'] = None
-    battery: Optional['Datastream'] = None
+    temperature: Optional['Datastream'] = None
     counter: np.ndarray
     info: Header
 
