@@ -119,9 +119,15 @@ class Dataset(CascadingDatasetInterface):
             This just combines `calibrate_acc` and `calibrate_gyro`.
 
         """
-        calibration = load_and_check_cal_info(calibration)
-        s = self.calibrate_acc(calibration, inplace)
-        s = s.calibrate_gyro(calibration, inplace=True)
+        s = inplace_or_copy(self, inplace)
+        check = [self._check_calibration(s.acc, 'acc'), self._check_calibration(s.gyro, 'gyro')]
+        if all(check):
+            calibration = load_and_check_cal_info(calibration)
+            acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
+            s.acc.data = acc
+            s.gyro.data = gyro
+            s.acc.is_calibrated = True
+            s.gyro.is_calibrated = True
         return s
 
     def calibrate_acc(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
