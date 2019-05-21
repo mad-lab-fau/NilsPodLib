@@ -35,12 +35,16 @@ The library aims to support the files recorded with the following NilsPod Firmwa
 
 | Firmware      | Support           |
 | ------------- |:-----------------:|
-| 0.13.x        | full              |
-| 0.12.x        | full              |
-| 0.11.255*     | partial           |
+| 0.14.x        | full              |
+| 0.13.x        | full *            |
+| 0.12.x        | full *            |
+| 0.11.255      | partial **        |
 | 0.11.>2       | legacy support    |
 
-\* 0.11.255 is the firmware version of older files converted to a compatible format.
+\* The current version does not support the battery sensor available for versions <0.14.0.
+However, to the best of our knowledge, this feature was never used.
+
+\*\* 0.11.255 is the firmware version of older files converted to a compatible format.
 They can be loaded as normal files, but certain header infos might not be supported.  
 
 In case of *legacy support*, the library provides methods to convert the old fileformat to the new.
