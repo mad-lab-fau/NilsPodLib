@@ -9,12 +9,12 @@ import numpy as np
 from NilsPodLib.utils import path_t
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo
+    from imucal import CalibrationInfo  # noqa: F401
 
 
 def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: datetime.datetime,
                      folder: path_t) -> Path:
-    """Saves a calibration info object in the correct format and file name for NilsPods.
+    """Save a calibration info object in the correct format and file name for NilsPods.
 
     The files will be saved in the format:
         folder / %Y-%m-%d_%H-%M_{sensor_id}.json
@@ -33,6 +33,7 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
         cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
             value in UTC timezone, as this is in line with the time handling in the rest of the library.
         folder: Basepath of the folder, where the file will be stored.
+
     """
     if not re.fullmatch(r'\w{4}', sensor_id):
         raise ValueError(
@@ -62,6 +63,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
             This will look for the `CalType` inside the json file and hence cause performance problems.
             If None, all found files will be returned.
             For possible values, see the `imucal` library.
+
     """
     method = 'glob'
     if recursive is True:
@@ -84,7 +86,7 @@ def find_closest_calibration_to_date(sensor_id: str,
                                      recursive: bool = False,
                                      filter_cal_type: Optional[str] = None,
                                      before_after: Optional[str] = None,
-                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:
+                                     warn_thres: datetime.timedelta = datetime.timedelta(days = 30)) -> Path:
     """Find the calibration file for a sensor, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
@@ -110,6 +112,7 @@ def find_closest_calibration_to_date(sensor_id: str,
 
     See Also:
         :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
+
     """
     if before_after not in ('before', 'after', None):
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')

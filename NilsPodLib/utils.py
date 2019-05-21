@@ -10,7 +10,7 @@ import numpy as np
 from pathlib import Path
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo
+    from imucal import CalibrationInfo  # noqa: F401
 
 
 path_t = TypeVar('path_t', str, Path)
@@ -79,7 +79,7 @@ def datastream_does_not_exist_warning(sensor_name, operation):
 
 
 def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
-    from imucal import CalibrationInfo
+    from imucal import CalibrationInfo  # noqa: F811
     if isinstance(calibration, (Path, str)):
         calibration = CalibrationInfo.from_json_file(calibration)
     if not isinstance(calibration, CalibrationInfo):

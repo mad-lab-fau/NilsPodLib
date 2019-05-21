@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Session groups multiple Datasets from sensors recorded at the same time
+"""Session groups multiple Datasets from sensors recorded at the same time.
 
 @author: Nils Roth, Arne Küderle
 """
@@ -15,7 +15,7 @@ from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo
+    from imucal import CalibrationInfo  # noqa: F401
 
 T = TypeVar('T', bound='Session')
 
@@ -66,6 +66,7 @@ class Session(CascadingDatasetInterface):
 
         See Also:
             :py:meth:`NilsPodLib.dataset.Dataset.calibrate_imu`
+
         """
         s = inplace_or_copy(self, inplace)
         s.datasets = [d.calibrate_imu(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
@@ -81,6 +82,7 @@ class Session(CascadingDatasetInterface):
 
         See Also:
             :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+
         """
         s = inplace_or_copy(self, inplace)
         s.datasets = [d.calibrate_acc(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
@@ -96,6 +98,7 @@ class Session(CascadingDatasetInterface):
 
         See Also:
             :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+
         """
         s = inplace_or_copy(self, inplace)
         s.datasets = [d.calibrate_gyro(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
@@ -132,9 +135,10 @@ class SyncedSession(Session):
             ValueError: This raises a ValueError in the following cases:
                 - One or more of the datasets are not part of the same syncgroup/same sync channel
                 - Multiple datasets are marked as "master"
-                - One or more datasets indicate that they are not syncronised
+                - One or more datasets indicate that they are not synchronised
                 - One or more dataset has a different sampling rate than the others
                 - If the recording times of provided datasets do not have any overlap
+
         """
         if not self._validate_sync_groups():
             raise ValueError('The provided datasets are not part of the same sync_group')
@@ -175,12 +179,12 @@ class SyncedSession(Session):
 
     @property
     def master(self) -> Dataset:
-        """Returns the master dataset of the session."""
+        """Return the master dataset of the session."""
         return next(d for d in self.datasets if d.info.sync_role == 'master')
 
     @property
     def slaves(self) -> Tuple[Dataset]:
-        """Returns a list of all slave datasets in the session."""
+        """Return a list of all slave datasets in the session."""
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
     def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,

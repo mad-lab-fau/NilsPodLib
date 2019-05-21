@@ -1,20 +1,20 @@
-"""Basic constants/names used throughout the lib"""
+"""Basic constants/names used throughout the lib."""
 import numpy as np
 
 #: Byte information of each sensor in one sample.
 #:
 #: Format: Overall number of bytes, number of channels, datatype
 SENSOR_SAMPLE_LENGTH = {
-        'acc': (6, 3, np.int16),
-        'gyro': (6, 3, np.int16),
-        'mag': (6, 3, np.int16),
-        'baro': (2, 1, np.int16),
-        'analog': (3, 3, np.uint8),
-        'ecg': (None, None, None),  # Needs to be implement
-        'ppg': (None, None, None),  # Needs to be implement
-        'battery': (1, 1, np.uint8)
+    'acc': (6, 3, np.int16),
+    'gyro': (6, 3, np.int16),
+    'mag': (6, 3, np.int16),
+    'baro': (2, 1, np.int16),
+    'analog': (3, 3, np.uint8),
+    'ecg': (None, None, None),  # Needs to be implement
+    'ppg': (None, None, None),  # Needs to be implement
+    'battery': (1, 1, np.uint8)
 
-    }
+}
 
 #: Default legends for all sensors
 SENSOR_LEGENDS = {

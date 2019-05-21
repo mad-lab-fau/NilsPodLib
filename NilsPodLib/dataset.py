@@ -23,7 +23,7 @@ from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, I
 from NilsPodLib.legacy import legacy_support_check
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo
+    from imucal import CalibrationInfo  # noqa: F401
 
 T = TypeVar('T')
 
@@ -48,6 +48,7 @@ class Dataset(CascadingDatasetInterface):
 
         Raises:
              VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
+
         """
         path = Path(path)
         if not path.suffix == '.bin':
@@ -68,23 +69,24 @@ class Dataset(CascadingDatasetInterface):
 
         Notes:
             This is planned but not yet supported
+
         """
         raise NotImplementedError('CSV importer coming soon')
 
     @property
     def size(self) -> int:
-        """Number of samples in the Dataset."""
+        """Get the number of samples in the Dataset."""
         return len(self.counter)
 
     @property
-    def ACTIVE_SENSORS(self) -> Tuple[str]:
-        """Enabled sensors in the dataset."""
+    def active_sensors(self) -> Tuple[str]:
+        """Get the enabled sensors in the dataset."""
         return tuple(self.info.enabled_sensors)
 
     @property
     def datastreams(self) -> Iterable[Datastream]:
         """Iterate through all available datastreams."""
-        for i in self.ACTIVE_SENSORS:
+        for i in self.active_sensors:
             yield i, getattr(self, i)
 
     @property
@@ -115,6 +117,7 @@ class Dataset(CascadingDatasetInterface):
 
         Notes:
             This just combines `calibrate_acc` and `calibrate_gyro`.
+
         """
         calibration = load_and_check_cal_info(calibration)
         s = self.calibrate_acc(calibration, inplace)
@@ -131,8 +134,9 @@ class Dataset(CascadingDatasetInterface):
             calibration: calibration object or path to .json file, that can be used to create one.
             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                 datastream objects is created
+
         """
-        # TODO: Allow option to specifiy the unit of the final ds
+        # TODO: Allow option to specify the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
             calibration = load_and_check_cal_info(calibration)
@@ -151,8 +155,9 @@ class Dataset(CascadingDatasetInterface):
             calibration: calibration object or path to .json file, that can be used to create one.
             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                 datastream objects is created
+
         """
-        # TODO: Allow option to specifiy the unit of the final ds
+        # TODO: Allow option to specify the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
             calibration = load_and_check_cal_info(calibration)
@@ -176,7 +181,8 @@ class Dataset(CascadingDatasetInterface):
 
         Notes:
             This just combines `factory_calibrate_acc` and `factory_calibrate_gyro`.
-         """
+
+        """
         s = self.factory_calibrate_acc(inplace=inplace)
         s = s.factory_calibrate_gyro(inplace=True)
 
@@ -194,7 +200,8 @@ class Dataset(CascadingDatasetInterface):
         Args:
              inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
-         """
+
+        """
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
             s.gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
@@ -213,7 +220,8 @@ class Dataset(CascadingDatasetInterface):
         Args:
              inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
-         """
+
+        """
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
             s.acc.data /= 2 ** 16 / self.info.acc_range_g / 2
@@ -232,6 +240,7 @@ class Dataset(CascadingDatasetInterface):
         Args:
              inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
+
         """
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.baro, 'baro') is True:
@@ -249,7 +258,8 @@ class Dataset(CascadingDatasetInterface):
 
         Args:
              inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+                 datastream objects is created.
+
         """
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.battery, 'battery') is True:
@@ -267,6 +277,7 @@ class Dataset(CascadingDatasetInterface):
         Args:
             ds: datastream object or None
             name: name of the datastream object. Used to provide additional info in error messages.
+
         """
         if ds is not None:
             if ds.is_calibrated is True:
@@ -292,6 +303,7 @@ class Dataset(CascadingDatasetInterface):
             factor: Factor by which the dataset should be downsampled.
             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
+
         """
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
@@ -316,6 +328,7 @@ class Dataset(CascadingDatasetInterface):
             step: Step size of the cut
             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
+
         """
         s = inplace_or_copy(self, inplace)
 
@@ -349,6 +362,7 @@ class Dataset(CascadingDatasetInterface):
             step: Step size of the cut
             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
+
         """
         if start:
             start = np.searchsorted(self.counter, start)
@@ -390,6 +404,7 @@ class Dataset(CascadingDatasetInterface):
 
         Warns:
             If a syncpackage occurred far before the last sample in the dataset. See arg `warn_thres`.
+
         """
         if self.info.is_synchronised is False:
             raise ValueError('Only synchronised Datasets can be cut to the syncregion')
@@ -420,6 +435,7 @@ class Dataset(CascadingDatasetInterface):
 
         Raises:
             ValueError: If any other than the allowed `index` values are used.
+
         """
         index_names = {None: 'n_samples', 'counter': 'n_samples', 'time': 't', 'utc': 'utc', 'utc_datetime': 'date'}
         if index and index not in index_names.keys():
@@ -428,7 +444,7 @@ class Dataset(CascadingDatasetInterface):
 
         index_name = index_names[index]
 
-        datastreams = datastreams or self.ACTIVE_SENSORS
+        datastreams = datastreams or self.active_sensors
         dfs = [s.data_as_df() for k, s in self.datastreams if k in datastreams]
         df = pd.concat(dfs, axis=1)
 
@@ -462,6 +478,7 @@ class Dataset(CascadingDatasetInterface):
 
         Raises:
             ValueError: If any other than the allowed `index` values are used.
+
         """
         return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
 
@@ -485,6 +502,7 @@ class Dataset(CascadingDatasetInterface):
         See Also:
             :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
             :py:func:`NilsPodLib.calibration_utils.find_closest_calibration_to_date`
+
         """
         # TODO: Test
         # TODO: Make folder path optional once there is a way to get default calibrations
@@ -513,7 +531,7 @@ class Dataset(CascadingDatasetInterface):
 def parse_binary(path: path_t, legacy_error: bool = True) -> Tuple[Dict[str, np.ndarray],
                                                                    np.ndarray,
                                                                    Header]:
-    """
+    """Parse a binary NilsPod session file and read the header and the data.
 
     Args:
         path: Path to the file

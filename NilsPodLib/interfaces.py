@@ -10,12 +10,12 @@ from NilsPodLib.utils import path_t
 T = TypeVar('T')
 
 if TYPE_CHECKING:
-    from NilsPodLib.datastream import Datastream
-    from imucal import CalibrationInfo
+    from NilsPodLib.datastream import Datastream  # noqa: F401
+    from imucal import CalibrationInfo  # noqa: F401
 
 
 class AnnotFieldMeta(type):
-    def __new__(mcs, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):  # noqa: N804
         cls = super().__new__(mcs, name, bases, attrs)
         if not bases:
             setattr(cls, '_' + name + '_fields', list(cls.__annotations__.keys()))
