@@ -12,7 +12,7 @@ SENSOR_SAMPLE_LENGTH = {
     'analog': (3, 3, np.uint8),
     'ecg': (None, None, None),  # Needs to be implement
     'ppg': (None, None, None),  # Needs to be implement
-    'battery': (1, 1, np.uint8)
+    'temperature': (2, 1, np.int16)
 
 }
 
@@ -21,7 +21,7 @@ SENSOR_LEGENDS = {
     'acc': tuple('acc_' + x for x in 'xyz'),
     'gyro': tuple('gyr_' + x for x in 'xyz'),
     'baro': tuple(['baro']),
-    'battery': tuple(['battery']),
+    'temperature': tuple(['battery']),
     'analog': tuple('analog_' + str(x) for x in range(3))
 }
 
@@ -30,7 +30,7 @@ SENSOR_UNITS = {
     'acc': 'g',
     'gyro': 'dps',
     'baro': 'mbar',
-    'battery': 'V'
+    'temperature': 'C'
 }
 
 #: Available sensor positions

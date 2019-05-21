@@ -63,7 +63,7 @@ class HeaderFields:
         ('analog', 0x10),
         ('ecg', 0x20),
         ('ppg', 0x40),
-        ('battery', 0x80)
+        ('temperature', 0x80)
     ])
 
     _OPERATION_MODES = {

@@ -7,7 +7,8 @@ from NilsPodLib.utils import RepeatedCalibrationError
 calibrate_sensors = [('acc', 1. / 2048),
                      ('gyro', 1. / 16.384),
                      ('baro', 1013.26),
-                     ('battery', 2. / 100)]
+                     ('temperature', 23 + 1 / (2 ** 9))
+                     ]
 
 
 @pytest.fixture()

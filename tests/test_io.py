@@ -34,7 +34,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     assert dataset.gyro.is_calibrated is False
     assert dataset.baro is None
     assert dataset.mag is None
-    assert dataset.battery is None
+    assert dataset.temperature is None
     assert dataset.analog is None
     assert dataset.ppg is None
     assert dataset.ecg is None
