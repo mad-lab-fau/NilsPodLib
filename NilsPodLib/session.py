@@ -159,10 +159,9 @@ class SyncedSession(Session):
 
     def _validate_sync_groups(self) -> bool:
         """Check that all _headers belong to the same sync group."""
-        sync_group = set(self.info.sync_group)
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
-        return all((len(i) == 1 for i in [sync_group, sync_channel, sync_address]))
+        return all((len(i) == 1 for i in [sync_channel, sync_address]))
 
     def _validate_sync_role(self) -> Tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""

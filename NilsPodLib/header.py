@@ -36,7 +36,6 @@ class HeaderFields:
 
     sync_role: str
     sync_distance_ms: float
-    sync_group: int
     sync_address: int
     sync_channel: int
     sync_index_start: int
@@ -179,16 +178,16 @@ class Header(HeaderFields):
                 enabled_sensors.append(para)
         header_dict['enabled_sensors'] = tuple(enabled_sensors)
 
-        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[2] & 0x0F]
+        # bin_array[2] = currently not used
+
+        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3] & 0x0F]
 
         header_dict['session_termination'] = next(
-            k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[3] & v) is True)
+            k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[4] & v) is True)
 
-        header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[4]]
+        header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[5]]
 
-        header_dict['sync_distance_ms'] = float(bin_array[5] * 100.0)
-
-        header_dict['sync_group'] = int(bin_array[6])
+        header_dict['sync_distance_ms'] = float(bin_array[6] * 100.0)
 
         header_dict['acc_range_g'] = float(bin_array[7])
 
