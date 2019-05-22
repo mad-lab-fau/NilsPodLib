@@ -5,23 +5,20 @@ from NilsPodLib.session import SyncedSession
 
 
 @pytest.fixture()
-def basic_synced_session(dataset_master_simple, dataset_slave_simple, dataset_analog_simple):
-    return SyncedSession([dataset_master_simple[0], dataset_slave_simple[0], dataset_analog_simple[0]])
+def basic_synced_session(dataset_synced):
+    return SyncedSession([v[0] for v in dataset_synced.values()])
 
 
-def test_basic_init(dataset_master_simple, dataset_slave_simple):
-    session = SyncedSession([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert session.datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
+def test_basic_init(dataset_synced):
+    session = SyncedSession([dataset_synced['master'][0], dataset_synced['slave1'][0]])
+    assert session.datasets == tuple([dataset_synced['master'][0], dataset_synced['slave1'][0]])
 
-@pytest.mark.parametrize('para', [
-    'sync_group',
-    'sync_channel'
-])
-def test_validate_sync_group(dataset_master_simple, dataset_slave_simple, para):
-    ds1 = dataset_slave_simple[0]
-    ds2 = dataset_master_simple[0]
 
-    setattr(ds1.info, para, getattr(ds2.info, para) + 1)
+def test_validate_sync_channel(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+
+    setattr(ds1.info, 'sync_channel', getattr(ds2.info, 'sync_channel') + 1)
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2])
 
@@ -34,9 +31,9 @@ def test_validate_sync_group(dataset_master_simple, dataset_slave_simple, para):
     assert 'sync_group' in str(e)
 
 
-def test_start_end_validation(dataset_master_simple, dataset_slave_simple):
-    ds1 = dataset_slave_simple[0]
-    ds2 = dataset_master_simple[0]
+def test_start_end_validation(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
 
     ds1.info.utc_start = ds2.info.utc_start - 10000
     ds1.info.utc_stop = ds2.info.utc_stop - 5000
@@ -52,10 +49,10 @@ def test_start_end_validation(dataset_master_simple, dataset_slave_simple):
     (('slave', 'slave', 'slave'), 'exactly 1 master'),
     (('master', 'slave', 'disabled'), 'either slave or master')
 ])
-def test_two_master_validation(dataset_master_simple, dataset_slave_simple, dataset_analog_simple, roles, err):
-    ds1 = dataset_slave_simple[0]
-    ds2 = dataset_master_simple[0]
-    ds3 = dataset_analog_simple[0]
+def test_two_master_validation(dataset_synced, roles, err):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+    ds3 = dataset_synced['slave2'][0]
 
     ds1.info.sync_role = roles[0]
     ds2.info.sync_role = roles[1]
@@ -67,9 +64,9 @@ def test_two_master_validation(dataset_master_simple, dataset_slave_simple, data
     assert err in str(e)
 
 
-def test_validate_sampling_rate(dataset_master_simple, dataset_slave_simple):
-    ds1 = dataset_slave_simple[0]
-    ds2 = dataset_master_simple[0]
+def test_validate_sampling_rate(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
 
     ds1.info.sampling_rate_hz = ds2.info.sampling_rate_hz + 5
 
@@ -79,9 +76,9 @@ def test_validate_sampling_rate(dataset_master_simple, dataset_slave_simple):
     assert 'same sampling rate' in str(e)
 
 
-def test_disable_validation(dataset_master_simple, dataset_slave_simple):
-    ds1 = dataset_slave_simple[0]
-    ds2 = dataset_master_simple[0]
+def test_disable_validation(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
 
     ds1.info.sync_address = ds2.info.sync_address + 'a'
     with pytest.raises(ValueError):
@@ -91,19 +88,17 @@ def test_disable_validation(dataset_master_simple, dataset_slave_simple):
     SyncedSession([ds1, ds2])
 
 
-# TODO: Tests for different error cases
+def test_master(basic_synced_session, dataset_synced):
+    master = dataset_synced['master'][0]
+    assert basic_synced_session.master.info.sensor_id == master.info.sensor_id
 
 
-def test_master(basic_synced_session, dataset_master_simple):
-    assert basic_synced_session.master.info.sensor_id == dataset_master_simple[0].info.sensor_id
-
-
-def test_slaves(basic_synced_session, dataset_slave_simple, dataset_analog_simple):
+def test_slaves(basic_synced_session, dataset_synced):
     slaves = basic_synced_session.slaves
     slave_ids = [d.info.sensor_id for d in slaves]
     assert len(slaves) == 2
-    assert dataset_slave_simple[0].info.sensor_id in slave_ids
-    assert dataset_analog_simple[0].info.sensor_id in slave_ids
+    assert dataset_synced['slave1'][0].info.sensor_id in slave_ids
+    assert dataset_synced['slave2'][0].info.sensor_id in slave_ids
 
 
 def test_cut_to_sync_only_master_with_end(basic_synced_session):
