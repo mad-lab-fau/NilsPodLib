@@ -32,6 +32,16 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> NoReturn:
         warnings.warn('This converter is meant for files recorded with Firmware version after {} and before {}'
                       ' not{}'.format(min_v, max_v, version))
 
+    header = shift_bytes_12_0(header)
+
+    # Update firmware version
+    header[-2] = 13
+    header[-1] = 255
+
+    with open(out_path, 'wb+') as f:
+        f.write(bytearray(header))
+        f.write(bytearray(data_bytes))
+
 
 def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
@@ -112,6 +122,16 @@ def insert_missing_bytes_11_2(header_bytes):
     return header_bytes
 
 
+def shift_bytes_12_0(header_bytes):
+    # remove old sync_group byte:
+    header_bytes = np.delete(header_bytes, 7)
+
+    # Add new empty byte after enabled sensors
+    header_bytes = np.insert(header_bytes, 3, 0x00)
+
+    return header_bytes
+
+
 def split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
     return sampling_rate_byte & 0x0F, sampling_rate_byte & 0xF0
 
@@ -129,7 +149,7 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
             converter = 'NilsPodLib.legacy.convert_12_0'
         if converter:
             msg = 'You are using a version ({}) which is only supported by legacy support.' \
-                  'Use `{}` to update the binary format to a newer version.'.format(version, converter)
+                  ' Use `{}` to update the binary format to a newer version.'.format(version, converter)
         else:
             msg = 'You are using a version completely unknown version: {}'.format(version)
 
