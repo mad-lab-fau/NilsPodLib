@@ -209,4 +209,15 @@ def test_cut_to_sync_warn(basic_synced_session):
     assert len(rec) == 0
 
 
+def test_sync_info(dataset_synced):
+    dataset, path = dataset_synced['slave1']
+    master = dataset_synced['master'][0]
 
+    info = dataset.info
+    assert info.sync_address == master.info.sync_address
+    assert info.sync_channel == master.info.sync_channel
+    assert info.sync_distance_ms == master.info.sync_distance_ms
+    assert info.is_synchronised is True
+    assert info.sync_role == 'slave'
+    assert info.sync_index_stop != 0
+    assert info.sync_index_start != 0

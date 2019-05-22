@@ -42,18 +42,3 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
 
     assert info.sync_index_start == 0
     assert info.sync_index_stop == 0
-
-
-def test_sync_info(dataset_slave_simple, dataset_master_simple, dataset_slave_simple_json_header):
-    dataset, path = dataset_slave_simple
-    master = dataset_master_simple[0]
-
-    # # Uncomment to update regression files
-    # with open(path.parent / (str(path.stem) + '_header.json'), 'w+') as f:
-    #     f.write(dataset.info.to_json())
-
-    info = dataset.info
-    assert dataset_slave_simple_json_header == json.loads(info.to_json())
-    assert info.sync_address == master.info.sync_address
-    assert info.sync_channel == master.info.sync_channel
-    assert info.sync_index_stop != 0

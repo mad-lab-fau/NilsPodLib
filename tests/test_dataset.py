@@ -86,8 +86,8 @@ def test_cut_to_sync_master(dataset_master_simple):
     assert np.array_equal(ds.counter, ds_new.counter)
 
 
-def test_cut_to_sync_slave_with_end(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_slave_with_end(dataset_synced):
+    ds = dataset_synced['slave1'][0]
     ds_new = ds.cut_to_syncregion(end=True)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
@@ -96,8 +96,8 @@ def test_cut_to_sync_slave_with_end(dataset_slave_simple):
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop - 1])
 
 
-def test_cut_to_sync_slave_without_end(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_slave_without_end(dataset_synced):
+    ds = dataset_synced['slave1'][0]
     ds_new = ds.cut_to_syncregion(end=False)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
@@ -106,8 +106,8 @@ def test_cut_to_sync_slave_without_end(dataset_slave_simple):
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[-1])
 
 
-def test_cut_to_sync_warning(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_warning(dataset_synced):
+    ds = dataset_synced['slave1'][0]
 
     with pytest.warns(None) as rec:
         ds.cut_to_syncregion(end=False)
