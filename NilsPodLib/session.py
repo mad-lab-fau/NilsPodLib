@@ -42,24 +42,31 @@ class Session(CascadingDatasetInterface):
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
     @classmethod
-    def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
+    def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_error: bool = True) -> T:
         """Create a new session from a list of files pointing to valid .bin files.
 
         Args:
             paths: List of paths pointing to files to be included
+            legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
+                If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
+                If `legacy_error` is False, only a warning will be displayed.
         """
-        ds = (Dataset.from_bin_file(p) for p in paths)
+        ds = (Dataset.from_bin_file(p, legacy_error=legacy_error) for p in paths)
         return cls(ds)
 
     @classmethod
-    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin') -> T:
+    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin',
+                         legacy_error: bool = True) -> T:
         """Create a new session from a folder path containing valid .bin files.
 
         Args:
             base_path: Path to the folder
             filter_pattern: regex that can be used to filter the files in the folder. This is passed to Pathlib.glob()
+            legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
+                If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
+                If `legacy_error` is False, only a warning will be displayed.
         """
-        return cls.from_file_paths(Path(base_path).glob(filter_pattern))
+        return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_error=legacy_error)
 
     def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
