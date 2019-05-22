@@ -55,14 +55,14 @@ class HeaderFields:
 
     # Note this must correspond to the order they appear in the datapackage when activated
     _SENSOR_FLAGS = OrderedDict([
-        ('gyro', 0x02),
-        ('acc', 0x01),
-        ('mag', 0x04),
-        ('baro', 0x08),
-        ('analog', 0x10),
-        ('ecg', 0x20),
-        ('ppg', 0x40),
-        ('temperature', 0x80)
+        ('gyro', (0x02, 0x00)),
+        ('acc', (0x01, 0x00)),
+        ('mag', (0x04, 0x00)),
+        ('baro', (0x08, 0x00)),
+        ('analog', (0x10, 0x00)),
+        ('ecg', (0x20, 0x00)),
+        ('ppg', (0x40, 0x00)),
+        ('temperature', (0x80, 0x00))
     ])
 
     _OPERATION_MODES = {
@@ -171,10 +171,10 @@ class Header(HeaderFields):
 
         header_dict['sample_size'] = int(bin_array[0])
 
-        sensors = bin_array[1]
+        sensors = bin_array[1:3]
         enabled_sensors = list()
         for para, val in cls._SENSOR_FLAGS.items():
-            if bool(sensors & val) is True:
+            if bool(sensors[0] & val[0]) or bool(sensors[1] & val[1]):
                 enabled_sensors.append(para)
         header_dict['enabled_sensors'] = tuple(enabled_sensors)
 

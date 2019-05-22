@@ -62,7 +62,7 @@ def test_sensor_enabled_flag_conversion(simple_session_11_2):
     sensors = convert_sensor_enabled_flag_11_2(header[2])
     enabled_sensors = list()
     for para, val in Header._SENSOR_FLAGS.items():
-        if bool(sensors & val) is True:
+        if bool(sensors & val[0]) is True:
             enabled_sensors.append(para)
 
     assert enabled_sensors == ['gyro', 'acc']
