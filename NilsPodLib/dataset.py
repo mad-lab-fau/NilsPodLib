@@ -127,7 +127,9 @@ class Dataset(CascadingDatasetInterface):
             s.acc.data = acc
             s.gyro.data = gyro
             s.acc.is_calibrated = True
+            s.acc._unit = calibration.ACC_UNIT
             s.gyro.is_calibrated = True
+            s.gyro._unit = calibration.GYRO_UNIT
         return s
 
     def calibrate_acc(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
@@ -142,13 +144,13 @@ class Dataset(CascadingDatasetInterface):
                 datastream objects is created
 
         """
-        # TODO: Allow option to specify the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.acc, 'acc') is True:
             calibration = load_and_check_cal_info(calibration)
             acc = calibration.calibrate_acc(s.acc.data)
             s.acc.data = acc
             s.acc.is_calibrated = True
+            s.acc._unit = calibration.ACC_UNIT
         return s
 
     def calibrate_gyro(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
@@ -163,13 +165,13 @@ class Dataset(CascadingDatasetInterface):
                 datastream objects is created
 
         """
-        # TODO: Allow option to specify the unit of the final ds
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.gyro, 'gyro') is True:
             calibration = load_and_check_cal_info(calibration)
             gyro = calibration.calibrate_gyro(s.gyro.data)
             s.gyro.data = gyro
             s.gyro.is_calibrated = True
+            s.gyro._unit = calibration.GYRO_UNIT
         return s
 
     def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
