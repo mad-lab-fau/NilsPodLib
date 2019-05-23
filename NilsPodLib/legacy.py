@@ -29,8 +29,8 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> NoReturn:
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
-        warnings.warn('This converter is meant for files recorded with Firmware version after {} and before {}'
-                      ' not{}'.format(min_v, max_v, version))
+        raise VersionError('This converter is meant for files recorded with Firmware version after {} and before {}'
+                           ' not {}'.format(min_v, max_v, version))
 
     header = shift_bytes_12_0(header)
 
@@ -64,8 +64,8 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
-        warnings.warn('This converter is meant for files recorded with Firmware version after {} and before {}'
-                      ' not{}'.format(min_v, max_v, version))
+        raise VersionError('This converter is meant for files recorded with Firmware version after {} and before {}'
+                           ' not {}'.format(min_v, max_v, version))
 
     packet_size = get_sample_size_from_header_bytes(header)
 
