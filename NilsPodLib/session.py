@@ -36,6 +36,11 @@ class Session(CascadingDatasetInterface):
     def __init__(self, datasets: Iterable[Dataset]):
         self.datasets = tuple(datasets)
 
+    def get_dataset_by_id(self, sensor_id: str) -> Dataset:
+        """Get a specific dataset by its sensor id."""
+        # TODO: TEsting
+        return self.datasets[self.info.sensor_id.index(sensor_id)]
+
     @classmethod
     def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
         """Create a new session from a list of files pointing to valid .bin files.
