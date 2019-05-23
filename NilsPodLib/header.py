@@ -212,9 +212,9 @@ class Header(HeaderFields):
         header_dict['sync_index_start'] = int(convert_little_endian(bin_array[26:30]))
         header_dict['sync_index_stop'] = int(convert_little_endian(bin_array[30:34]))
 
-        header_dict['mac_address'] = ':'.join([hex(int(x))[-2:] for x in bin_array[34:40]][::-1])
+        header_dict['mac_address'] = ':'.join(['{:02x}'.format(int(x)) for x in bin_array[34:40]][::-1])
 
-        header_dict['sync_address'] = ''.join([hex(int(x))[-2:] for x in bin_array[40:45]][::-1])
+        header_dict['sync_address'] = ''.join(['{:02x}'.format(int(x)) for x in bin_array[40:45]][::-1])
         header_dict['sync_channel'] = int(bin_array[45])
 
         header_dict['version_hardware'] = ''.join((str(x) for x in bin_array[46:48]))
