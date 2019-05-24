@@ -12,7 +12,6 @@ from pathlib import Path
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
 
-
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
 
@@ -26,10 +25,25 @@ def convert_little_endian(byte_list, dtype=int):
 
 
 def read_binary_uint8(data_bytes, packet_size, expected_samples):
-    if expected_samples * packet_size > len(data_bytes):
-        expected_samples = len(data_bytes) // packet_size
-    data_bytes = data_bytes[:expected_samples * packet_size]
-    data = np.reshape(data_bytes, (expected_samples, int(packet_size)))
+    packet_size = int(packet_size)
+    expected_length = expected_samples * packet_size
+    page_size = 2048
+    if abs(len(data_bytes) - expected_length) > page_size // packet_size:
+        warnings.warn('The provided binary file contains more or less than {0} packages than indicated by the header'
+                      ' ({1} vs. {2}). This can be caused by a bug affecting all synchronised sessions recorded with'
+                      ' firmware versions before 0.14.0. \n'
+                      'The full file will be read to avoid data loss, but this might add up to {0} corrupted packages'
+                      ' at the end of the datastream.'.format(page_size // packet_size, expected_samples,
+                                                              len(data_bytes) // packet_size))
+        expected_length = (len(data_bytes) // packet_size) * packet_size
+
+    elif expected_length > len(data_bytes):
+        warnings.warn('The provided binary file contains less samples than indicated by the header.'
+                      ' This might mean that the file was corrupted.')
+        expected_length = (len(data_bytes) // packet_size) * packet_size
+
+    data_bytes = data_bytes[:expected_length]
+    data = np.reshape(data_bytes, (expected_length // packet_size, packet_size))
     return data
 
 
