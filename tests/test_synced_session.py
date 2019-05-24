@@ -138,7 +138,7 @@ def test_cut_to_sync_with_end(basic_synced_session):
     s = basic_synced_session.cut_to_syncregion(end=True, inplace=False)
 
     start = np.array([d.counter[d.info.sync_index_start] for d in basic_synced_session.slaves]).max()
-    stop = np.array([d.counter[d.info.sync_index_stop] for d in basic_synced_session.slaves]).min()
+    stop = np.array([d.counter[d.info.sync_index_stop] + 1 for d in basic_synced_session.slaves]).min()
 
     for d in s.datasets:
         assert len(d.counter) == stop - start
