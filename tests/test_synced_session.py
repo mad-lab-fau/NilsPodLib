@@ -149,9 +149,10 @@ def test_cut_to_sync_without_end(basic_synced_session):
     s = basic_synced_session.cut_to_syncregion(end=False, inplace=False)
 
     start = np.array([d.counter[d.info.sync_index_start] for d in basic_synced_session.slaves]).max()
-    length = np.array([len(d.counter) - np.where(d.counter == start)[0] for d in basic_synced_session.slaves]).min()
+    length = np.array([len(d.counter) - d.info.sync_index_start - 1 for d in basic_synced_session.slaves]).min()
 
     for d in s.datasets:
+        assert d.counter[0] == start
         assert len(d.counter) == length
         assert np.array_equal(d.counter, s.master.counter)
 
