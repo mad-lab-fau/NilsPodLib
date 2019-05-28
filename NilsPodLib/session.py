@@ -52,7 +52,7 @@ class Session(CascadingDatasetInterface):
         return cls(ds)
 
     @classmethod
-    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*') -> T:
+    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin') -> T:
         """Create a new session from a folder path containing valid .bin files.
 
         Args:
