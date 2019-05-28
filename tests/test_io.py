@@ -10,7 +10,7 @@ from NilsPodLib.datastream import Datastream
 def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, dataset_master_data_csv):
     dataset, path = dataset_master_simple
 
-    # Uncomment to update regression files
+    # # Uncomment to update regression files
     # with open(path.parent / (str(path.stem) + '_header.json'), 'w+') as f:
     #     f.write(dataset.info.to_json())
     # dataset.data_as_df(index='time').to_csv(path.parent / (str(path.stem) + '_data.csv'))
