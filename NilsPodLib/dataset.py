@@ -37,14 +37,17 @@ class Dataset(CascadingDatasetInterface):
             setattr(self, k, v)
 
     @classmethod
-    def from_bin_file(cls: Type[T], path: path_t, legacy_error: bool = True) -> T:
+    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = 'error') -> T:
         """Create a new Dataset from a valid .bin file.
 
         Args:
             path: Path to the file
-            legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
-                If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
-                If `legacy_error` is False, only a warning will be displayed.
+            legacy_support: This indicates how to deal with old firmware versions.
+                If `error`: An error is raised, if an unsupported version is detected.
+                If `warn`: A warning is raised, but the file is parsed without modification
+                If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
+                    an error is raised. See the `legacy` package and the README to learn more about available
+                    conversions.
 
         Raises:
              VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
@@ -54,7 +57,7 @@ class Dataset(CascadingDatasetInterface):
         if not path.suffix == '.bin':
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
-        sensor_data, counter, info = parse_binary(path, legacy_error=legacy_error)
+        sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support)
         s = cls(sensor_data, counter, info)
 
         s.path = path
@@ -536,16 +539,18 @@ class Dataset(CascadingDatasetInterface):
         return True
 
 
-def parse_binary(path: path_t, legacy_error: bool = True) -> Tuple[Dict[str, np.ndarray],
-                                                                   np.ndarray,
-                                                                   Header]:
+def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str, np.ndarray],
+                                                                       np.ndarray,
+                                                                       Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
     Args:
         path: Path to the file
-        legacy_error: The method checks, if the binary file was created with a compatible Firmware Version.
-            If `legacy_error` is True, this will raise an error, if an unsupported version is detected.
-            If `legacy_error` is False, only a warning will be displayed.
+        legacy_support: This indicates how to deal with old firmware versions.
+            If `error`: An error is raised, if an unsupported version is detected.
+            If `warn`: A warning is raised, but the file is parsed without modification
+            If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
+                an error is raised. See the `legacy` package and the README to learn more about available conversions.
 
     Returns:
         The sensor data as dictionary
@@ -553,13 +558,18 @@ def parse_binary(path: path_t, legacy_error: bool = True) -> Tuple[Dict[str, np.
         The session header
 
     Raises:
-        VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
+        VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is `error`
+        VersionError: If `legacy_error` is `resolve`, but no suitable conversion is found.
 
     """
     header_bytes, data_bytes = get_header_and_data_bytes(path)
 
     version = get_strict_version_from_header_bytes(header_bytes)
-    legacy_support_check(version, as_warning=not legacy_error)
+
+    if legacy_support == 'resolve':
+        pass
+    elif legacy_support in ['error', 'warn']:
+        legacy_support_check(version, as_warning=(legacy_support == 'warn'))
 
     session_header = Header.from_bin_array(header_bytes[1:])
 

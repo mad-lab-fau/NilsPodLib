@@ -125,7 +125,7 @@ def test_legacy_error(session, converter, request):
 
     with pytest.warns(UserWarning) as e:
         try:
-            Dataset.from_bin_file(path, legacy_error=False)
+            Dataset.from_bin_file(path, legacy_support='warn')
         except:
             pass
 
