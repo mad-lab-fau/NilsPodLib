@@ -2,3 +2,4 @@ numpy
 pandas
 scipy
 git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git
+git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal.git

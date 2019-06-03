@@ -48,7 +48,7 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
     return f_name
 
 
-def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool = False,
+def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None, recursive: bool = True,
                                  filter_cal_type: Optional[str] = None) -> List[Path]:
     """Find possible calibration files based on the filename.
 
@@ -57,7 +57,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
     Args:
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
-        folder: Basepath of the folder to search
+        folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
         filter_cal_type: Whether only files obtain with a certain calibration type should be found.
             This will look for the `CalType` inside the json file and hence cause performance problems.
@@ -65,6 +65,10 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
             For possible values, see the `imucal` library.
 
     """
+    if not folder:
+        from NilsPodRefCal import CAL_PATH
+        folder = CAL_PATH
+
     method = 'glob'
     if recursive is True:
         method = 'rglob'
@@ -82,8 +86,8 @@ def find_calibrations_for_sensor(sensor_id: str, folder: path_t, recursive: bool
 
 def find_closest_calibration_to_date(sensor_id: str,
                                      cal_time: datetime.datetime,
-                                     folder: path_t,
-                                     recursive: bool = False,
+                                     folder: Optional[path_t] = None,
+                                     recursive: bool = True,
                                      filter_cal_type: Optional[str] = None,
                                      before_after: Optional[str] = None,
                                      warn_thres: datetime.timedelta = datetime.timedelta(days = 30)) -> Path:
@@ -95,7 +99,7 @@ def find_closest_calibration_to_date(sensor_id: str,
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
             :py:meth:`NilePodLib.header.Header.sensor_id`
         cal_time: time and date to look for
-        folder: Basepath of the folder to search
+        folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
         filter_cal_type: Whether only files obtain with a certain calibration type should be found.
             This will look for the `CalType` inside the json file and hence cause performance problems.

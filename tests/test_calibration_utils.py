@@ -73,7 +73,7 @@ def test_find_calibration_simple(dummy_cal_folder):
 
 
 def test_find_calibration_recursive(dummy_cal_folder_recursive):
-    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive)
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=False)
 
     assert len(cals) == 0
 
@@ -140,3 +140,15 @@ def test_find_closest_warning(dummy_cal_folder):
         find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder)
 
     assert len(rec) == 0
+
+
+def test_find_default_cal():
+    cals = find_calibrations_for_sensor('3d73')
+
+    assert len(cals) > 0
+
+
+def test_find_default_cal_wrong():
+    cals = find_calibrations_for_sensor('FFFF')
+
+    assert len(cals) == 0

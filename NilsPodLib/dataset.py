@@ -488,7 +488,10 @@ class Dataset(CascadingDatasetInterface):
         """
         return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
 
-    def find_closest_calibration(self, folder: path_t, recursive: bool = False, filter_cal_type: Optional[str] = None,
+    def find_closest_calibration(self,
+                                 folder: Optional[path_t] = None,
+                                 recursive: bool = True,
+                                 filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
@@ -496,7 +499,7 @@ class Dataset(CascadingDatasetInterface):
         naming.
 
         Args:
-            folder: Basepath of the folder to search
+            folder: Basepath of the folder to search. If None, tries to find a default calibration
             recursive: If the folder should be searched recursive or not.
             filter_cal_type: Whether only files obtain with a certain calibration type should be found.
                 This will look for the `CalType` inside the json file and hence cause performance problems.
@@ -511,7 +514,6 @@ class Dataset(CascadingDatasetInterface):
 
         """
         # TODO: Test
-        # TODO: Make folder path optional once there is a way to get default calibrations
         return find_closest_calibration_to_date(
             sensor_id=self.info.sensor_id,
             cal_time=self.info.utc_datetime_start,
