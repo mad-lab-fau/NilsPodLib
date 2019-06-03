@@ -1,5 +1,4 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
-import tempfile
 import warnings
 from distutils.version import StrictVersion
 from typing import NoReturn, Tuple
@@ -9,7 +8,7 @@ from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_versi
     get_sample_size_from_header_bytes
 
 
-def convert_12_0(in_path: path_t, out_path: path_t) -> NoReturn:
+def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
 
     This will update the firmware version to 0.13.255 to identify converted sessions.
@@ -23,9 +22,30 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> NoReturn:
         in_path: path to 0.12.x / 0.13.x file
         out_path: path to converted 0.13.255 file
     """
+    header, data_bytes = get_header_and_data_bytes(in_path)
+    header, data_bytes = load_12_0(header, data_bytes)
+
+    with open(out_path, 'wb+') as f:
+        f.write(bytearray(header))
+        f.write(bytearray(data_bytes))
+
+
+def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
+
+    This will update the firmware version to 0.13.255 to identify converted sessions.
+    Potential version checks in the library will use <0.13.255 to check for compatibility.
+
+    Warnings:
+        After the update the following features will not work:
+            - The sync group was removed and hence can not be read anymore
+
+    Args:
+        header: bytes containing all the legacy header information
+        data_bytes: raw bytes representing the data
+    """
     min_v = StrictVersion('0.11.255')
     max_v = StrictVersion('0.13.255')
-    header, data_bytes = get_header_and_data_bytes(in_path)
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
@@ -38,12 +58,10 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> NoReturn:
     header[-2] = 13
     header[-1] = 255
 
-    with open(out_path, 'wb+') as f:
-        f.write(bytearray(header))
-        f.write(bytearray(data_bytes))
+    return header, data_bytes
 
 
-def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
+def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
 
     This will update the firmware version to 0.13.255 to identify converted sessions.
@@ -58,9 +76,31 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
         in_path: path to 0.11.2 file
         out_path: path to converted 0.13.255 file
     """
+    header, data_bytes = get_header_and_data_bytes(in_path)
+    header, data_bytes = load_11_2(header, data_bytes)
+
+    with open(out_path, 'wb+') as f:
+        f.write(bytearray(header))
+        f.write(bytearray(data_bytes))
+
+
+def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
+
+    This will update the firmware version to 0.13.255 to identify converted sessions.
+    Potential version checks in the library will use <0.13.255 to check for compatibility.
+
+    Warnings:
+        After the update the following features will not work:
+            - The battery sensor does not exist anymore and hence, is not supported in the converted files
+            - The sync group was removed and hence can not be read anymore
+
+    Args:
+        header: bytes containing all the legacy header information
+        data_bytes: raw bytes representing the data
+    """
     min_v = StrictVersion('0.11.2')
     max_v = StrictVersion('0.11.255')
-    header, data_bytes = get_header_and_data_bytes(in_path)
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
@@ -81,11 +121,8 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> NoReturn:
     # Update firmware version
     header[-1] = 255
 
-    with tempfile.NamedTemporaryFile() as tmp:
-        with open(tmp.name, 'wb+') as f:
-            f.write(bytearray(header))
-            f.write(bytearray(data_bytes))
-        convert_12_0(tmp.name, out_path)
+    header, data_bytes = load_12_0(header, data_bytes)
+    return header, data_bytes
 
 
 def fix_little_endian_counter(data_bytes, packet_size):
