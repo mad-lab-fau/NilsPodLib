@@ -17,7 +17,7 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
     """Save a calibration info object in the correct format and file name for NilsPods.
 
     The files will be saved in the format:
-        folder / %Y-%m-%d_%H-%M_{sensor_id}.json
+        folder / {sensor_id}_%Y-%m-%d_%H-%M.json
 
     The naming schema and format is of course just a suggestion, and any structure can be used as long as it can be
     converted back into a CalibrationInfo object.
