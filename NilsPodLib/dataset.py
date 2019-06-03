@@ -419,7 +419,7 @@ class Dataset(CascadingDatasetInterface):
         if warn_thres is not None and end is not True and self._check_sync_packages(warn_thres) is False:
             warnings.warn('The last sync package occured more than {} s before the end of the measurement.'
                           'The last region of the data should not be trusted.'.format(warn_thres))
-        end = self.info.sync_index_stop + 1 if end is True else None
+        end = self.info.sync_index_stop if end is True else None
         return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:

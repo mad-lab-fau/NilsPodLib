@@ -91,9 +91,9 @@ def test_cut_to_sync_slave_with_end(dataset_slave_simple):
     ds_new = ds.cut_to_syncregion(end=True)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
-    assert ds_new.counter[-1] == ds.counter[ds.info.sync_index_stop]
+    assert ds_new.counter[-1] == ds.counter[ds.info.sync_index_stop - 1]
     assert np.array_equal(ds_new.acc.data[0], ds.acc.data[ds.info.sync_index_start])
-    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop])
+    assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop - 1])
 
 
 def test_cut_to_sync_slave_without_end(dataset_slave_simple):

@@ -220,21 +220,25 @@ class SyncedSession(Session):
                               'end of the dataset. The last section of this data should not be trusted.'.format(
                     sync_warn, warn_thres))
 
-        if end:
-            # This needs to be calculated here, before the dataset is cut
-            stop_sync_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
+        stop_sync_idx = None
+        # if end:
+        #     # This needs to be calculated here, before the dataset is cut
+        #     stop_sync_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
 
         s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
         if only_to_master is True:
             return s
 
-        start_idx = [d.counter[0] for d in s.slaves]
-        stop_idx = [d.counter[-1] for d in s.slaves]
+        start_idx = [d.counter[0] for d in s.datasets]
+        stop_idx = [d.counter[-1] for d in s.datasets]
         if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
             raise ValueError('The provided datasets do not have a overlapping regions where all are synced!')
 
-        end = np.min(stop_sync_idx) if end else np.min(stop_idx)
-        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), end + 1, inplace=True)
+        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
+        stop_idx = [len(d.counter) for d in s.datasets]
+        s = super(SyncedSession, s).cut(stop=np.min(stop_idx), inplace=True)
+        # stop_sync_idx = [d.info.sync_index_stop for d in s.slaves]
+        # end = np.min(stop_sync_idx) if stop_sync_idx else np.min(stop_idx)
 
         # Finally set the master counter to all slaves to really ensure identical counters
         for d in s.slaves:
