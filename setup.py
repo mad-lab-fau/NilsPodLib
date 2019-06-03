@@ -29,5 +29,10 @@ setup(
         'pandas',
         'numpy',
         'imucal @ git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git'
-    ]
+    ],
+    extras_require={
+        'cal': [
+            'NilsPodRefCal @ https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal.git',
+        ]
+    },
 )
