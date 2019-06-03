@@ -66,7 +66,12 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
 
     """
     if not folder:
-        from NilsPodRefCal import CAL_PATH
+        try:
+            from NilsPodRefCal import CAL_PATH
+        except ImportError:
+            raise ImportError('The module NilsPodRefCal is not installed. If you want support for default calibrations,'
+                              ' please install it from'
+                              ' https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal')
         folder = CAL_PATH
 
     method = 'glob'
