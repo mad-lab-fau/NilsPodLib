@@ -114,6 +114,30 @@ def test_full_conversion(session, converter, request):
     ('simple_session_11_2', convert_11_2),
     ('simple_session_12_0', convert_12_0),
 ])
+def test_auto_resolve(session, converter, request):
+    path = request.getfixturevalue(session)[0]
+    ds = Dataset.from_bin_file(path, legacy_support='resolve')
+
+    # # Uncomment to update regression files
+    # with open(path.parent / (str(path.stem) + '_header.json'), 'w+') as f:
+    #     f.write(ds.info.to_json())
+    # ds.data_as_df(index='time').to_csv(path.parent / (str(path.stem) + '_data.csv'))
+
+    header = request.getfixturevalue(session + '_json_header')
+    csv = request.getfixturevalue(session + '_csv')
+
+    pd.testing.assert_frame_equal(ds.data_as_df(index='time'), csv)
+
+    # Header
+    # Check all direct values
+    info = ds.info
+    assert header == json.loads(info.to_json())
+
+
+@pytest.mark.parametrize('session, converter', [
+    ('simple_session_11_2', convert_11_2),
+    ('simple_session_12_0', convert_12_0),
+])
 def test_legacy_error(session, converter, request):
     session = request.getfixturevalue(session)
     path = session[0]

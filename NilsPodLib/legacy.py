@@ -1,11 +1,31 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
 from distutils.version import StrictVersion
-from typing import NoReturn, Tuple
+from typing import Tuple, Callable, Optional
 import numpy as np
 
 from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_version_from_header_bytes, \
     get_sample_size_from_header_bytes
+
+CONVERSION_DICT = {
+    '12_0': {'min': StrictVersion('0.11.255'),
+             'max': StrictVersion('0.13.255')},
+    '11_2': {'min': StrictVersion('0.11.2'),
+             'max': StrictVersion('0.11.255')}
+}
+
+
+def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True) -> Callable:
+    """Return a suitable conversion funtion for a specific legacy version.
+
+    This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
+    """
+    # TODO: test
+    for k, v in CONVERSION_DICT.items():
+        if v['min'] <= version < v['max']:
+            n = 'load_' if in_memory else 'convert_'
+            return globals()[n + k]
+    raise VersionError('No suitable conversion function found for {}'.format(version))
 
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
@@ -44,8 +64,8 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
         header: bytes containing all the legacy header information
         data_bytes: raw bytes representing the data
     """
-    min_v = StrictVersion('0.11.255')
-    max_v = StrictVersion('0.13.255')
+    min_v = CONVERSION_DICT['12_0']['min']
+    max_v = CONVERSION_DICT['12_0']['max']
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
@@ -99,8 +119,8 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
         header: bytes containing all the legacy header information
         data_bytes: raw bytes representing the data
     """
-    min_v = StrictVersion('0.11.2')
-    max_v = StrictVersion('0.11.255')
+    min_v = CONVERSION_DICT['11_2']['min']
+    max_v = CONVERSION_DICT['11_2']['max']
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):

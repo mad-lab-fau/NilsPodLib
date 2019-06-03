@@ -20,7 +20,7 @@ from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
     RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
     get_header_and_data_bytes, get_strict_version_from_header_bytes
-from NilsPodLib.legacy import legacy_support_check
+from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -567,7 +567,7 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
     version = get_strict_version_from_header_bytes(header_bytes)
 
     if legacy_support == 'resolve':
-        pass
+        header_bytes, data_bytes = find_conversion_function(version, in_memory=True)(header_bytes, data_bytes)
     elif legacy_support in ['error', 'warn']:
         legacy_support_check(version, as_warning=(legacy_support == 'warn'))
 
