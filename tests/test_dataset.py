@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_approx_equal
 
 
 def test_size(dataset_master_simple):
@@ -165,8 +166,8 @@ def test_utc_counter(dataset_master_simple):
     ds = dataset_master_simple[0]
 
     assert int(ds.utc_counter[0]) == int(ds.info.utc_start)
-    # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert int(ds.utc_counter[-1] // 10) == int(ds.info.utc_stop // 10)
+    # he values will not be exactly the same, but they should be close
+    assert_approx_equal(ds.utc_counter[-1], ds.info.utc_stop, 10)
     assert len(ds.utc_counter) == len(ds.counter)
 
 
