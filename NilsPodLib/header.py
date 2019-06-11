@@ -36,7 +36,6 @@ class HeaderFields:
 
     sync_role: str
     sync_distance_ms: float
-    sync_group: int
     sync_address: int
     sync_channel: int
     sync_index_start: int
@@ -56,14 +55,14 @@ class HeaderFields:
 
     # Note this must correspond to the order they appear in the datapackage when activated
     _SENSOR_FLAGS = OrderedDict([
-        ('gyro', 0x02),
-        ('acc', 0x01),
-        ('mag', 0x04),
-        ('baro', 0x08),
-        ('analog', 0x10),
-        ('ecg', 0x20),
-        ('ppg', 0x40),
-        ('temperature', 0x80)
+        ('gyro', (0x02, 0x00)),
+        ('acc', (0x01, 0x00)),
+        ('mag', (0x04, 0x00)),
+        ('baro', (0x08, 0x00)),
+        ('analog', (0x10, 0x00)),
+        ('ecg', (0x20, 0x00)),
+        ('ppg', (0x40, 0x00)),
+        ('temperature', (0x80, 0x00))
     ])
 
     _OPERATION_MODES = {
@@ -172,23 +171,23 @@ class Header(HeaderFields):
 
         header_dict['sample_size'] = int(bin_array[0])
 
-        sensors = bin_array[1]
+        sensors = bin_array[1:3]
         enabled_sensors = list()
         for para, val in cls._SENSOR_FLAGS.items():
-            if bool(sensors & val) is True:
+            if bool(sensors[0] & val[0]) or bool(sensors[1] & val[1]):
                 enabled_sensors.append(para)
         header_dict['enabled_sensors'] = tuple(enabled_sensors)
 
-        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[2] & 0x0F]
+        # bin_array[2] = currently not used
+
+        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3] & 0x0F]
 
         header_dict['session_termination'] = next(
-            k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[3] & v) is True)
+            k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[4] & v) is True)
 
-        header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[4]]
+        header_dict['sync_role'] = cls._SYNC_ROLE[bin_array[5]]
 
-        header_dict['sync_distance_ms'] = float(bin_array[5] * 100.0)
-
-        header_dict['sync_group'] = int(bin_array[6])
+        header_dict['sync_distance_ms'] = float(bin_array[6] * 100.0)
 
         header_dict['acc_range_g'] = float(bin_array[7])
 

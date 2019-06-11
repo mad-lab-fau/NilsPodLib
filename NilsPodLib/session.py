@@ -42,24 +42,37 @@ class Session(CascadingDatasetInterface):
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
     @classmethod
-    def from_file_paths(cls: Type[T], paths: Iterable[path_t]) -> T:
+    def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_support: str = 'error') -> T:
         """Create a new session from a list of files pointing to valid .bin files.
 
         Args:
             paths: List of paths pointing to files to be included
+            legacy_support: This indicates how to deal with old firmware versions.
+                If `error`: An error is raised, if an unsupported version is detected.
+                If `warn`: A warning is raised, but the file is parsed without modification
+                If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
+                    an error is raised. See the `legacy` package and the README to learn more about available
+                    conversions.
         """
-        ds = (Dataset.from_bin_file(p) for p in paths)
+        ds = (Dataset.from_bin_file(p, legacy_support=legacy_support) for p in paths)
         return cls(ds)
 
     @classmethod
-    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin') -> T:
+    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin',
+                         legacy_support: str = 'error') -> T:
         """Create a new session from a folder path containing valid .bin files.
 
         Args:
             base_path: Path to the folder
             filter_pattern: regex that can be used to filter the files in the folder. This is passed to Pathlib.glob()
+            legacy_support: This indicates how to deal with old firmware versions.
+                If `error`: An error is raised, if an unsupported version is detected.
+                If `warn`: A warning is raised, but the file is parsed without modification
+                If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
+                    an error is raised. See the `legacy` package and the README to learn more about available
+                    conversions.
         """
-        return cls.from_file_paths(Path(base_path).glob(filter_pattern))
+        return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_support=legacy_support)
 
     def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
@@ -159,10 +172,9 @@ class SyncedSession(Session):
 
     def _validate_sync_groups(self) -> bool:
         """Check that all _headers belong to the same sync group."""
-        sync_group = set(self.info.sync_group)
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
-        return all((len(i) == 1 for i in [sync_group, sync_channel, sync_address]))
+        return all((len(i) == 1 for i in [sync_channel, sync_address]))
 
     def _validate_sync_role(self) -> Tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""

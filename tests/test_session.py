@@ -8,27 +8,31 @@ from NilsPodLib.session import Session
 
 
 @pytest.fixture()
-def basic_session(dataset_master_simple, dataset_slave_simple):
-    return Session([dataset_master_simple[0], dataset_slave_simple[0]])
+def basic_session(dataset_synced):
+    return Session([dataset_synced['master'][0], dataset_synced['slave1'][0]])
 
 
-def test_basic_init(dataset_master_simple, dataset_slave_simple):
-    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert session.datasets == tuple([dataset_master_simple[0], dataset_slave_simple[0]])
+def test_basic_init(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+    session = Session([ds1, ds2])
+    assert session.datasets == tuple([ds1, ds2])
 
 
-def test_init_from_file_paths(dataset_master_simple, dataset_slave_simple):
-    session = Session.from_file_paths([dataset_master_simple[1], dataset_slave_simple[1]])
-    assert dataset_master_simple[0].info.sensor_id in session.info.sensor_id
-    assert dataset_slave_simple[0].info.sensor_id in session.info.sensor_id
+def test_init_from_file_paths(dataset_synced):
+    ds1 = dataset_synced['master']
+    ds2 = dataset_synced['slave1']
+    session = Session.from_file_paths([ds1[1], ds2[1]])
+    assert ds1[0].info.sensor_id in session.info.sensor_id
+    assert ds2[0].info.sensor_id in session.info.sensor_id
     assert len(session.datasets) == 2
 
 
-def test_init_from_folder(dataset_master_simple, dataset_slave_simple, dataset_analog_simple):
-    session = Session.from_folder_path(Path(dataset_master_simple[0].path).parent)
-    assert dataset_master_simple[0].info.sensor_id in session.info.sensor_id
-    assert dataset_slave_simple[0].info.sensor_id in session.info.sensor_id
-    assert dataset_analog_simple[0].info.sensor_id in session.info.sensor_id
+def test_init_from_folder(dataset_synced):
+    session = Session.from_folder_path(Path(dataset_synced['master'][1]).parent)
+    assert dataset_synced['master'][0].info.sensor_id in session.info.sensor_id
+    assert dataset_synced['slave1'][0].info.sensor_id in session.info.sensor_id
+    assert dataset_synced['slave2'][0].info.sensor_id in session.info.sensor_id
     assert len(session.datasets) == 3
 
 
@@ -54,20 +58,28 @@ def test_info_get_method(basic_session):
     assert 'from_json' in str(e)
 
 
-def test_dataset_attr_access(dataset_master_simple, dataset_slave_simple):
-    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
-    assert session.acc == (dataset_master_simple[0].acc, dataset_slave_simple[0].acc)
+def test_dataset_attr_access(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+    session = Session([ds1, ds2])
+    assert session.acc == (ds1.acc, ds2.acc)
 
 
-def test_dataset_func_call(dataset_master_simple, dataset_slave_simple):
-    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
-    pd.testing.assert_frame_equal(session.data_as_df()[0], dataset_master_simple[0].data_as_df())
-    pd.testing.assert_frame_equal(session.data_as_df()[1], dataset_slave_simple[0].data_as_df())
+def test_dataset_func_call(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+
+    session = Session([ds1, ds2])
+    pd.testing.assert_frame_equal(session.data_as_df()[0], ds1.data_as_df())
+    pd.testing.assert_frame_equal(session.data_as_df()[1], ds2.data_as_df())
 
 
-def test_dataset_func_call_dataset_return(dataset_master_simple, dataset_slave_simple):
-    session = Session([dataset_master_simple[0], dataset_slave_simple[0]])
+def test_dataset_func_call_dataset_return(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+
+    session = Session([ds1, ds2])
     return_val = session.cut(0, 10)
     assert isinstance(return_val, Session)
-    assert np.array_equal(return_val.datasets[0].acc.data, dataset_master_simple[0].cut(0, 10).acc.data)
-    assert np.array_equal(return_val.datasets[1].acc.data, dataset_slave_simple[0].cut(0, 10).acc.data)
+    assert np.array_equal(return_val.datasets[0].acc.data, ds1.cut(0, 10).acc.data)
+    assert np.array_equal(return_val.datasets[1].acc.data, ds2.cut(0, 10).acc.data)

@@ -4,6 +4,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_approx_equal
 
 
 def test_size(dataset_master_simple):
@@ -86,8 +87,8 @@ def test_cut_to_sync_master(dataset_master_simple):
     assert np.array_equal(ds.counter, ds_new.counter)
 
 
-def test_cut_to_sync_slave_with_end(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_slave_with_end(dataset_synced):
+    ds = dataset_synced['slave1'][0]
     ds_new = ds.cut_to_syncregion(end=True)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
@@ -96,8 +97,8 @@ def test_cut_to_sync_slave_with_end(dataset_slave_simple):
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[ds.info.sync_index_stop - 1])
 
 
-def test_cut_to_sync_slave_without_end(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_slave_without_end(dataset_synced):
+    ds = dataset_synced['slave1'][0]
     ds_new = ds.cut_to_syncregion(end=False)
 
     assert ds_new.counter[0] == ds.counter[ds.info.sync_index_start]
@@ -106,8 +107,8 @@ def test_cut_to_sync_slave_without_end(dataset_slave_simple):
     assert np.array_equal(ds_new.acc.data[-1], ds.acc.data[-1])
 
 
-def test_cut_to_sync_warning(dataset_slave_simple):
-    ds = dataset_slave_simple[0]
+def test_cut_to_sync_warning(dataset_synced):
+    ds = dataset_synced['slave1'][0]
 
     with pytest.warns(None) as rec:
         ds.cut_to_syncregion(end=False)
@@ -165,8 +166,8 @@ def test_utc_counter(dataset_master_simple):
     ds = dataset_master_simple[0]
 
     assert int(ds.utc_counter[0]) == int(ds.info.utc_start)
-    # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert int(ds.utc_counter[-1] // 10) == int(ds.info.utc_stop // 10)
+    # he values will not be exactly the same, but they should be close
+    assert_approx_equal(ds.utc_counter[-1], ds.info.utc_stop, 10)
     assert len(ds.utc_counter) == len(ds.counter)
 
 
