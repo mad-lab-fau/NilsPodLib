@@ -5,14 +5,14 @@
 """
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, TypeVar, Type, Any, Optional, Union, TYPE_CHECKING
+from typing import Iterable, Tuple, TypeVar, Type, Any, Optional, Union, TYPE_CHECKING, Sequence
 
 import numpy as np
 
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import ProxyHeader
 from NilsPodLib.interfaces import CascadingDatasetInterface
-from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t, SynchronisationError
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -140,6 +140,7 @@ class Session(CascadingDatasetInterface):
 
 class SyncedSession(Session):
     VALIDATE_ON_INIT = True
+    _fully_synced = False
 
     def __init__(self, datasets: Iterable[Dataset]):
         super().__init__(datasets)
@@ -255,4 +256,14 @@ class SyncedSession(Session):
         # Finally set the master counter to all slaves to really ensure identical counters
         for d in s.slaves:
             d.counter = s.master.counter
+            self._fully_synced = True
         return s
+
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None, concat_df: Optional[bool] = False):
+        import pandas as pd
+        dfs = super().data_as_df(datastreams, index)
+        if concat_df is True:
+            if not self._fully_synced:
+                raise SynchronisationError('Only fully synced datasets, can be exported as a df with unified index.')
+            dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
+        return dfs

@@ -86,6 +86,10 @@ class RepeatedCalibrationError(Exception):
         super().__init__(message)
 
 
+class SynchronisationError(Exception):
+    """Error that is raised for sync realted issues."""
+
+
 def datastream_does_not_exist_warning(sensor_name, operation):
     message = 'The datastream "{}" does not exist for the current session.\
      The performed operation "{}" will have not effect'.format(sensor_name, operation)
