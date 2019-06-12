@@ -252,7 +252,32 @@ class SyncedSession(Session):
         self._fully_synced = True
         return s
 
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None, concat_df: Optional[bool] = False):
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
+                   concat_df: Optional[bool] = False):
+        """Export all datasets of the dataset in a list of (or a single) pandas DataFrame.
+
+        See Also:
+            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
+
+        Args:
+            datastreams: Optional list of datastream names, if only specific ones should be included. Datastreams that
+                are not part of the current dataset will be silently ignored.
+            index: Specify which index should be used for the dataset. The options are:
+                "counter": For the actual counter
+                "time": For the time in seconds since the first sample
+                "utc": For the utc time stamp of each sample
+                "utc_datetime": for a pandas DateTime index in UTC time
+                None: For a simple index (0...N)
+            concat_df: If True the individual dfs from each dataset will be concatenated. This is only supported, if the
+                session is properly cut to the sync region and all the datasets have the same counter.
+
+        Notes:
+            This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+            Therefore, it will use the column information of each datastream.
+
+        Raises:
+            ValueError: If any other than the allowed `index` values are used.
+        """
         import pandas as pd
         dfs = super().data_as_df(datastreams, index)
         if concat_df is True:
@@ -260,3 +285,32 @@ class SyncedSession(Session):
                 raise SynchronisationError('Only fully synced datasets, can be exported as a df with unified index.')
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
+
+    def imu_data_as_df(self, index: Optional[str] = None, concat_df: Optional[bool] = False):
+        """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
+
+        See Also:
+            :py:meth:`NilsPodLib.session.SyncedSession.data_as_df`
+            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
+            :py:meth:`NilsPodLib.dataset.Dataset.imu_data_as_df`
+
+
+        Args:
+            index: Specify which index should be used for the dataset. The options are:
+                "counter": For the actual counter
+                "time": For the time in seconds since the first sample
+                "utc": For the utc time stamp of each sample
+                "utc_datetime": for a pandas DateTime index in UTC time
+                None: For a simple index (0...N)
+            concat_df: If True the individual dfs from each dataset will be concatenated. This is only supported, if the
+                session is properly cut to the sync region and all the datasets have the same counter.
+
+        Notes:
+            This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+            Therefore, it will use the column information of each datastream.
+
+        Raises:
+            ValueError: If any other than the allowed `index` values are used.
+
+        """
+        return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
