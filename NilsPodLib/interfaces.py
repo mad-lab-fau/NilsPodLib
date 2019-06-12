@@ -79,6 +79,9 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:
         return self._cascading_dataset_method_called('data_as_df', datastreams, index)
 
+    def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
+        return self._cascading_dataset_method_called('imu_data_as_df', index)
+
     def find_closest_calibration(self, folder: path_t, recursive: bool = False, filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None) -> Path:
         return self._cascading_dataset_method_called('find_closest_calibration')
