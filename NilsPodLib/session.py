@@ -233,11 +233,6 @@ class SyncedSession(Session):
                               'end of the dataset. The last section of this data should not be trusted.'.format(
                     sync_warn, warn_thres))
 
-        stop_sync_idx = None
-        # if end:
-        #     # This needs to be calculated here, before the dataset is cut
-        #     stop_sync_idx = [d.counter[d.info.sync_index_stop] for d in s.slaves]
-
         s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
         if only_to_master is True:
             return s
@@ -250,13 +245,11 @@ class SyncedSession(Session):
         s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
         stop_idx = [len(d.counter) for d in s.datasets]
         s = super(SyncedSession, s).cut(stop=np.min(stop_idx), inplace=True)
-        # stop_sync_idx = [d.info.sync_index_stop for d in s.slaves]
-        # end = np.min(stop_sync_idx) if stop_sync_idx else np.min(stop_idx)
 
         # Finally set the master counter to all slaves to really ensure identical counters
         for d in s.slaves:
             d.counter = s.master.counter
-            self._fully_synced = True
+        self._fully_synced = True
         return s
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None, concat_df: Optional[bool] = False):
