@@ -1,7 +1,7 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
 from distutils.version import StrictVersion
-from typing import Tuple, Callable, Optional
+from typing import Tuple, Callable, Optional, Union
 import numpy as np
 
 from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_version_from_header_bytes, \
@@ -15,7 +15,8 @@ CONVERSION_DICT = {
 }
 
 
-def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True) -> Callable:
+def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True,
+                             return_name: Optional[bool] = False) -> Union[Callable, str]:
     """Return a suitable conversion funtion for a specific legacy version.
 
     This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
@@ -24,6 +25,8 @@ def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] =
     for k, v in CONVERSION_DICT.items():
         if v['min'] <= version < v['max']:
             n = 'load_' if in_memory else 'convert_'
+            if return_name:
+                return n + k
             return globals()[n + k]
     raise VersionError('No suitable conversion function found for {}'.format(version))
 
@@ -199,15 +202,12 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
     elif version >= StrictVersion('0.13.255'):
         return
     else:
-        converter = None
-        if StrictVersion('0.11.2') <= version < StrictVersion('0.11.255'):
-            converter = 'NilsPodLib.legacy.convert_11_2'
-        elif StrictVersion('0.11.255') <= version < StrictVersion('0.13.255'):
-            converter = 'NilsPodLib.legacy.convert_12_0'
-        if converter:
+        try:
+            converter = find_conversion_function(version, in_memory=False, return_name=True)
             msg = 'You are using a version ({}) which is only supported by legacy support.' \
-                  ' Use `{}` to update the binary format to a newer version.'.format(version, converter)
-        else:
+                  ' Use `{}` to update the binary format to a newer version' \
+                  ' or use `legacy_support="resolve"` when loading the file'.format(version, converter)
+        except VersionError:
             msg = 'You are using a version completely unknown version: {}'.format(version)
 
     if as_warning is True:
