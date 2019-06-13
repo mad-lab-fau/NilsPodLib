@@ -128,6 +128,9 @@ def find_closest_calibration_to_date(sensor_id: str,
 
     potential_list = find_calibrations_for_sensor(sensor_id=sensor_id, folder=folder, recursive=recursive,
                                                   filter_cal_type=filter_cal_type)
+    if not potential_list:
+        raise ValueError('Not Calibration for the sensor with the id {} could be found'.format(sensor_id))
+
     dates = [datetime.datetime.strptime('_'.join(d.stem.split('_')[1:]), '%Y-%m-%d_%H-%M') for d in potential_list]
 
     dates = np.array(dates, dtype='datetime64[s]')

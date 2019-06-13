@@ -3,6 +3,7 @@
 
 @author: Nils Roth, Arne Küderle
 """
+import datetime
 import warnings
 from distutils.version import StrictVersion
 from pathlib import Path
@@ -523,7 +524,8 @@ class Dataset(CascadingDatasetInterface):
                                  folder: Optional[path_t] = None,
                                  recursive: bool = True,
                                  filter_cal_type: Optional[str] = None,
-                                 before_after: Optional[str] = None) -> Path:
+                                 before_after: Optional[str] = None,
+                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -538,6 +540,8 @@ class Dataset(CascadingDatasetInterface):
                 For possible values, see the `imucal` library.
             before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
                 either before or after the specified date.
+            warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
+
 
         See Also:
             :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
@@ -551,7 +555,8 @@ class Dataset(CascadingDatasetInterface):
             folder=folder,
             recursive=recursive,
             filter_cal_type=filter_cal_type,
-            before_after=before_after
+            before_after=before_after,
+            warn_thres=warn_thres
         )
 
     def _check_sync_packages(self, threshold_s: int = 30) -> bool:
