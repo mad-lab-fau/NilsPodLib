@@ -6,13 +6,13 @@
 import warnings
 from distutils.version import StrictVersion
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING
+from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING, List
 
 import numpy as np
 import pandas as pd
 from scipy.signal import decimate
 
-from NilsPodLib.calibration_utils import find_closest_calibration_to_date
+from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_calibrations_for_sensor
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
@@ -490,6 +490,34 @@ class Dataset(CascadingDatasetInterface):
 
         """
         return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
+
+    def find_calibrations(self, folder: Optional[path_t] = None,
+                          recursive: bool = True,
+                          filter_cal_type: Optional[str] = None) -> List[Path]:
+        """Find all calibration infos that belong to a given sensor.
+
+        As this only checks the filenames, this might return a false positive depending on your folder structure and
+        naming.
+
+        Args:
+            folder: Basepath of the folder to search. If None, tries to find a default calibration
+            recursive: If the folder should be searched recursive or not.
+            filter_cal_type: Whether only files obtain with a certain calibration type should be found.
+                This will look for the `CalType` inside the json file and hence cause performance problems.
+                If None, all found files will be returned.
+                For possible values, see the `imucal` library.
+
+        See Also:
+            :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
+
+        """
+        # TODO: Test
+        return find_calibrations_for_sensor(
+            sensor_id=self.info.sensor_id,
+            folder=folder,
+            recursive=recursive,
+            filter_cal_type=filter_cal_type,
+        )
 
     def find_closest_calibration(self,
                                  folder: Optional[path_t] = None,

@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING, Type, Sequence
+from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING, Type, Sequence, List
 
 import numpy as np
 import pandas as pd
@@ -82,9 +81,17 @@ class CascadingDatasetInterface(metaclass=AnnotFieldMeta):
     def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
         return self._cascading_dataset_method_called('imu_data_as_df', index)
 
-    def find_closest_calibration(self, folder: path_t, recursive: bool = False, filter_cal_type: Optional[str] = None,
-                                 before_after: Optional[str] = None) -> Path:
-        return self._cascading_dataset_method_called('find_closest_calibration')
+    def find_closest_calibration(self, folder: path_t,
+                                 recursive: bool = False,
+                                 filter_cal_type: Optional[str] = None,
+                                 before_after: Optional[str] = None):
+        return self._cascading_dataset_method_called('find_closest_calibration', folder, recursive, filter_cal_type,
+                                                     before_after)
+
+    def find_calibrations(self, folder: Optional[path_t] = None,
+                          recursive: bool = True,
+                          filter_cal_type: Optional[str] = None):
+        return self._cascading_dataset_method_called('find_calibrations', folder, recursive, filter_cal_type)
 
     def __getattribute__(self, name: str) -> Any:
         if name != '_CascadingDatasetInterface_fields' \
