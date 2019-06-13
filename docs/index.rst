@@ -5,6 +5,7 @@ NilsPodLib Docu Overview
    :maxdepth: 2
 
    README.md
+   Calibration.md
 
 .. toctree::
    :maxdepth: 2
