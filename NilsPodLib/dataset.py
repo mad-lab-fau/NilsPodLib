@@ -570,6 +570,8 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
         header_bytes, data_bytes = find_conversion_function(version, in_memory=True)(header_bytes, data_bytes)
     elif legacy_support in ['error', 'warn']:
         legacy_support_check(version, as_warning=(legacy_support == 'warn'))
+    else:
+        raise ValueError("legacy_support must be one of 'resolve',  'error' or 'warn'")
 
     session_header = Header.from_bin_array(header_bytes[1:])
 
