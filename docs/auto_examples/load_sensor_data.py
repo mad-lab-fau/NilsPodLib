@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-Single Dataset
-==============
-
-A simple example on how to work with a single Dataset.
-"""
+"""A simple example on how to work with a single Dataset."""
+import os
 
 import matplotlib.pyplot as plt
 from pathlib import Path

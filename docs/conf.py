@@ -46,6 +46,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx_markdown_tables',
+    'sphinx_gallery.gen_gallery',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -209,3 +210,9 @@ autoclass_content = 'both'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# -- Options for Sphinx Gallery ----------------------------------------------
+sphinx_gallery_conf = {
+    'filename_pattern': '/',
+    'gallery_dirs': 'examples'
+}

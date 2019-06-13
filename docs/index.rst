@@ -7,6 +7,7 @@ NilsPodLib Docu Overview
    README.md
    Legacy.md
    Calibration.md
+   examples/index.rst
 
 .. toctree::
    :maxdepth: 2
