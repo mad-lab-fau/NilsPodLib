@@ -5,19 +5,19 @@ A python package to parse logged NilsPod Binary files.
 ## Installation
 
 ```
-pip install git+https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib.git --upgrade
+pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git --upgrade
 ```
 
 With ssh access:
 
 ```
-pip install git+ssh://git@mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib.git --upgrade
+pip install git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git --upgrade
 ```
 
 For development:
 
 ```
-git clone https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib.git
+git clone https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git
 cd nilspodpythonlib
 pip install -e . --upgrade
 ```
@@ -27,7 +27,7 @@ pip install -e . --upgrade
 The documentation is available as SphinxDoc, which can be downloaded from the [pipelines page](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/-/jobs/artifacts/master/download?job=docs) for each commit.
 The documentation is also available [online](http://madlab.mad-pages.informatik.uni-erlangen.de/portabilestools/nilspodpythonlib/README.html) (only from the FAU university network).
 
-Supplementary examples can be found in the [examples folder](https://mad-srv.informatik.uni-erlangen.de/lo94zeny/nilspodpythonlib/tree/master/examples) of the git project.
+Supplementary examples can be found in the [examples folder](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/tree/master/examples) of the git project.
 
 ## Legacy Support
 
