@@ -10,7 +10,7 @@ SENSOR_SAMPLE_LENGTH = {
     'mag': (6, 3, np.int16),
     'baro': (2, 1, np.int16),
     'analog': (3, 3, np.uint8),
-    'ecg': (None, None, None),  # Needs to be implement
+    'ecg': (4, 1, np.int32),  # Needs to be implement
     'ppg': (None, None, None),  # Needs to be implement
     'temperature': (2, 1, np.int16)
 
