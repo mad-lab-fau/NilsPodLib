@@ -29,7 +29,7 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
     Args:
         calibration: The CalibrationInfo object ot be saved
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilePodLib.header.Header.sensor_id`
+            :py:meth:`NilsPodLib.header.Header.sensor_id`
         cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
             value in UTC timezone, as this is in line with the time handling in the rest of the library.
         folder: Basepath of the folder, where the file will be stored.
@@ -56,7 +56,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
 
     Args:
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilePodLib.header.Header.sensor_id`
+            :py:meth:`NilsPodLib.header.Header.sensor_id`
         folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
         filter_cal_type: Whether only files obtain with a certain calibration type should be found.
@@ -102,7 +102,7 @@ def find_closest_calibration_to_date(sensor_id: str,
 
     Args:
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilePodLib.header.Header.sensor_id`
+            :py:meth:`NilsPodLib.header.Header.sensor_id`
         cal_time: time and date to look for
         folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
