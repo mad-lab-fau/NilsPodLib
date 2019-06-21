@@ -86,7 +86,7 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
     if filter_cal_type is None:
         return potential_matches
 
-    return [f for f in potential_matches if json.load(f.open())['cal_type'] == filter_cal_type]
+    return [f for f in potential_matches if json.load(f.open())['cal_type'].lower() == filter_cal_type.lower()]
 
 
 def find_closest_calibration_to_date(sensor_id: str,

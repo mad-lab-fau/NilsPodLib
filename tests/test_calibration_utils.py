@@ -55,7 +55,7 @@ def dummy_cal_folder(dummy_cal):
 @pytest.fixture()
 def dummy_cal_folder_recursive(dummy_cal):
     with tempfile.TemporaryDirectory() as f:
-        for s in ['sub1', 'sub2']:
+        for s in ['sub1', 'sub2', 'Sub3']:
             new_cal = copy.deepcopy(dummy_cal)
             new_cal.CAL_TYPE = s
             for sid in ['tes1', 'tes2', 'tes3']:
@@ -79,7 +79,7 @@ def test_find_calibration_recursive(dummy_cal_folder_recursive):
 
     cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True)
 
-    assert len(cals) == 20
+    assert len(cals) == 30
     assert all(['tes1' in str(x) for x in cals])
 
 
@@ -88,6 +88,41 @@ def test_find_calibration_type_filer(dummy_cal_folder_recursive):
 
     assert len(cals) == 10
     assert all(['tes1' in str(x) for x in cals])
+
+
+def test_find_calibration_type_filer_case_sensitive(dummy_cal_folder_recursive):
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub1')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub1')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='sub1')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
+
+def test_find_calibration_type_filer_case_sensitive_2(dummy_cal_folder_recursive):
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub3')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub3')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
+    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='SUB3')
+
+    assert len(cals) == 10
+    assert all(['tes1' in str(x) for x in cals])
+
 
 
 def test_find_closest(dummy_cal_folder):
