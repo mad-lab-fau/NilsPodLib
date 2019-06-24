@@ -7,8 +7,8 @@ import pytest
 
 from NilsPodLib import Dataset
 from NilsPodLib.header import Header
-from NilsPodLib.legacy import fix_little_endian_counter, convert_sensor_enabled_flag_11_2, insert_missing_bytes_11_2, \
-    split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0
+from NilsPodLib.legacy import _fix_little_endian_counter, _convert_sensor_enabled_flag_11_2, _insert_missing_bytes_11_2, \
+    _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0
 from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12
 
@@ -52,14 +52,14 @@ def simple_session_12_0_csv():
 def test_endian_conversion(simple_session_11_2):
     _, header, data = simple_session_11_2
     sample_size = get_sample_size_from_header_bytes(header)
-    data = fix_little_endian_counter(data, sample_size)
+    data = _fix_little_endian_counter(data, sample_size)
     counter_after = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
     assert np.all(np.diff(counter_after) == 1.)
 
 
 def test_sensor_enabled_flag_conversion(simple_session_11_2):
     _, header, _ = simple_session_11_2
-    sensors = convert_sensor_enabled_flag_11_2(header[2])
+    sensors = _convert_sensor_enabled_flag_11_2(header[2])
     enabled_sensors = list()
     for para, val in Header._SENSOR_FLAGS.items():
         if bool(sensors & val[0]) is True:
@@ -70,7 +70,7 @@ def test_sensor_enabled_flag_conversion(simple_session_11_2):
 
 def test_insert_missing_bytes(simple_session_11_2):
     _, header, _ = simple_session_11_2
-    new_header = insert_missing_bytes_11_2(header)
+    new_header = _insert_missing_bytes_11_2(header)
 
     assert len(new_header) == 52
 
@@ -81,7 +81,7 @@ def test_insert_missing_bytes(simple_session_11_2):
     (0x52, (0x02, 0x50))
 ])
 def test_split_sampling_rate(in_byte, out):
-    assert split_sampling_rate_byte_11_2(in_byte) == out
+    assert _split_sampling_rate_byte_11_2(in_byte) == out
 
 
 @pytest.mark.parametrize('session, converter', [

@@ -1,22 +1,26 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
+"""Set of helper functions used throughout the library."""
+
 import copy
 import struct
 import warnings
 from distutils.version import StrictVersion
-from typing import TypeVar, Union, TYPE_CHECKING, Tuple
+from typing import TypeVar, TYPE_CHECKING, Tuple
 
 import numpy as np
 from pathlib import Path
-
-if TYPE_CHECKING:
-    from imucal import CalibrationInfo  # noqa: F401
 
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
 
 
-def convert_little_endian(byte_list, dtype=int):
+def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> T:
+    """Convert a little endian bytestring into a readable format.
+
+    Args:
+        byte_list: The array of bytes
+        dtype: The datatype, the final value should be converted to.
+    """
     byte_list = np.array(byte_list).astype(np.uint32)
     number = byte_list[0]
     for i, v in enumerate(byte_list[1:]):
@@ -24,7 +28,20 @@ def convert_little_endian(byte_list, dtype=int):
     return number.astype(dtype)
 
 
-def read_binary_uint8(data_bytes, packet_size, expected_samples):
+def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples: int) -> np.ndarray:
+    """Read a continuous stream of uint8 values into its separate datapoints.
+
+    Args:
+        data_bytes: The raw stream of data bytes
+        packet_size: The size of each datapacket stored in the stream
+        expected_samples: The expected number of samples in the data stream. This is only used to check the integrity
+            of the datastream and raise a warning if, the number of samples in the dataset, does not match the expected
+            number.
+
+    Returns:
+        Array with the shape (n_samples, packet_size)
+
+    """
     packet_size = int(packet_size)
     expected_length = expected_samples * packet_size
     page_size = 2048
@@ -48,6 +65,7 @@ def read_binary_uint8(data_bytes, packet_size, expected_samples):
 
 
 def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
+    """Separate a binary file into its header and data part."""
     with open(path, 'rb') as f:
         header = f.read(1)
         header_size = header[0]
@@ -61,51 +79,59 @@ def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def get_sample_size_from_header_bytes(header_bytes: np.ndarray) -> int:
+    """Get the size of an individual data sample (in bytes) from the header info."""
     return int(header_bytes[1])
 
 
 def get_strict_version_from_header_bytes(header_bytes: np.ndarray) -> StrictVersion:
+    """Extract the version number from a byte header."""
     return StrictVersion('{}.{}.{}'.format(*(int(x) for x in header_bytes[-3:])))
 
 
 def inplace_or_copy(obj: T, inplace: bool) -> T:
+    """Either create a deepcopy of the object or return it based on the value of `inplace`."""
     if inplace is True:
         return obj
     return copy.deepcopy(obj)
 
 
 class InvalidInputFileError(Exception):
+    """Indicate an invalid binary file, which can not be loaded."""
+
     pass
 
 
 class RepeatedCalibrationError(Exception):
+    """Indicate that a datastream was already calibrated."""
+
     MESSAGE = 'The sensor "{}" is already calibrated. Repeated calibration will lead to wrong values.'
 
     def __init__(self, sensor_name):
+        """Get a new Exception instance."""
         message = self.MESSAGE.format(sensor_name)
         super().__init__(message)
 
 
 class SynchronisationError(Exception):
-    """Error that is raised for sync realted issues."""
+    """Error that is raised for sync related issues."""
+
+    pass
 
 
 def datastream_does_not_exist_warning(sensor_name, operation):
+    """Warn about not existing datastreams."""
     message = 'The datastream "{}" does not exist for the current session.\
      The performed operation "{}" will have not effect'.format(sensor_name, operation)
     return warnings.warn(message)
 
 
-def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
-    from imucal import CalibrationInfo  # noqa: F811
-    if isinstance(calibration, (Path, str)):
-        calibration = CalibrationInfo.from_json_file(calibration)
-    if not isinstance(calibration, CalibrationInfo):
-        raise ValueError('No valid CalibrationInfo object provided')
-    return calibration
-
-
 def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> bool:
+    """Check that multiple intervals indicated by their start and stop values do all have an overlapping region.
+
+    Raises:
+        ValueError: If any of the intervals are invalid, because their end values is before their start value.
+
+    """
     if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError('The start values need to be smaller then their respective end values!')
     return np.max(start_vals) < np.min(end_vals)

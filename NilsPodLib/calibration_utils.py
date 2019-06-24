@@ -1,8 +1,10 @@
+"""A set of utilities to save and find calibrations for NilsPod sensors."""
+
 import datetime
 import json
 import warnings
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 import re
 import numpy as np
 
@@ -154,3 +156,13 @@ def find_closest_calibration_to_date(sensor_id: str,
                                                                    datetime.timedelta(seconds=min_dist)))
 
     return potential_list[int(np.nanargmin(np.abs(diffs)))]
+
+
+def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
+    """Load a calibration from path or check if the provided object is already a valid calibration."""
+    from imucal import CalibrationInfo  # noqa: F811
+    if isinstance(calibration, (Path, str)):
+        calibration = CalibrationInfo.from_json_file(calibration)
+    if not isinstance(calibration, CalibrationInfo):
+        raise ValueError('No valid CalibrationInfo object provided')
+    return calibration

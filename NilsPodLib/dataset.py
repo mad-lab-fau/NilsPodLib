@@ -13,14 +13,15 @@ import numpy as np
 import pandas as pd
 from scipy.signal import decimate
 
-from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_calibrations_for_sensor
+from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_calibrations_for_sensor, \
+    load_and_check_cal_info
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, load_and_check_cal_info, \
-    get_header_and_data_bytes, get_strict_version_from_header_bytes
+    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, get_header_and_data_bytes, \
+    get_strict_version_from_header_bytes
 from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 
 if TYPE_CHECKING:
@@ -552,7 +553,7 @@ class Dataset(CascadingDatasetInterface):
                                  recursive: bool = True,
                                  filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None,
-                                 warn_thres: datetime.timedelta = datetime.timedelta(days = 30)) -> Path:
+                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:  # noqa: E252
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and

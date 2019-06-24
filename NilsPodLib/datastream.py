@@ -139,7 +139,7 @@ class Datastream:
         s.sampling_rate_hz /= factor
         return s
 
-    def data_as_df(self, index_as_time: bool = True) -> pd.DataFrame:
+    def data_as_df(self, index_as_time: bool = True) -> 'pd.DataFrame':
         """Return the datastream as pandas Dataframe.
 
         This will use `self.columns` as columns for the dataframe.
@@ -148,7 +148,7 @@ class Datastream:
             index_as_time: If True the index will be divided by the sampling rate to represent time since start of the
                 measurement.
         """
-        import pandas as pd
+        import pandas as pd  # noqa: F811
         df = pd.DataFrame(self.data, columns=self.columns)
         if index_as_time:
             df.index /= self.sampling_rate_hz

@@ -75,7 +75,7 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
         raise VersionError('This converter is meant for files recorded with Firmware version after {} and before {}'
                            ' not {}'.format(min_v, max_v, version))
 
-    header = shift_bytes_12_0(header)
+    header = _shift_bytes_12_0(header)
 
     # Update firmware version
     header[-2] = 13
@@ -132,11 +132,11 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
     packet_size = get_sample_size_from_header_bytes(header)
 
-    data_bytes = fix_little_endian_counter(data_bytes, packet_size).flatten()
+    data_bytes = _fix_little_endian_counter(data_bytes, packet_size).flatten()
 
-    header = insert_missing_bytes_11_2(header)
-    header[3:5] = split_sampling_rate_byte_11_2(header[3])
-    header[2] = convert_sensor_enabled_flag_11_2(header[2])
+    header = _insert_missing_bytes_11_2(header)
+    header[3:5] = _split_sampling_rate_byte_11_2(header[3])
+    header[2] = _convert_sensor_enabled_flag_11_2(header[2])
 
     # adapt to new header size:
     header[0] = len(header)
@@ -148,7 +148,8 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     return header, data_bytes
 
 
-def fix_little_endian_counter(data_bytes, packet_size):
+def _fix_little_endian_counter(data_bytes, packet_size):
+    """Convert the big endian counter of older firmware versions to a small endian counter."""
     expected_samples = len(data_bytes) // packet_size
     data_bytes = data_bytes[:expected_samples * packet_size]
     data = np.reshape(data_bytes, (expected_samples, int(packet_size)))
@@ -156,7 +157,8 @@ def fix_little_endian_counter(data_bytes, packet_size):
     return data
 
 
-def convert_sensor_enabled_flag_11_2(byte):
+def _convert_sensor_enabled_flag_11_2(byte):
+    """Convert the old sensor enabled flags to the new one."""
     conversion_map = {
         0x01: 0x02,  # gyro
         0x02: 0x10,  # analog
@@ -174,7 +176,8 @@ def convert_sensor_enabled_flag_11_2(byte):
     return out_byte
 
 
-def insert_missing_bytes_11_2(header_bytes):
+def _insert_missing_bytes_11_2(header_bytes):
+    """Insert header byter that were added after 11.2."""
     header_bytes = np.insert(header_bytes, 4, 0x00)
 
     header_bytes = np.insert(header_bytes, 47, [0x00] * 2)
@@ -182,7 +185,8 @@ def insert_missing_bytes_11_2(header_bytes):
     return header_bytes
 
 
-def shift_bytes_12_0(header_bytes):
+def _shift_bytes_12_0(header_bytes):
+    """Move old bytestructure, as it was changed for versions after 12.0."""
     # remove old sync_group byte:
     header_bytes = np.delete(header_bytes, 7)
 
@@ -192,11 +196,18 @@ def shift_bytes_12_0(header_bytes):
     return header_bytes
 
 
-def split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
+def _split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
+    """Separate sampling rate into its own byte."""
     return sampling_rate_byte & 0x0F, sampling_rate_byte & 0xF0
 
 
 def legacy_support_check(version: StrictVersion, as_warning: bool = False):
+    """Check if a file recorded with a specific fileformat version can be converted using legacy support.
+
+    Args:
+        version: The version to check for.
+        as_warning: If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
+    """
     if version < StrictVersion('0.11.2'):
         msg = 'You are using a version ({}) previous to 0.11.2. This version is not supported!'.format(version)
     elif version >= StrictVersion('0.13.255'):
@@ -217,4 +228,6 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
 
 
 class VersionError(Exception):
+    """Error related to Firmware Version issues."""
+
     pass
