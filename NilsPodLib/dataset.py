@@ -30,7 +30,34 @@ T = TypeVar('T')
 
 
 class Dataset(CascadingDatasetInterface):
+    """Class representing a logged session of a single NilsPod.
+
+    Warning:
+        Some operations on the dataset should not be performed after each other, as they can lead to unexpected
+        results.
+        The respective methods have specific warnings in their docstring.
+
+    Each instance has 3 important (groups of attributes):
+        self.info: A instance of `NilsPodLib.header.Header` containing all the meta info about the measurement
+        self.counter: The continuous counter created by the sensor. It is in particular important to synchronise
+            multiple datasets that were recorded at the same time (see `NilsPodLib.session.SyncedSession`)
+        datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
+            Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
+    """
+
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
+        """Get new Dataset instance.
+
+        Note:
+            Usually you shouldn't use this init directly.
+            Use the provided `from_bin_file` constructor to handle loading recorded NilsPod Sessions.
+
+        Args:
+            sensor_data: dictionary with name of sensor and sensor data as np.array.
+                The data needs to be 2D with time/counter as first dimension
+            counter: The counter created by the sensor. Should have the same length as all datasets
+            info: Header instance containing all Metainfo about the measurement.
+        """
         self.counter = counter
         self.info = info
         for k, v in sensor_data.items():
@@ -525,7 +552,7 @@ class Dataset(CascadingDatasetInterface):
                                  recursive: bool = True,
                                  filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None,
-                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:
+                                 warn_thres: datetime.timedelta = datetime.timedelta(days = 30)) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
