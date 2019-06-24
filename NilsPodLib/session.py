@@ -11,7 +11,7 @@ import numpy as np
 
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import _ProxyHeader
-from NilsPodLib.interfaces import CascadingDatasetInterface
+from NilsPodLib.interfaces import MultiDataset
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 from NilsPodLib.exceptions import SynchronisationError
 
@@ -21,11 +21,29 @@ if TYPE_CHECKING:
 T = TypeVar('T', bound='Session')
 
 
-class Session(CascadingDatasetInterface):
+class Session(MultiDataset):
+    """Object representing a collection of Datasets.
+
+    Note:
+        By default a session makes no assumption about when and how datasets are recorded.
+        It just provides an interface to manipulate multiple datasets at once.
+        If you have datasets that were recorded simultaneously with active sensor synchronisation, you should use a
+        `SyncedSession` instead of a `Session` to take full advantage of this.
+
+    A session can access all the same attributes and most of the methods provided by a dataset.
+    However, instead of returning a single value/acting only on a single dataset, it will return a tuple of values (one
+    for each dataset) or modify all datasets of a session.
+    You can also use the `self.info` object to access header information of all datasets at the same time.
+    All return values will be in the same order as `self.datasets`.
+    """
     datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Iterable[Dataset]):
         self.datasets = tuple(datasets)
+
+    @property
+    def info(self):
+        return _ProxyHeader(tuple(d.info for d in self.datasets))
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
         """Get a specific dataset by its sensor id."""
@@ -124,8 +142,6 @@ class Session(CascadingDatasetInterface):
 
     def _cascading_dataset_attribute_access(self, name: str) -> Any:
         return_val = tuple([getattr(d, name) for d in self.datasets])
-        if name == 'info':
-            return _ProxyHeader(return_val)
         return return_val
 
 
