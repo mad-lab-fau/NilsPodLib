@@ -10,7 +10,7 @@ from typing import Iterable, Tuple, TypeVar, Type, Any, Optional, Union, TYPE_CH
 import numpy as np
 
 from NilsPodLib.dataset import Dataset
-from NilsPodLib.header import ProxyHeader
+from NilsPodLib.header import _ProxyHeader
 from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 from NilsPodLib.exceptions import SynchronisationError
@@ -125,7 +125,7 @@ class Session(CascadingDatasetInterface):
     def _cascading_dataset_attribute_access(self, name: str) -> Any:
         return_val = tuple([getattr(d, name) for d in self.datasets])
         if name == 'info':
-            return ProxyHeader(return_val)
+            return _ProxyHeader(return_val)
         return return_val
 
 

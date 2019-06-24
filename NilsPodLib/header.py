@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 28 11:32:22 2017
-
-@author: Nils Roth, Arne Küderle
-"""
+"""Header class(es), which are used to read and access basic information from a recorded session."""
 
 import datetime
 import json
-import struct
 import warnings
 from collections import OrderedDict
 from distutils.version import StrictVersion
 from itertools import chain
-from typing import Tuple, Any, List
+from typing import Tuple, Any, List, Dict, Union
 
 import numpy as np
 
 from NilsPodLib.consts import SENSOR_POS
-from NilsPodLib.utils import convert_little_endian, path_t
+from NilsPodLib.utils import convert_little_endian
 
 
 # TODO: Fix type issues when using proxy header
+# TODO: Add docstrings fro attributes
 class HeaderFields:
+    """Base class listing all the attributes of a session header."""
+
     enabled_sensors: tuple
 
     motion_interrupt_enabled: bool
@@ -93,38 +91,59 @@ class HeaderFields:
 
     @property
     def _header_fields(self) -> List[str]:
+        """List all header fields.
+
+        This is a little hacky and relies on that the header fields are the only attributes that are type annotated.
+        """
         return list(HeaderFields.__annotations__.keys())
 
     @property
     def duration_s(self) -> int:
+        """Length of the measurement."""
         return self.utc_stop - self.utc_start
 
     @property
     def utc_datetime_start(self) -> datetime.datetime:
+        """Start time as utc datetime."""
         return datetime.datetime.utcfromtimestamp(self.utc_start)
 
     @property
     def utc_datetime_stop(self) -> datetime.datetime:
+        """Stop time as utc datetime."""
         return datetime.datetime.utcfromtimestamp(self.utc_stop)
 
     @property
     def utc_datetime_start_day_midnight(self) -> datetime.datetime:
+        """UTC timestamp marking midnight of the recording date.
+
+        This is useful, as the sensor internal counter gets reset at midnight.
+        I.e. utc_datetime_start_day_midnight + counter[0] * sampling_rate should be utc_datetime_start
+        """
         return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=datetime.timezone.utc)
 
     @property
     def is_synchronised(self) -> bool:
+        """If a recording was syncronised or not.
+
+        Note:
+            This does only indicate, that the session was recorded with the sync feature enabled, not that the data is
+            actually synchronised.
+        """
         return not self.sync_role == 'disabled'
 
     @property
     def has_position_info(self) -> bool:
+        """If any information about the sensor position is provided."""
         return not self.sensor_position == 'undefined'
 
     @property
     def sensor_id(self) -> str:
+        """Get the unique sensor identifier."""
         return ''.join(self.mac_address[-5:].split(':'))
 
     @property
     def strict_version_firmware(self) -> StrictVersion:
+        """Get the firmware as a StrictVersion object."""
         return StrictVersion(self.version_firmware[1:])
 
 
@@ -132,11 +151,20 @@ class Header(HeaderFields):
     """Additional Infos of recording.
 
     Note:
+        Usually their is no need to use this class on its own, but it is just used as a convenient wrapper to access
+        all information via a dataset instance.
+
+    Note:
         - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
             any local conversions
     """
 
     def __init__(self, **kwargs):
+        """Initialize a header object.
+
+        This will just put all values provided in kwargs as attributes onto the class instance.
+        If one value has an unexpected name, a warning is raised, and the key is ignored.
+        """
         for k, v in kwargs.items():
             if k in self._header_fields:
                 setattr(self, k, v)
@@ -146,11 +174,17 @@ class Header(HeaderFields):
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray) -> 'Header':
+        """Create a new Header instance from an array of bytes."""
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict)
 
     @classmethod
     def from_json(cls, json_string: str) -> 'Header':
+        """Create a new Header from a json export of the header.
+
+        This is only tested with the direct output of the `to_json` method and should only be used to reimport a Header
+        exported with this method.
+        """
         h = cls(**json.loads(json_string))
         # ensure that the enabled sensors and custom_metadata have the right dtype
         for k in ('enabled_sensors', 'custom_meta_data'):
@@ -159,11 +193,16 @@ class Header(HeaderFields):
         return h
 
     def to_json(self) -> str:
+        """Export a header as json.
+
+        It can be imported again using the `from_json` method without information loss.
+        """
         header_dict = {k: v for k, v in self.__dict__.items() if k in self._header_fields}
         return json.dumps(header_dict)
 
     @classmethod
-    def parse_header_package(cls, bin_array: np.ndarray):
+    def parse_header_package(cls, bin_array: np.ndarray) -> Dict[str, Union[str, int, float, bool, tuple]]:
+        """Extract all values from a binary header package."""
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation
         bin_array = bin_array.astype(np.uint32)
@@ -223,7 +262,15 @@ class Header(HeaderFields):
         return header_dict
 
 
-class ProxyHeader(HeaderFields):
+class _ProxyHeader(HeaderFields):
+    """A proxy header used by session objects to get direct access to multiple headers.
+
+    This allows to access attributes of multiple header instances without reimplementing all of its attributes.
+    This is achieved by basically intercepting all getattribute calls and redirecting them to all header instances.
+
+    This concept only allows read only access. However, usually their is no need to modify a header after creation.
+    """
+
     _headers: Tuple[Header]
 
     def __init__(self, headers: Tuple[Header]):
@@ -234,7 +281,7 @@ class ProxyHeader(HeaderFields):
             return super().__getattribute__(name)
         if callable(getattr(self._headers[0], name)) is True:
             raise ValueError(
-                'ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(
+                '_ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(
                     name))
 
         return tuple([getattr(d, name) for d in self._headers])
@@ -242,19 +289,7 @@ class ProxyHeader(HeaderFields):
     def __setattr__(self, name: str, value: Any) -> None:
         if name == '_headers':
             return super().__setattr__(name, value)
-        raise NotImplementedError('ProxyHeader only allows readonly access to the info objects of a dataset')
+        raise NotImplementedError('_ProxyHeader only allows readonly access to the info objects of a dataset')
 
     def __dir__(self):
         return chain(super().__dir__(), self._headers[0].__dir__())
-
-
-def parse_header(path: path_t) -> Tuple[Header, int]:
-    with open(path, 'rb') as f:
-        data = f.read(1)
-        header_size = data[0]
-        data += f.read(header_size - 1)
-
-    data = bytearray(data)
-    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', data[0:header_size]), dtype=np.uint8)
-    session_header = Header.from_bin_array(header_bytes[1:header_size])
-    return session_header, header_size
