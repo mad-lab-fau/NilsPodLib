@@ -20,16 +20,6 @@ if TYPE_CHECKING:
 T = TypeVar('T', bound='Session')
 
 
-# TODO: Create function to parse sessions from larger folder full of datasets
-# def identify_sessions(folder_path: path_t, filter_pattern: str = '*') -> Sequence[Sequence[path_t]]:
-#     files = Path(folder_path).glob(filter_pattern)
-#     props = dict()
-#     for f in files:
-#         props[f] =
-# STrep1: pool by syncgroup
-# Step2: pool by overlapping dates
-
-
 class Session(CascadingDatasetInterface):
     datasets: Tuple[Dataset]
 
