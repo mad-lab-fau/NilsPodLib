@@ -14,16 +14,12 @@ if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
 
 
-class AnnotFieldMeta(type):
-    def __new__(mcs, name, bases, attrs):  # noqa: N804
-        cls = super().__new__(mcs, name, bases, attrs)
-        if not bases:
-            setattr(cls, '_base_keys', list(cls.__annotations__.keys()))
-        elif getattr(cls, '_base_keys', None):
-            keys = set(cls._base_keys) - set(attrs.keys())
-            keys -= set(k for k in keys if k.startswith('_'))
-            setattr(cls, '_base_keys', list(keys))
-        return cls
+class CascadingField:
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner):
+        return tuple(getattr(d, self.name) for d in instance.datasets)
 
 
 def call_dataset(append_doc=True):
@@ -50,22 +46,22 @@ def call_dataset(append_doc=True):
     return wrapped
 
 
-class MultiDataset(metaclass=AnnotFieldMeta):
-    path: path_t
-    acc: Optional[Tuple['Datastream']] = None
-    gyro: Optional[Tuple['Datastream']] = None
-    mag: Optional[Tuple['Datastream']] = None
-    baro: Optional[Tuple['Datastream']] = None
-    analog: Optional[Tuple['Datastream']] = None
-    ecg: Optional[Tuple['Datastream']] = None
-    ppg: Optional[Tuple['Datastream']] = None
-    temperature: Optional[Tuple['Datastream']] = None
-    counter: Tuple[np.ndarray]
+class MultiDataset:
+    path: path_t = CascadingField()
+    acc: Tuple[Optional['Datastream']] = CascadingField()
+    gyro: Tuple[Optional['Datastream']] = CascadingField()
+    mag: Tuple[Optional['Datastream']] = CascadingField()
+    baro: Tuple[Optional['Datastream']] = CascadingField()
+    analog: Tuple[Optional['Datastream']] = CascadingField()
+    ecg: Tuple[Optional['Datastream']] = CascadingField()
+    ppg: Tuple[Optional['Datastream']] = CascadingField()
+    temperature: Tuple[Optional['Datastream']] = CascadingField()
+    counter: Tuple[np.ndarray] = CascadingField()
 
-    size: Tuple[int]
-    datastreams: Tuple[Iterable['Datastream']]
+    size: Tuple[int] = CascadingField()
+    datastreams: Tuple[Iterable['Datastream']] = CascadingField()
 
-    ACTIVE_SENSORS: Tuple[Tuple[str]]
+    ACTIVE_SENSORS: Tuple[Tuple[str]] = CascadingField()
 
     # Dark magic for metaclass
     _base_keys = None
@@ -138,19 +134,3 @@ class MultiDataset(metaclass=AnnotFieldMeta):
                           recursive: bool = True,
                           filter_cal_type: Optional[str] = None):
         pass
-
-    def __getattribute__(self, name: str) -> Any:
-        if name != '_base_keys' and name in self._base_keys:
-            try:
-                return self._cascading_dataset_attribute_access(name)
-            except NotImplementedError:
-                return super().__getattribute__(name)
-        else:
-            return super().__getattribute__(name)
-
-    def _cascading_dataset_method_called(self, name: str, *args, **kwargs) -> Any:
-        raise NotImplementedError('Implement either the method itself or _cascading_dataset_method_called to handle'
-                                  'all method calls.')
-
-    def _cascading_dataset_attribute_access(self, name: str) -> Any:
-        raise NotImplementedError('Implement either the method itself to handle all attribute access.')

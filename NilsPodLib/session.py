@@ -131,19 +131,6 @@ class Session(MultiDataset):
         s.datasets = [d.calibrate_gyro(c, inplace=True) for d, c in zip(s.datasets, calibrations)]
         return s
 
-    def _cascading_dataset_method_called(self, name: str, *args, **kwargs):
-        return_vals = tuple(getattr(d, name)(*args, **kwargs) for d in self.datasets)
-        if all(isinstance(d, Dataset) for d in return_vals):
-            inplace = kwargs.get('inplace', False)
-            s = inplace_or_copy(self, inplace)
-            s.datasets = return_vals
-            return s
-        return return_vals
-
-    def _cascading_dataset_attribute_access(self, name: str) -> Any:
-        return_val = tuple([getattr(d, name) for d in self.datasets])
-        return return_val
-
 
 class SyncedSession(Session):
     VALIDATE_ON_INIT = True
