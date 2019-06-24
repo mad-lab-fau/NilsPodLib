@@ -4,7 +4,7 @@ from imucal import FerrarisCalibrationInfo
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import Header
 import numpy as np
-from NilsPodLib.utils import RepeatedCalibrationError
+from NilsPodLib.exceptions import RepeatedCalibrationError
 
 factory_calibrate_sensors = [('acc', 1. / 2048),
                              ('gyro', 1. / 16.384),

@@ -12,7 +12,8 @@ import numpy as np
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.header import ProxyHeader
 from NilsPodLib.interfaces import CascadingDatasetInterface
-from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t, SynchronisationError
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
+from NilsPodLib.exceptions import SynchronisationError
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401

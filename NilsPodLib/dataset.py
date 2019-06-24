@@ -19,9 +19,10 @@ from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
 from NilsPodLib.interfaces import CascadingDatasetInterface
-from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, InvalidInputFileError, \
-    RepeatedCalibrationError, inplace_or_copy, datastream_does_not_exist_warning, get_header_and_data_bytes, \
+from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, inplace_or_copy, \
+    get_header_and_data_bytes, \
     get_strict_version_from_header_bytes
+from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning
 from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 
 if TYPE_CHECKING:
