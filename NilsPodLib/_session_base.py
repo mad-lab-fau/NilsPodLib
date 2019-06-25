@@ -1,7 +1,7 @@
 """Internal bases for sessions to make it easier to call dataset methods on the session object."""
 
 from functools import wraps
-from typing import Optional, Iterable, Tuple, Union, TypeVar, TYPE_CHECKING, Type, Sequence
+from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequence
 
 import numpy as np
 import pandas as pd
