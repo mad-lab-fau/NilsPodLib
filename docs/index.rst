@@ -13,7 +13,7 @@ NilsPodLib Docu Overview
    :maxdepth: 2
    :caption: API Docs
 
-   modules/NilsPodLib
+   modules/modules.rst
 
 
 Indices and tables
