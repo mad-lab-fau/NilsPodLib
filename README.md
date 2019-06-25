@@ -9,6 +9,18 @@ A python package to parse logged NilsPod Binary files.
 ## Installation
 
 ```
+pip install "NilsPodLib[cal] @ git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git" --upgrade
+```
+
+With ssh access:
+
+```
+pip install "NilsPodLib[cal] @ git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git" --upgrade
+```
+
+The same excluding the reference calibrations:
+
+```
 pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git --upgrade
 ```
 
