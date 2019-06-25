@@ -18,40 +18,67 @@ from NilsPodLib.consts import SENSOR_POS
 from NilsPodLib.utils import convert_little_endian
 
 
-# TODO: Fix type issues when using proxy header
-# TODO: Add docstrings fro attributes
 class HeaderFields:
     """Base class listing all the attributes of a session header."""
 
+    #: tuple of sensors that were enabled during the recording. Uses typical shorthands
     enabled_sensors: tuple
 
+    #: If the motion interrupt of the sensor was enabled
     motion_interrupt_enabled: bool
+    #: If the sensor was used in dock/home monitoring mode (charging starts/stops sessions)
     dock_mode_enabled: bool
+    #: If a sensor position was specified. Can be a position from a list or custom bytes
     sensor_position: str
+    #: The reason, why the session was stopped. Can be used to diagnose potential issues
     session_termination: str
+    #: The size of a single sample in bytes. This depends on the enabled sensors
     sample_size: int
 
+    #: Sampling rate of the recording
     sampling_rate_hz: float
+    #: Range of the accelerometer in g
     acc_range_g: float
+    #: Range of the gyroscope in deg per s
     gyro_range_dps: float
 
+    #: Can be "master", "slave" or disabled
     sync_role: str
+    #: How far apart the sync packages are set to be
+    #: (this is only a lower limit and does not represent the actual timing)
     sync_distance_ms: float
+    #: Shared address used by all sensors of the sync group.
     sync_address: int
+    #: Shared radio channel used by all sensors of the sync group.
     sync_channel: int
+    #: Index (position in counter) were the first sync package was received (0 if sync_role=="master")
     sync_index_start: int
+    #: Index (position in counter) were the last sync package was received (0 if sync_role=="master")
     sync_index_stop: int
 
+    #: Unix time stamp of the start of the recording.
+    #: Note: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
+    #: However, this can not be guaranteed
     utc_start: int
+    #: Unix time stamp of the end of the recording.
+    #: Note: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
+    #: However, this can not be guaranteed
     utc_stop: int
 
+    #: Version number of the firmware
     version_firmware: str
+    #: Hardware revision of the sensor. Another revision usually indicates, that data should be handled differently.
     version_hardware: str
+    #: BLE Mac address of the sensor
     mac_address: str
 
+    #: Custom meta data (3 bytes) which was saved on the sensor
     custom_meta_data: tuple
-    # Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
-    #   only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be cut.
+
+    #: Number of samples recorded during the measurement
+    #: Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
+    #:     only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be
+    #:     cut. This issue should be resolved in 0.14.0 or higher.
     n_samples: int
 
     # Note this must correspond to the order they appear in the datapackage when activated
@@ -126,7 +153,7 @@ class HeaderFields:
 
     @property
     def is_synchronised(self) -> bool:
-        """If a recording was syncronised or not.
+        """If a recording was synchronised or not.
 
         Note:
             This does only indicate, that the session was recorded with the sync feature enabled, not that the data is
