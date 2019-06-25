@@ -1,5 +1,9 @@
 # NilsPodLib
 
+[![pipeline status](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/badges/master/pipeline.svg)](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/commits/master)
+[![coverage report](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/badges/master/coverage.svg)](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/commits/master)
+[![docs](https://img.shields.io/badge/docs-online-green.svg)](http://madlab.mad-pages.informatik.uni-erlangen.de/portabilestools/nilspodpythonlib/README.html)
+
 A python package to parse logged NilsPod Binary files.
 
 ## Installation
