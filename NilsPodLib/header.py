@@ -22,7 +22,7 @@ class HeaderFields:
     """Base class listing all the attributes of a session header."""
 
     #: tuple of sensors that were enabled during the recording. Uses typical shorthands
-    enabled_sensors: tuple
+    enabled_sensors: Tuple[str]
 
     #: If the motion interrupt of the sensor was enabled
     motion_interrupt_enabled: bool
@@ -73,7 +73,7 @@ class HeaderFields:
     mac_address: str
 
     #: Custom meta data (3 bytes) which was saved on the sensor
-    custom_meta_data: tuple
+    custom_meta_data: Tuple[float]
 
     #: Number of samples recorded during the measurement
     #: Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
