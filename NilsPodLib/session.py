@@ -92,8 +92,11 @@ class Session(_MultiDataset):
         return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_support=legacy_support)
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
-        """Get a specific dataset by its sensor id."""
-        # TODO: TEsting
+        """Get a specific dataset by its sensor id.
+
+        Args:
+            sensor_id: For letter/digit id of the sensor
+        """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
     def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:

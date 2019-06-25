@@ -83,3 +83,12 @@ def test_dataset_func_call_dataset_return(dataset_synced):
     assert isinstance(return_val, Session)
     assert np.array_equal(return_val.datasets[0].acc.data, ds1.cut(0, 10).acc.data)
     assert np.array_equal(return_val.datasets[1].acc.data, ds2.cut(0, 10).acc.data)
+
+
+def test_get_dataset_by_id(dataset_synced):
+    ds1 = dataset_synced['master'][0]
+    ds2 = dataset_synced['slave1'][0]
+
+    session = Session([ds1, ds2])
+
+    assert session.get_dataset_by_id(ds1.info.sensor_id).info.sensor_id == ds1.info.sensor_id
