@@ -45,6 +45,7 @@ class Dataset:
         datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
             Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
     """
+
     path: path_t
     acc: Optional['Datastream'] = None
     gyro: Optional['Datastream'] = None
