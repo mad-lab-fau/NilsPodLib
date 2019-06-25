@@ -1,5 +1,7 @@
+"""Internal bases for sessions to make it easier to call dataset methods on the session object."""
+
 from functools import wraps
-from typing import Optional, Iterable, Tuple, Union, Any, TypeVar, TYPE_CHECKING, Type, Sequence
+from typing import Optional, Iterable, Tuple, Union, TypeVar, TYPE_CHECKING, Type, Sequence
 
 import numpy as np
 import pandas as pd
@@ -14,7 +16,9 @@ if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
 
 
-class CascadingField:
+class CascadingDatasetField:
+    """A simple descriptor object to forward attribute access to all datasets of a session."""
+
     def __set_name__(self, owner, name):
         self.name = name
 
@@ -22,7 +26,13 @@ class CascadingField:
         return tuple(getattr(d, self.name) for d in instance.datasets)
 
 
-def call_dataset(append_doc=True):
+def call_dataset(autogen_doc=True):  # noqa: D202
+    """Forward all method calls to all datasets of a session.
+
+    Args:
+        autogen_doc: If True, the docstring of the respective dataset method is copied to the method with short pretext.
+    """
+
     def wrapped(method):
         @wraps(method)
         def cascading_access(*args, **kwargs):
@@ -36,35 +46,46 @@ def call_dataset(append_doc=True):
                 return s
             return return_vals
 
-        if append_doc:
+        if autogen_doc:
             if cascading_access.__doc__:
                 cascading_access.__doc__ += '\n\n'
             else:
                 cascading_access.__doc__ = ''
             cascading_access.__doc__ += getattr(Dataset, method.__name__).__doc__
         return cascading_access
+
     return wrapped
 
 
-class MultiDataset:
-    path: path_t = CascadingField()
-    acc: Tuple[Optional['Datastream']] = CascadingField()
-    gyro: Tuple[Optional['Datastream']] = CascadingField()
-    mag: Tuple[Optional['Datastream']] = CascadingField()
-    baro: Tuple[Optional['Datastream']] = CascadingField()
-    analog: Tuple[Optional['Datastream']] = CascadingField()
-    ecg: Tuple[Optional['Datastream']] = CascadingField()
-    ppg: Tuple[Optional['Datastream']] = CascadingField()
-    temperature: Tuple[Optional['Datastream']] = CascadingField()
-    counter: Tuple[np.ndarray] = CascadingField()
+class _MultiDataset:
+    """Wrapper that holds all attributes and methods that can be simply called on multiple datasets.
 
-    size: Tuple[int] = CascadingField()
-    datastreams: Tuple[Iterable['Datastream']] = CascadingField()
+    Note:
+        This class should not be used as public interface and is only relevant as base for the session class
 
-    ACTIVE_SENSORS: Tuple[Tuple[str]] = CascadingField()
+    This class uses a decorator for methods and a descriptor for attributes to automatically forward all calls to
+    multiple datasets.
+    See the implementation of `CascadingDatasetField` and `call_dataset` for details.
+    """
 
-    # Dark magic for metaclass
-    _base_keys = None
+    path: path_t = CascadingDatasetField()
+    acc: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    gyro: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    mag: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    baro: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    analog: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    ecg: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    ppg: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    temperature: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    counter: Tuple[np.ndarray] = CascadingDatasetField()
+
+    size: Tuple[int] = CascadingDatasetField()
+    datastreams: Tuple[Iterable['Datastream']] = CascadingDatasetField()
+
+    ACTIVE_SENSORS: Tuple[Tuple[str]] = CascadingDatasetField()
+
+    # This needs to be implemented by the session
+    datasets: Tuple[Dataset]
 
     @call_dataset()
     def calibrate_imu(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:

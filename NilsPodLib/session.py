@@ -5,15 +5,15 @@
 """
 import warnings
 from pathlib import Path
-from typing import Iterable, Tuple, TypeVar, Type, Any, Optional, Union, TYPE_CHECKING, Sequence
+from typing import Iterable, Tuple, TypeVar, Type, Optional, Union, TYPE_CHECKING, Sequence
 
 import numpy as np
 
 from NilsPodLib.dataset import Dataset
-from NilsPodLib.header import _ProxyHeader
-from NilsPodLib.interfaces import MultiDataset
-from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 from NilsPodLib.exceptions import SynchronisationError
+from NilsPodLib.header import _ProxyHeader
+from NilsPodLib.interfaces import _MultiDataset
+from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 T = TypeVar('T', bound='Session')
 
 
-class Session(MultiDataset):
+class Session(_MultiDataset):
     """Object representing a collection of Datasets.
 
     Note:
@@ -36,6 +36,7 @@ class Session(MultiDataset):
     You can also use the `self.info` object to access header information of all datasets at the same time.
     All return values will be in the same order as `self.datasets`.
     """
+
     datasets: Tuple[Dataset]
 
     def __init__(self, datasets: Iterable[Dataset]):
@@ -218,14 +219,15 @@ class SyncedSession(Session):
 
         Warns:
             If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
+
         """
         s = inplace_or_copy(self, inplace)
         if warn_thres is not None and end is not True:
             sync_warn = [d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres) is False]
             if any(sync_warn):
                 warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
-                              'end of the dataset. The last section of this data should not be trusted.'.format(
-                    sync_warn, warn_thres))
+                              'end of the dataset. '
+                              'The last section of this data should not be trusted.'.format(sync_warn, warn_thres))
 
         s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
         if only_to_master is True:
@@ -271,6 +273,7 @@ class SyncedSession(Session):
 
         Raises:
             ValueError: If any other than the allowed `index` values are used.
+
         """
         import pandas as pd
         dfs = super().data_as_df(datastreams, index)
