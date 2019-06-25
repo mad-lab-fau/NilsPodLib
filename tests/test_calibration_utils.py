@@ -83,14 +83,14 @@ def test_find_calibration_recursive(dummy_cal_folder_recursive):
     assert all(['tes1' in str(x) for x in cals])
 
 
-def test_find_calibration_type_filer(dummy_cal_folder_recursive):
+def test_find_calibration_type_filter(dummy_cal_folder_recursive):
     cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='sub1')
 
     assert len(cals) == 10
     assert all(['tes1' in str(x) for x in cals])
 
 
-def test_find_calibration_type_filer_case_sensitive(dummy_cal_folder_recursive):
+def test_find_calibration_type_filter_case_sensitive(dummy_cal_folder_recursive):
     cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub1')
 
     assert len(cals) == 10
@@ -107,7 +107,7 @@ def test_find_calibration_type_filer_case_sensitive(dummy_cal_folder_recursive):
     assert all(['tes1' in str(x) for x in cals])
 
 
-def test_find_calibration_type_filer_case_sensitive_2(dummy_cal_folder_recursive):
+def test_find_calibration_type_filter_case_sensitive_2(dummy_cal_folder_recursive):
     cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True, filter_cal_type='Sub3')
 
     assert len(cals) == 10
@@ -122,7 +122,6 @@ def test_find_calibration_type_filer_case_sensitive_2(dummy_cal_folder_recursive
 
     assert len(cals) == 10
     assert all(['tes1' in str(x) for x in cals])
-
 
 
 def test_find_closest(dummy_cal_folder):
