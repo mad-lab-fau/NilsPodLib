@@ -17,7 +17,7 @@ path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
 
 
-def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray[T]:
+def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
     """Convert a little endian bytestring into a readable format.
 
     Args:

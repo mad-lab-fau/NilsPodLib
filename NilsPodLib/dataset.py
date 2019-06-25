@@ -652,6 +652,18 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
     n_samples = session_header.n_samples
 
     data = read_binary_uint8(data_bytes, sample_size, n_samples)
+
+    counter, sensor_data = split_into_sensor_data(data, session_header)
+
+    if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
+        warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
+                      'This might indicate a corrupted file')
+
+    return sensor_data, counter, session_header
+
+
+def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
+    """Split/Parse the binary data into the different sensors and the counter."""
     sensor_data = dict()
 
     idx = 0
@@ -665,19 +677,16 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
             idx += bits_per_channel
         sensor_data[sensor] = tmp
 
+    len_counter, _, counter_dtype = SENSOR_SAMPLE_LENGTH['counter']
+
     # Sanity Check:
-    if not idx + 4 == data.shape[-1]:
-        # TODO: Test if this works as expected
+    if not idx + len_counter == data.shape[-1]:
         expected_cols = idx
-        all_cols = data.shape[-1] - 4
+        all_cols = data.shape[-1] - len_counter
         raise InvalidInputFileError(
             'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
                 expected_cols, all_cols))
 
-    counter = convert_little_endian(np.atleast_2d(data[:, -4:]).T, dtype=float)
+    counter = convert_little_endian(np.atleast_2d(data[:, -len_counter:]).T, dtype=counter_dtype)
 
-    if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
-        warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
-                      'This might indicate a corrupted file')
-
-    return sensor_data, counter, session_header
+    return counter, sensor_data

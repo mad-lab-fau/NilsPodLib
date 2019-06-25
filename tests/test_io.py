@@ -2,8 +2,13 @@ import datetime
 import json
 
 import pandas as pd
+import pytest
+from NilsPodLib.exceptions import InvalidInputFileError
 
+from NilsPodLib.dataset import parse_binary, split_into_sensor_data
 from NilsPodLib.datastream import Datastream
+from NilsPodLib.header import Header
+from NilsPodLib.utils import get_header_and_data_bytes, read_binary_uint8
 
 
 def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, dataset_master_data_csv):
@@ -36,3 +41,20 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
 
     assert info.sync_index_start == 0
     assert info.sync_index_stop == 0
+
+
+def test_read_binary_sanity_check(dataset_master_simple):
+    _, path = dataset_master_simple
+
+    header_bytes, data_bytes = get_header_and_data_bytes(path)
+    session_header = Header.from_bin_array(header_bytes[1:])
+
+    sample_size = session_header.sample_size
+    n_samples = session_header.n_samples
+
+    data = read_binary_uint8(data_bytes, sample_size, n_samples)
+
+    data = data[:, :-1]
+
+    with pytest.raises(InvalidInputFileError):
+        split_into_sensor_data(data, session_header)
