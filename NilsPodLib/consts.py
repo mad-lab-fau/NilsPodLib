@@ -1,4 +1,7 @@
-"""Basic constants/names used throughout the lib."""
+"""Basic constants/names used throughout the lib.
+
+@author: Arne Küderle
+"""
 import numpy as np
 
 #: Byte information of each sensor in one sample.

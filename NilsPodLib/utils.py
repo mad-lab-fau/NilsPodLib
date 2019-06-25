@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Set of helper functions used throughout the library."""
+"""Set of helper functions used throughout the library.
+
+@author: Arne Küderle
+"""
 
 import copy
 import struct

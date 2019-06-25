@@ -1,4 +1,7 @@
-"""Exceptions and warnings used in the library."""
+"""Exceptions and warnings used in the library.
+
+@author: Arne Küderle
+"""
 import warnings
 
 

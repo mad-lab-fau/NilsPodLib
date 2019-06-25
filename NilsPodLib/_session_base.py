@@ -1,4 +1,7 @@
-"""Internal bases for sessions to make it easier to call dataset methods on the session object."""
+"""Internal bases for sessions to make it easier to call dataset methods on the session object.
+
+@author: Arne Küderle
+"""
 
 from functools import wraps
 from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequence

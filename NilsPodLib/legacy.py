@@ -1,4 +1,7 @@
-"""Legacy support helper to convert older NilsPod files into new versions."""
+"""Legacy support helper to convert older NilsPod files into new versions.
+
+@author: Arne Küderle
+"""
 import warnings
 from distutils.version import StrictVersion
 from typing import Tuple, Callable, Optional, Union

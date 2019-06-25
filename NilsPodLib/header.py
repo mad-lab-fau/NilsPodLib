@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Header class(es), which are used to read and access basic information from a recorded session."""
+"""Header class(es), which are used to read and access basic information from a recorded session.
+
+@author: Nils Roth, Arne Küderle
+"""
 
 import datetime
 import json

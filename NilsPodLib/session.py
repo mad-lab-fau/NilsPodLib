@@ -39,17 +39,24 @@ class Session(_MultiDataset):
 
     datasets: Tuple[Dataset]
 
-    def __init__(self, datasets: Iterable[Dataset]):
-        self.datasets = tuple(datasets)
-
     @property
     def info(self):
+        """Get metainfo for all datasets.
+
+        All attributes of :py:class:`NilsPodLib.header.HeaderInfo` are supported in read-only mode.
+        """
         return _ProxyHeader(tuple(d.info for d in self.datasets))
 
-    def get_dataset_by_id(self, sensor_id: str) -> Dataset:
-        """Get a specific dataset by its sensor id."""
-        # TODO: TEsting
-        return self.datasets[self.info.sensor_id.index(sensor_id)]
+    def __init__(self, datasets: Iterable[Dataset]):
+        """Create new session.
+
+        Instead of this init you can also use the factory methods :py:meth:`~NilsPodLib.session.Session.from_file_paths`
+        and :py:meth:`~NilsPodLib.session.Session.from_folder_path`.
+
+        Args:
+            datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+        """
+        self.datasets = tuple(datasets)
 
     @classmethod
     def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_support: str = 'error') -> T:
@@ -83,6 +90,11 @@ class Session(_MultiDataset):
                     conversions.
         """
         return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_support=legacy_support)
+
+    def get_dataset_by_id(self, sensor_id: str) -> Dataset:
+        """Get a specific dataset by its sensor id."""
+        # TODO: TEsting
+        return self.datasets[self.info.sensor_id.index(sensor_id)]
 
     def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
@@ -134,10 +146,45 @@ class Session(_MultiDataset):
 
 
 class SyncedSession(Session):
-    VALIDATE_ON_INIT = True
+    """Object representing a collection of Datasets recorded with active synconisation.
+
+    A session can access all the same attributes and most of the methods provided by a dataset.
+    However, instead of returning a single value/acting only on a single dataset, it will return a tuple of values (one
+    for each dataset) or modify all datasets of a session.
+    You can also use the `self.info` object to access header information of all datasets at the same time.
+    All return values will be in the same order as `self.datasets`.
+
+    See Also:
+        :py:class:`NilsPodLib.session.Session`
+
+    Attributes:
+        VALIDATE_ON_INIT: If True all synced sessions will be checked on init.
+            These checks include testing, if all datasets are really part of a single measurement.
+            In rare cases, it might be useful to deactivate these checks and force the creation of a synced session.
+
+            Example:
+
+                >>> SyncedSession.VALIDATE_ON_INIT = False
+                >>> SyncedSession.from_folder_path('./my/path') # No validation will be performed
+
+    """
+
+    VALIDATE_ON_INIT: bool = True
     _fully_synced = False
 
     def __init__(self, datasets: Iterable[Dataset]):
+        """Create new synced session.
+
+        Instead of this init you can also use the factory methods
+        :py:meth:`~NilsPodLib.session.SyncedSession.from_file_paths` and
+        :py:meth:`~NilsPodLib.session.SyncedSession.from_folder_path`.
+
+        This init performs basic validation on the datasets.
+        See :py:meth:`~NilsPodLib.session.SyncedSession.validate` for details.
+
+        Args:
+            datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+        """
         super().__init__(datasets)
         if self.VALIDATE_ON_INIT:
             self.validate()

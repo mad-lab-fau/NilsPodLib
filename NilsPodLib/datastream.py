@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Fundamental Datastream class, which holds any type of sensor data and handles basic interactions with it."""
+"""Fundamental Datastream class, which holds any type of sensor data and handles basic interactions with it.
+
+@author: Nils Roth, Arne Küderle
+"""
 
 import copy
 from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING

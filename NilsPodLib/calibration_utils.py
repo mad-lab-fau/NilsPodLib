@@ -1,4 +1,7 @@
-"""A set of utilities to save and find calibrations for NilsPod sensors."""
+"""A set of utilities to save and find calibrations for NilsPod sensors.
+
+@author: Arne Küderle
+"""
 
 import datetime
 import json
