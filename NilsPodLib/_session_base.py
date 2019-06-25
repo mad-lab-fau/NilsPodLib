@@ -7,13 +7,12 @@ import numpy as np
 import pandas as pd
 
 from NilsPodLib import Dataset
-from NilsPodLib.utils import path_t, inplace_or_copy
+from NilsPodLib.utils import path_t, inplace_or_copy, remove_docstring_indent
 
 T = TypeVar('T')
 
 if TYPE_CHECKING:
     from NilsPodLib.datastream import Datastream  # noqa: F401
-    from imucal import CalibrationInfo  # noqa: F401
 
 
 class CascadingDatasetField:
@@ -21,6 +20,7 @@ class CascadingDatasetField:
 
     def __set_name__(self, owner, name):
         self.name = name
+        self.__doc__ = getattr(Dataset, self.name, None).__doc__
 
     def __get__(self, instance, owner):
         return tuple(getattr(d, self.name) for d in instance.datasets)
@@ -29,8 +29,11 @@ class CascadingDatasetField:
 def call_dataset(autogen_doc=True):  # noqa: D202
     """Forward all method calls to all datasets of a session.
 
+    This function respects the inplace feature and will create a copy of the session object if required.
+
     Args:
         autogen_doc: If True, the docstring of the respective dataset method is copied to the method with short pretext.
+            If a docstring already exists, the dataset docstring will be appended WITHOUT pretext.
     """
 
     def wrapped(method):
@@ -50,8 +53,12 @@ def call_dataset(autogen_doc=True):  # noqa: D202
             if cascading_access.__doc__:
                 cascading_access.__doc__ += '\n\n'
             else:
-                cascading_access.__doc__ = ''
-            cascading_access.__doc__ += getattr(Dataset, method.__name__).__doc__
+                cascading_access.__doc__ = 'Apply `Dataset.{0}` to all datasets of the session.\n\n' \
+                                           'See :py:meth:`NilsPodLib.dataset.Dataset.{0}` for more details. ' \
+                                           'The docstring of this method is included below:\n\n'.format(method.__name__)
+            cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
+            cascading_access.__doc__ += '\nSee Also:\n' \
+                                        '   :py:meth:`NilsPodLib.dataset.Dataset.{0}`'.format(method.__name__)
         return cascading_access
 
     return wrapped
@@ -86,18 +93,6 @@ class _MultiDataset:
 
     # This needs to be implemented by the session
     datasets: Tuple[Dataset]
-
-    @call_dataset()
-    def calibrate_imu(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
-        pass
-
-    @call_dataset()
-    def calibrate_acc(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
-        pass
-
-    @call_dataset()
-    def calibrate_gyro(self: Type[T], calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
-        pass
 
     @call_dataset()
     def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:
