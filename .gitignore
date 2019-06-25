@@ -117,3 +117,6 @@ dmypy.json
 
 # PyCharm
 .idea
+
+# Auto generated examples
+docs/examples
