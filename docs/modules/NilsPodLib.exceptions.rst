@@ -1,7 +1,7 @@
-NilsPodLib.interfaces module
+NilsPodLib.exceptions module
 ============================
 
-.. automodule:: NilsPodLib.interfaces
+.. automodule:: NilsPodLib.exceptions
     :members:
     :undoc-members:
     :show-inheritance:

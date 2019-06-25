@@ -105,3 +105,19 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
     if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError('The start values need to be smaller then their respective end values!')
     return np.max(start_vals) < np.min(end_vals)
+
+
+def remove_docstring_indent(doc_str: str) -> str:
+    """Remove the additional indent of a multiline docstring.
+
+    This can be helpful, if docstrings are combined programmatically.
+    """
+    lines = doc_str.split('\n')
+    if len(lines) <= 1:
+        return doc_str
+    first_non_summary_line = next(l for l in lines[1:] if l)
+    indent = len(first_non_summary_line) - len(first_non_summary_line.lstrip())
+    cut_lines = [lines[0]]
+    for l in lines:
+        cut_lines.append(l[indent:])
+    return '\n'.join(cut_lines)

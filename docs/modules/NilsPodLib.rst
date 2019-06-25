@@ -1,25 +1,24 @@
 NilsPodLib package
 ==================
 
+.. automodule:: NilsPodLib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
 .. toctree::
 
+   NilsPodLib._session_base
+   NilsPodLib.calibration_utils
    NilsPodLib.consts
    NilsPodLib.dataset
    NilsPodLib.datastream
+   NilsPodLib.exceptions
    NilsPodLib.header
-   NilsPodLib.interfaces
+   NilsPodLib.legacy
    NilsPodLib.session
    NilsPodLib.utils
-   NilsPodLib.legacy
-   NilsPodLib.calibration_utils
 
-Module contents
----------------
-
-.. automodule:: NilsPodLib
-    :members:
-    :undoc-members:
-    :show-inheritance:

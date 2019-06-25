@@ -63,7 +63,7 @@ class Datastream:
         """Get the unit of the data contained in the datastream.
 
         This will return either `a.u.` if the datastream is not yet calibrated, the value of `self._unit` if set or
-        the default unit from :py:var:`NilsPodLib.consts.SENSOR_UNITS`
+        the default unit from :py:data:`NilsPodLib.consts.SENSOR_UNITS`
         """
         if self.is_calibrated is True:
             if self._unit:
@@ -77,7 +77,7 @@ class Datastream:
         """Get the column headers for the data contained in the datastream.
 
         This will return `self._columns` if set on init or will try to get the default columns from
-        :py:var:`NilsPodLib.consts.SENSOR_LEGENDS`.
+        :py:data:`NilsPodLib.consts.SENSOR_LEGENDS`.
         If none of the above is applicable the columns wil be numbered starting with 0.
         """
         if self._columns:

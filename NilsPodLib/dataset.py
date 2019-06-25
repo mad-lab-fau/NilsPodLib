@@ -18,7 +18,6 @@ from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
 from NilsPodLib.header import Header
-from NilsPodLib.interfaces import CascadingDatasetInterface
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, inplace_or_copy, \
     get_header_and_data_bytes, \
     get_strict_version_from_header_bytes
@@ -31,7 +30,7 @@ if TYPE_CHECKING:
 T = TypeVar('T')
 
 
-class Dataset(CascadingDatasetInterface):
+class Dataset:
     """Class representing a logged session of a single NilsPod.
 
     Warning:
@@ -46,6 +45,18 @@ class Dataset(CascadingDatasetInterface):
         datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
             Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
     """
+
+    path: path_t
+    acc: Optional['Datastream'] = None
+    gyro: Optional['Datastream'] = None
+    mag: Optional['Datastream'] = None
+    baro: Optional['Datastream'] = None
+    analog: Optional['Datastream'] = None
+    ecg: Optional['Datastream'] = None
+    ppg: Optional['Datastream'] = None
+    temperature: Optional['Datastream'] = None
+    counter: np.ndarray
+    info: Header
 
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         """Get new Dataset instance.
