@@ -12,7 +12,7 @@ import numpy as np
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.exceptions import SynchronisationError
 from NilsPodLib.header import _ProxyHeader
-from NilsPodLib.interfaces import _MultiDataset
+from NilsPodLib._session_base import _MultiDataset
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
