@@ -1,5 +1,6 @@
 import json
 import tempfile
+from distutils.version import StrictVersion
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ import pytest
 from NilsPodLib import Dataset
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import _fix_little_endian_counter, _convert_sensor_enabled_flag_11_2, _insert_missing_bytes_11_2, \
-    _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0
+    _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0, find_conversion_function
 from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12
 
@@ -160,4 +161,31 @@ def test_legacy_error(session, converter, request):
     with tempfile.NamedTemporaryFile() as tmp:
         converter(path, tmp.name)
         Dataset.from_bin_file(tmp.name)
+
+
+@pytest.mark.parametrize('version, correct_func', [
+    (StrictVersion('0.10.0'), None),
+    (StrictVersion('0.11.255'), '12_0'),
+    (StrictVersion('0.12.1'), '12_0'),
+    (StrictVersion('0.11.1'), None),
+    (StrictVersion('0.11.2'), '11_2'),
+    (StrictVersion('0.11.3'), '11_2'),
+    (StrictVersion('0.15.0'), None),
+])
+def test_find_conversion_function(version, correct_func):
+    if not correct_func:
+        with pytest.raises(VersionError):
+            find_conversion_function(version, in_memory=False, return_name=False)
+    else:
+        func = find_conversion_function(version, in_memory=False, return_name=False)
+        assert func.__name__ == 'convert_' + correct_func
+
+        func = find_conversion_function(version, in_memory=True, return_name=False)
+        assert func.__name__ == 'load_' + correct_func
+
+        func = find_conversion_function(version, in_memory=False, return_name=True)
+        assert func == 'convert_' + correct_func
+
+        func = find_conversion_function(version, in_memory=True, return_name=True)
+        assert func == 'load_' + correct_func
 

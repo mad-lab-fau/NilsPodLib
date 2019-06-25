@@ -20,11 +20,10 @@ CONVERSION_DICT = {
 
 def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True,
                              return_name: Optional[bool] = False) -> Union[Callable, str]:
-    """Return a suitable conversion funtion for a specific legacy version.
+    """Return a suitable conversion function for a specific legacy version.
 
     This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
     """
-    # TODO: test
     for k, v in CONVERSION_DICT.items():
         if v['min'] <= version < v['max']:
             n = 'load_' if in_memory else 'convert_'
