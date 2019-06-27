@@ -3,6 +3,7 @@
 
 @author: Nils Roth, Arne Küderle
 """
+import datetime
 import warnings
 from pathlib import Path
 from typing import Iterable, Tuple, TypeVar, Type, Optional, Union, TYPE_CHECKING, Sequence
@@ -157,6 +158,15 @@ class SyncedSession(Session):
     You can also use the `self.info` object to access header information of all datasets at the same time.
     All return values will be in the same order as `self.datasets`.
 
+    To synchronise a dataset, you usually want to call :py:method:`~NilsPodLib.session.SyncedSession.cut_to_syncregion`
+    on the session.
+    The resulting session is considered fully synchronised (depending on the parameters chosen).
+    This means that all datasets have the same length and the exact same counter.
+    However, note, that the header information of the individual datasets will not be updated to reflect the sync.
+    This means that header values like `number_of_samples` or the start and stop times will not match the data anymore.
+    As a substitute you can use a set of direct attributes on the session (e.g. `session_utc_start`, `session_duration`,
+    etc.)
+
     See Also:
         :py:class:`NilsPodLib.session.Session`
 
@@ -174,6 +184,52 @@ class SyncedSession(Session):
 
     VALIDATE_ON_INIT: bool = True
     _fully_synced = False
+
+    @property
+    def session_utc_start(self) -> float:
+        """Start time of the session as utc timestamp.
+
+        You need to `cut_to_sync_region` before you can obtain this value.
+        """
+        return self.session_utc_datetime_start.timestamp()
+
+    @property
+    def session_utc_stop(self) -> float:
+        """Stop time of the session as utc timestamp.
+
+        You need to `cut_to_sync_region` before you can obtain this value.
+        """
+        return self.session_utc_datetime_stop.timestamp()
+
+    @property
+    def session_duration(self) -> float:
+        """Duration of the session in seconds.
+
+        You need to `cut_to_sync_region` before you can obtain this value.
+        """
+        return self.session_utc_stop - self.session_utc_start
+
+    @property
+    def session_utc_datetime_start(self) -> datetime.datetime:
+        """Start time of the session as utc datetime.
+
+        You need to `cut_to_sync_region` before you can obtain this value.
+        """
+        if not self._fully_synced:
+            raise SynchronisationError('Only fully synced datasets, have valid start and stop times.')
+        return self.master.info.utc_datetime_start_day_midnight + datetime.timedelta(
+            seconds=self.master.counter[0] / self.master.info.sampling_rate_hz)
+
+    @property
+    def session_utc_datetime_stop(self) -> datetime.datetime:
+        """Stop time of the session as utc datetime.
+
+        You need to `cut_to_sync_region` before you can obtain this value.
+        """
+        if not self._fully_synced:
+            raise SynchronisationError('Only fully synced datasets, have valid start and stop times.')
+        return self.master.info.utc_datetime_start_day_midnight + datetime.timedelta(
+            seconds=self.master.counter[-1] / self.master.info.sampling_rate_hz)
 
     def __init__(self, datasets: Iterable[Dataset]):
         """Create new synced session.
@@ -295,7 +351,7 @@ class SyncedSession(Session):
         # Finally set the master counter to all slaves to really ensure identical counters
         for d in s.slaves:
             d.counter = s.master.counter
-        self._fully_synced = True
+        s._fully_synced = True
         return s
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,

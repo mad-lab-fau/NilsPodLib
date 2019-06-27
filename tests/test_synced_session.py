@@ -1,6 +1,10 @@
+import datetime
+
 import pytest
 
 import numpy as np
+
+from NilsPodLib.exceptions import SynchronisationError
 from NilsPodLib.session import SyncedSession
 
 
@@ -221,3 +225,35 @@ def test_sync_info(dataset_synced):
     assert info.sync_role == 'slave'
     assert info.sync_index_stop != 0
     assert info.sync_index_start != 0
+
+
+@pytest.mark.parametrize('method', [
+    'session_utc_start',
+    'session_utc_stop',
+    'session_duration',
+    'session_utc_datetime_start',
+    'session_utc_datetime_stop',
+])
+def test_synced_time_info_error(basic_synced_session, method):
+    with pytest.raises(SynchronisationError):
+        getattr(basic_synced_session, method)
+
+
+def test_session_utc_datetime(basic_synced_session):
+    basic_synced_session = basic_synced_session.cut_to_syncregion()
+
+    start = basic_synced_session.session_utc_datetime_start
+    end = basic_synced_session.session_utc_datetime_stop
+
+    assert start == datetime.datetime(2019, 4, 30, 7, 33, 12, 11719, tzinfo=datetime.timezone.utc)
+    assert end == datetime.datetime(2019, 4, 30, 7, 33, 58, 857422, tzinfo=datetime.timezone.utc)
+
+    start = basic_synced_session.session_utc_start
+    end = basic_synced_session.session_utc_stop
+
+    assert start == 1556609592.011719
+    assert end == 1556609638.857422
+
+    duration = basic_synced_session.session_duration
+
+    assert duration == 46.845703125
