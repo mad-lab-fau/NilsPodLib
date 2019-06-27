@@ -572,8 +572,8 @@ class Dataset:
                                  recursive: bool = True,
                                  filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None,
-                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30),
-                                 ignore_file_not_found: Optional[bool] = False) -> Path:  # noqa: E252
+                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
+                                 ignore_file_not_found: Optional[bool] = False) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and

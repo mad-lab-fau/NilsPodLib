@@ -105,7 +105,7 @@ def find_closest_calibration_to_date(sensor_id: str,
                                      recursive: bool = True,
                                      filter_cal_type: Optional[str] = None,
                                      before_after: Optional[str] = None,
-                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30),
+                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
                                      ignore_file_not_found: Optional[bool] = False) -> Optional[Path]:
     """Find the calibration file for a sensor, that is closes to a given date.
 
