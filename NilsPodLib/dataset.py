@@ -466,7 +466,8 @@ class Dataset:
         end = self.info.sync_index_stop if end is True else None
         return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
+                   include_units: Optional[bool] = False) -> pd.DataFrame:
         """Export the datastreams of the dataset in a single pandas DataFrame.
 
         Args:
@@ -478,6 +479,7 @@ class Dataset:
                 "utc": For the utc time stamp of each sample
                 "utc_datetime": for a pandas DateTime index in UTC time
                 None: For a simple index (0...N)
+            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
 
         Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
@@ -495,7 +497,7 @@ class Dataset:
         index_name = index_names[index]
 
         datastreams = datastreams or self.active_sensors
-        dfs = [s.data_as_df() for k, s in self.datastreams if k in datastreams]
+        dfs = [s.data_as_df(include_units=include_units) for k, s in self.datastreams if k in datastreams]
         df = pd.concat(dfs, axis=1)
 
         if index:
@@ -508,7 +510,7 @@ class Dataset:
         df.index.name = index_name
         return df
 
-    def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
+    def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False) -> pd.DataFrame:
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
         See Also:
@@ -521,6 +523,7 @@ class Dataset:
                 "utc": For the utc time stamp of each sample
                 "utc_datetime": for a pandas DateTime index in UTC time
                 None: For a simple index (0...N)
+            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
 
         Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
@@ -530,7 +533,7 @@ class Dataset:
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
+        return self.data_as_df(datastreams=['acc', 'gyro'], index=index, include_units=include_units)
 
     def find_calibrations(self, folder: Optional[path_t] = None,
                           recursive: bool = True,

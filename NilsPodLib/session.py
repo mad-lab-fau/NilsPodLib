@@ -355,7 +355,7 @@ class SyncedSession(Session):
         return s
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
-                   concat_df: Optional[bool] = False):
+                   include_units: Optional[bool] = False, concat_df: Optional[bool] = False):
         """Export all datasets of the dataset in a list of (or a single) pandas DataFrame.
 
         See Also:
@@ -372,6 +372,7 @@ class SyncedSession(Session):
                 None: For a simple index (0...N)
             concat_df: If True the individual dfs from each dataset will be concatenated. This is only supported, if the
                 session is properly cut to the sync region and all the datasets have the same counter.
+            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
 
         Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
@@ -382,14 +383,15 @@ class SyncedSession(Session):
 
         """
         import pandas as pd
-        dfs = super().data_as_df(datastreams, index)
+        dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
             if not self._fully_synced:
                 raise SynchronisationError('Only fully synced datasets, can be exported as a df with unified index.')
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
 
-    def imu_data_as_df(self, index: Optional[str] = None, concat_df: Optional[bool] = False):
+    def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False,
+                       concat_df: Optional[bool] = False):
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also:
@@ -407,6 +409,8 @@ class SyncedSession(Session):
                 None: For a simple index (0...N)
             concat_df: If True the individual dfs from each dataset will be concatenated. This is only supported, if the
                 session is properly cut to the sync region and all the datasets have the same counter.
+            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
+
 
         Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
@@ -416,4 +420,4 @@ class SyncedSession(Session):
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        return self.data_as_df(datastreams=['acc', 'gyro'], index=index)
+        return self.data_as_df(datastreams=['acc', 'gyro'], index=index, include_units=include_units)

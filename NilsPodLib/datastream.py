@@ -142,7 +142,7 @@ class Datastream:
         s.sampling_rate_hz /= factor
         return s
 
-    def data_as_df(self, index_as_time: bool = True) -> 'pd.DataFrame':
+    def data_as_df(self, index_as_time: bool = True, include_units=False) -> 'pd.DataFrame':
         """Return the datastream as pandas Dataframe.
 
         This will use `self.columns` as columns for the dataframe.
@@ -150,9 +150,13 @@ class Datastream:
         Args:
             index_as_time: If True the index will be divided by the sampling rate to represent time since start of the
                 measurement.
+            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
         """
         import pandas as pd  # noqa: F811
-        df = pd.DataFrame(self.data, columns=self.columns)
+        columns = self.columns
+        if include_units is True:
+            columns = ['{}_{}'.format(c, self.unit) for c in columns]
+        df = pd.DataFrame(self.data, columns=columns)
         if index_as_time:
             df.index /= self.sampling_rate_hz
             df.index.name = 't'

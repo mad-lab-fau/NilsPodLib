@@ -133,7 +133,8 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None) -> pd.DataFrame:
+    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
+                   include_units: Optional[bool] = True) -> pd.DataFrame:
         pass
 
     @call_dataset()

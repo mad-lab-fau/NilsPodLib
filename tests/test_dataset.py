@@ -45,6 +45,22 @@ def test_data_as_df(dataset_master_simple):
     assert np.array_equal(df.index.values, ds.utc_datetime_counter)
 
 
+def test_data_as_df_units(dataset_master_simple):
+    ds = dataset_master_simple[0]
+
+    df = ds.data_as_df(include_units=True)
+    for c in df.columns:
+        assert c.endswith('_a.u.')
+
+    ds = ds.factory_calibrate_imu()
+    df = ds.data_as_df(include_units=True)
+    for c in df.columns:
+        if c.startswith('acc'):
+            assert c.endswith('_g')
+        elif c.startswith('gyr'):
+            assert c.endswith('_dps')
+
+
 def test_imu_data_as_df(dataset_master_simple):
     ds = dataset_master_simple[0]
 
