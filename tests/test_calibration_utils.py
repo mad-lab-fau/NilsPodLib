@@ -72,10 +72,18 @@ def test_find_calibration_simple(dummy_cal_folder):
     assert all(['tes1' in str(x) for x in cals])
 
 
-def test_find_calibration_recursive(dummy_cal_folder_recursive):
-    cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=False)
+def test_find_calibration_non_existent(dummy_cal_folder):
+    with pytest.raises(ValueError):
+        find_calibrations_for_sensor('wrong_sensor', dummy_cal_folder)
+
+    cals = find_calibrations_for_sensor('wrong_sensor', dummy_cal_folder, ignore_file_not_found=True)
 
     assert len(cals) == 0
+
+
+def test_find_calibration_recursive(dummy_cal_folder_recursive):
+    with pytest.raises(ValueError):
+        find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=False)
 
     cals = find_calibrations_for_sensor('tes1', dummy_cal_folder_recursive, recursive=True)
 
@@ -141,6 +149,16 @@ def test_find_closest(dummy_cal_folder):
     assert cal.name == 'tes1_2000-10-03_13-14.json'
 
 
+def test_find_closest_non_existend(dummy_cal_folder):
+    with pytest.raises(ValueError):
+        find_closest_calibration_to_date('wrong_sensor', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder)
+
+    cal = find_closest_calibration_to_date('wrong_sensor', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder,
+                                           ignore_file_not_found=True)
+
+    assert cal is None
+
+
 def test_find_closest_before_after(dummy_cal_folder):
     # Default to earlier if same distance before and after.
     cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder)
@@ -148,24 +166,28 @@ def test_find_closest_before_after(dummy_cal_folder):
     assert cal.name == 'tes1_2000-10-03_13-14.json'
 
     # Return later if after.
-    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, before_after='after')
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder,
+                                           before_after='after')
 
     assert cal.name == 'tes1_2000-10-03_13-16.json'
 
     # Return later if before.
-    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, before_after='before')
+    cal = find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder,
+                                           before_after='before')
 
     assert cal.name == 'tes1_2000-10-03_13-14.json'
 
 
 def test_find_closest_warning(dummy_cal_folder):
     with pytest.warns(UserWarning) as rec:
-        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder, warn_thres=datetime.timedelta(seconds=30))
+        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder,
+                                         warn_thres=datetime.timedelta(seconds=30))
 
     assert len(rec) == 1
 
     with pytest.warns(None) as rec:
-        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder, warn_thres=datetime.timedelta(seconds=30))
+        find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder,
+                                         warn_thres=datetime.timedelta(seconds=30))
 
     assert len(rec) == 0
 
@@ -183,6 +205,5 @@ def test_find_default_cal():
 
 
 def test_find_default_cal_wrong():
-    cals = find_calibrations_for_sensor('FFFF')
-
-    assert len(cals) == 0
+    with pytest.raises(ValueError):
+        cals = find_calibrations_for_sensor('FFFF')

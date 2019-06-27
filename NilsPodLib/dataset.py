@@ -537,7 +537,8 @@ class Dataset:
 
     def find_calibrations(self, folder: Optional[path_t] = None,
                           recursive: bool = True,
-                          filter_cal_type: Optional[str] = None) -> List[Path]:
+                          filter_cal_type: Optional[str] = None,
+                          ignore_file_not_found: Optional[bool] = False) -> List[Path]:
         """Find all calibration infos that belong to a given sensor.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -550,6 +551,8 @@ class Dataset:
                 This will look for the `CalType` inside the json file and hence cause performance problems.
                 If None, all found files will be returned.
                 For possible values, see the `imucal` library.
+            ignore_file_not_found: If True this function will not raise an error, but rather return an empty list, if no
+                calibration files were found for the specific sensor.
 
         See Also:
             :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
@@ -561,6 +564,7 @@ class Dataset:
             folder=folder,
             recursive=recursive,
             filter_cal_type=filter_cal_type,
+            ignore_file_not_found=ignore_file_not_found
         )
 
     def find_closest_calibration(self,
@@ -568,7 +572,8 @@ class Dataset:
                                  recursive: bool = True,
                                  filter_cal_type: Optional[str] = None,
                                  before_after: Optional[str] = None,
-                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30)) -> Path:  # noqa: E252
+                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30),
+                                 ignore_file_not_found: Optional[bool] = False) -> Path:  # noqa: E252
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -584,6 +589,8 @@ class Dataset:
             before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
                 either before or after the specified date.
             warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
+            ignore_file_not_found: If True this function will not raise an error, but rather return `None`, if no
+                calibration files were found for the specific sensor.
 
 
         See Also:
@@ -599,7 +606,8 @@ class Dataset:
             recursive=recursive,
             filter_cal_type=filter_cal_type,
             before_after=before_after,
-            warn_thres=warn_thres
+            warn_thres=warn_thres,
+            ignore_file_not_found=ignore_file_not_found
         )
 
     def _check_sync_packages(self, threshold_s: int = 30) -> bool:

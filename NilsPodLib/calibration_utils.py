@@ -54,7 +54,8 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
 
 
 def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None, recursive: bool = True,
-                                 filter_cal_type: Optional[str] = None) -> List[Path]:
+                                 filter_cal_type: Optional[str] = None,
+                                 ignore_file_not_found: Optional[bool] = False) -> List[Path]:
     """Find possible calibration files based on the filename.
 
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
@@ -68,6 +69,8 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
             This will look for the `CalType` inside the json file and hence cause performance problems.
             If None, all found files will be returned.
             For possible values, see the `imucal` library.
+        ignore_file_not_found: If True this function will not raise an error, but rather return an empty list, if no
+            calibration files were found for the specific sensor.
 
     """
     if not folder:
@@ -85,13 +88,15 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
 
     r = sensor_id.lower() + r'_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}'
 
-    potential_matches = [f for f in getattr(Path(folder), method)('{}_*.json'.format(sensor_id)) if
-                         re.fullmatch(r, f.stem)]
+    matches = [f for f in getattr(Path(folder), method)('{}_*.json'.format(sensor_id)) if
+               re.fullmatch(r, f.stem)]
 
-    if filter_cal_type is None:
-        return potential_matches
+    if filter_cal_type:
+        matches = [f for f in matches if json.load(f.open())['cal_type'].lower() == filter_cal_type.lower()]
 
-    return [f for f in potential_matches if json.load(f.open())['cal_type'].lower() == filter_cal_type.lower()]
+    if not matches and ignore_file_not_found is not True:
+        raise ValueError('No Calibration for the sensor with the id {} could be found'.format(sensor_id))
+    return matches
 
 
 def find_closest_calibration_to_date(sensor_id: str,
@@ -100,7 +105,8 @@ def find_closest_calibration_to_date(sensor_id: str,
                                      recursive: bool = True,
                                      filter_cal_type: Optional[str] = None,
                                      before_after: Optional[str] = None,
-                                     warn_thres: datetime.timedelta = datetime.timedelta(days = 30)) -> Path:
+                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30),
+                                     ignore_file_not_found: Optional[bool] = False) -> Optional[Path]:
     """Find the calibration file for a sensor, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
@@ -119,6 +125,8 @@ def find_closest_calibration_to_date(sensor_id: str,
             either before or after the specified date. If None the closest value ignoring if it was before or after the
             measurement.
         warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
+        ignore_file_not_found: If True this function will not raise an error, but rather return `None`, if no
+            calibration files were found for the specific sensor.
 
     Notes:
         If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
@@ -132,9 +140,12 @@ def find_closest_calibration_to_date(sensor_id: str,
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')
 
     potential_list = find_calibrations_for_sensor(sensor_id=sensor_id, folder=folder, recursive=recursive,
-                                                  filter_cal_type=filter_cal_type)
+                                                  filter_cal_type=filter_cal_type,
+                                                  ignore_file_not_found=ignore_file_not_found)
     if not potential_list:
-        raise ValueError('Not Calibration for the sensor with the id {} could be found'.format(sensor_id))
+        if ignore_file_not_found is True:
+            return None
+        raise ValueError('No Calibration for the sensor with the id {} could be found'.format(sensor_id))
 
     dates = [datetime.datetime.strptime('_'.join(d.stem.split('_')[1:]), '%Y-%m-%d_%H-%M') for d in potential_list]
 

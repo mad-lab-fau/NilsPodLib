@@ -146,11 +146,13 @@ class _MultiDataset:
                                  folder: Optional[path_t] = None,
                                  recursive: bool = False,
                                  filter_cal_type: Optional[str] = None,
-                                 before_after: Optional[str] = None):
+                                 before_after: Optional[str] = None,
+                                 ignore_file_not_found: Optional[bool] = False):
         pass
 
     @call_dataset()
     def find_calibrations(self, folder: Optional[path_t] = None,
                           recursive: bool = True,
-                          filter_cal_type: Optional[str] = None):
+                          filter_cal_type: Optional[str] = None,
+                          ignore_file_not_found: Optional[bool] = False):
         pass
