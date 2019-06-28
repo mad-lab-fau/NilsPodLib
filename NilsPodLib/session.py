@@ -362,7 +362,7 @@ class SyncedSession(Session):
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
                    include_units: Optional[bool] = False, concat_df: Optional[bool] = False):
-        """Export all datasets of the dataset in a list of (or a single) pandas DataFrame.
+        """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         See Also:
             :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
@@ -370,7 +370,7 @@ class SyncedSession(Session):
         Args:
             datastreams: Optional list of datastream names, if only specific ones should be included. Datastreams that
                 are not part of the current dataset will be silently ignored.
-            index: Specify which index should be used for the dataset. The options are:
+            index: Specify which index should be used for each dataset. The options are:
                 "counter": For the actual counter
                 "time": For the time in seconds since the first sample
                 "utc": For the utc time stamp of each sample
