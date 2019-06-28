@@ -18,6 +18,7 @@ from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
+    import pandas as pd  # noqa: F401
 
 T = TypeVar('T', bound='Session')
 
@@ -360,8 +361,11 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
-                   include_units: Optional[bool] = False, concat_df: Optional[bool] = False):
+    def data_as_df(self,
+                   datastreams: Optional[Sequence[str]] = None,
+                   index: Optional[str] = None,
+                   include_units: Optional[bool] = False,
+                   concat_df: Optional[bool] = False) -> Union[Tuple['pd.DataFrame'], 'pd.DataFrame']:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         See Also:
@@ -384,11 +388,14 @@ class SyncedSession(Session):
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
             Therefore, it will use the column information of each datastream.
 
+        Returns:
+            Tuple of pd.DataFrames (one for each Dataset) or a single DataFrame if `concat_df` is set to True
+
         Raises:
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        import pandas as pd
+        import pandas as pd  # noqa: F811
         dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
             if not self._fully_synced:
@@ -397,14 +404,13 @@ class SyncedSession(Session):
         return dfs
 
     def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False,
-                       concat_df: Optional[bool] = False):
+                       concat_df: Optional[bool] = False) -> Union[Tuple['pd.DataFrame'], 'pd.DataFrame']:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also:
             :py:meth:`NilsPodLib.session.SyncedSession.data_as_df`
             :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
             :py:meth:`NilsPodLib.dataset.Dataset.imu_data_as_df`
-
 
         Args:
             index: Specify which index should be used for the dataset. The options are:
@@ -417,10 +423,12 @@ class SyncedSession(Session):
                 session is properly cut to the sync region and all the datasets have the same counter.
             include_units: If True the column names will have the unit of the datastream concatenated with an `_`
 
-
         Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
             Therefore, it will use the column information of each datastream.
+
+        Returns:
+            Tuple of pd.DataFrames (one for each Dataset) or a single DataFrame if `concat_df` is set to True
 
         Raises:
             ValueError: If any other than the allowed `index` values are used.

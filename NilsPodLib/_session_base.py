@@ -7,7 +7,6 @@ from functools import wraps
 from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequence
 
 import numpy as np
-import pandas as pd
 
 from NilsPodLib import Dataset
 from NilsPodLib.utils import path_t, inplace_or_copy, remove_docstring_indent
@@ -16,6 +15,7 @@ T = TypeVar('T')
 
 if TYPE_CHECKING:
     from NilsPodLib.datastream import Datastream  # noqa: F401
+    import pandas as pd  # noqa: F401
 
 
 class CascadingDatasetField:
@@ -134,11 +134,11 @@ class _MultiDataset:
 
     @call_dataset()
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
-                   include_units: Optional[bool] = True) -> pd.DataFrame:
+                   include_units: Optional[bool] = True) -> Tuple['pd.DataFrame']:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: Optional[str] = None) -> pd.DataFrame:
+    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple['pd.DataFrame']:
         pass
 
     @call_dataset()
