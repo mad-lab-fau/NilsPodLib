@@ -158,6 +158,7 @@ class HeaderFields:
         Note:
             This does only indicate, that the session was recorded with the sync feature enabled, not that the data is
             actually synchronised.
+
         """
         return not self.sync_role == 'disabled'
 
@@ -187,6 +188,7 @@ class Header(HeaderFields):
     Note:
         - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
             any local conversions
+
     """
 
     def __init__(self, **kwargs):

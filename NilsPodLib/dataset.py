@@ -44,6 +44,7 @@ class Dataset:
             multiple datasets that were recorded at the same time (see `NilsPodLib.session.SyncedSession`)
         datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
             Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
+
     """
 
     path: path_t
@@ -70,6 +71,7 @@ class Dataset:
                 The data needs to be 2D with time/counter as first dimension
             counter: The counter created by the sensor. Should have the same length as all datasets
             info: Header instance containing all Metainfo about the measurement.
+
         """
         self.counter = counter
         self.info = info
@@ -310,6 +312,7 @@ class Dataset:
         Args:
              inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
                  datastream objects is created
+
         """
         s = inplace_or_copy(self, inplace)
         if self._check_calibration(s.temperature, 'temperature') is True:

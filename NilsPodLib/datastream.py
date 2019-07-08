@@ -48,6 +48,7 @@ class Datastream:
                 This is only used, if `self.is_calibrated` is set to `True`
             sensor_type: Type of sensor the data is produced from. This allows to automatically get default values for
                 columns and units from :py:mod:`NilsPodLib.consts
+
         """
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
@@ -151,6 +152,7 @@ class Datastream:
             index_as_time: If True the index will be divided by the sampling rate to represent time since start of the
                 measurement.
             include_units: If True the column names will have the unit of the datastream concatenated with an `_`
+
         """
         import pandas as pd  # noqa: F811
         columns = self.columns

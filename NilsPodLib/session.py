@@ -37,6 +37,7 @@ class Session(_MultiDataset):
     for each dataset) or modify all datasets of a session.
     You can also use the `self.info` object to access header information of all datasets at the same time.
     All return values will be in the same order as `self.datasets`.
+
     """
 
     datasets: Tuple[Dataset]
@@ -57,6 +58,7 @@ class Session(_MultiDataset):
 
         Args:
             datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+
         """
         self.datasets = tuple(datasets)
 
@@ -72,6 +74,7 @@ class Session(_MultiDataset):
                 If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
                     an error is raised. See the `legacy` package and the README to learn more about available
                     conversions.
+
         """
         ds = (Dataset.from_bin_file(p, legacy_support=legacy_support) for p in paths)
         return cls(ds)
@@ -90,6 +93,7 @@ class Session(_MultiDataset):
                 If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
                     an error is raised. See the `legacy` package and the README to learn more about available
                     conversions.
+
         """
         return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_support=legacy_support)
 
@@ -98,6 +102,7 @@ class Session(_MultiDataset):
 
         Args:
             sensor_id: For letter/digit id of the sensor
+
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
@@ -157,7 +162,7 @@ class Session(_MultiDataset):
 
 
 class SyncedSession(Session):
-    """Object representing a collection of Datasets recorded with active synconisation.
+    """Object representing a collection of Datasets recorded with active synchronisation.
 
     A session can access all the same attributes and most of the methods provided by a dataset.
     However, instead of returning a single value/acting only on a single dataset, it will return a tuple of values (one
@@ -182,8 +187,7 @@ class SyncedSession(Session):
             These checks include testing, if all datasets are really part of a single measurement.
             In rare cases, it might be useful to deactivate these checks and force the creation of a synced session.
 
-            Example:
-
+            Example:  # noqa:D412
                 >>> SyncedSession.VALIDATE_ON_INIT = False
                 >>> SyncedSession.from_folder_path('./my/path') # No validation will be performed
 
@@ -250,6 +254,7 @@ class SyncedSession(Session):
 
         Args:
             datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+
         """
         super().__init__(datasets)
         if self.VALIDATE_ON_INIT:

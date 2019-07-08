@@ -23,6 +23,7 @@ def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
     Args:
         byte_list: The array of bytes
         dtype: The datatype, the final value should be converted to.
+
     """
     byte_list = np.array(byte_list).astype(np.uint32)
     number = byte_list[0]

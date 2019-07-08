@@ -46,6 +46,7 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     Args:
         in_path: path to 0.12.x / 0.13.x file
         out_path: path to converted 0.13.255 file
+
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_12_0(header, data_bytes)
@@ -68,6 +69,7 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     Args:
         header: bytes containing all the legacy header information
         data_bytes: raw bytes representing the data
+
     """
     min_v = CONVERSION_DICT['12_0']['min']
     max_v = CONVERSION_DICT['12_0']['max']
@@ -100,6 +102,7 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     Args:
         in_path: path to 0.11.2 file
         out_path: path to converted 0.13.255 file
+
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_11_2(header, data_bytes)
@@ -123,6 +126,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     Args:
         header: bytes containing all the legacy header information
         data_bytes: raw bytes representing the data
+
     """
     min_v = CONVERSION_DICT['11_2']['min']
     max_v = CONVERSION_DICT['11_2']['max']
@@ -209,6 +213,7 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
     Args:
         version: The version to check for.
         as_warning: If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
+
     """
     if version < StrictVersion('0.11.2'):
         msg = 'You are using a version ({}) previous to 0.11.2. This version is not supported!'.format(version)

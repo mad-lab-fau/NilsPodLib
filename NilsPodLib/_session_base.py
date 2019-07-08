@@ -37,6 +37,7 @@ def call_dataset(autogen_doc=True):  # noqa: D202
     Args:
         autogen_doc: If True, the docstring of the respective dataset method is copied to the method with short pretext.
             If a docstring already exists, the dataset docstring will be appended WITHOUT pretext.
+
     """
 
     def wrapped(method):
@@ -76,6 +77,7 @@ class _MultiDataset:
     This class uses a decorator for methods and a descriptor for attributes to automatically forward all calls to
     multiple datasets.
     See the implementation of `CascadingDatasetField` and `call_dataset` for details.
+
     """
 
     path: path_t = CascadingDatasetField()
