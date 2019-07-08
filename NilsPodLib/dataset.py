@@ -141,7 +141,7 @@ class Dataset:
     @property
     def utc_datetime_counter(self) -> np.ndarray:
         """Counter as np.datetime64 in UTC timezone."""
-        return pd.to_datetime(pd.Series(self.utc_counter * 1000000), utc=True, unit='us').values
+        return (self.utc_counter * 1e6).astype('datetime64[us]')
 
     @property
     def time_counter(self) -> np.ndarray:
