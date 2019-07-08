@@ -146,7 +146,7 @@ def test_legacy_error(session, converter, request):
     with pytest.raises(VersionError) as e:
         Dataset.from_bin_file(path)
 
-    assert 'legacy support' in str(e)
+    assert 'legacy support' in str(e.value)
 
     with pytest.warns(UserWarning) as e:
         try:

@@ -26,13 +26,13 @@ def test_validate_sync_channel(dataset_synced):
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2])
 
-    assert 'sync_group' in str(e)
+    assert 'sync_group' in str(e.value)
 
     ds1.info.sync_address = ds2.info.sync_address + 'a'
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2])
 
-    assert 'sync_group' in str(e)
+    assert 'sync_group' in str(e.value)
 
 
 def test_start_end_validation(dataset_synced):
@@ -45,7 +45,7 @@ def test_start_end_validation(dataset_synced):
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2])
 
-    assert 'overlapping time period' in str(e)
+    assert 'overlapping time period' in str(e.value)
 
 
 @pytest.mark.parametrize('roles, err', [
@@ -65,7 +65,7 @@ def test_two_master_validation(dataset_synced, roles, err):
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2, ds3])
 
-    assert err in str(e)
+    assert err in str(e.value)
 
 
 def test_validate_sampling_rate(dataset_synced):
@@ -77,7 +77,7 @@ def test_validate_sampling_rate(dataset_synced):
     with pytest.raises(ValueError) as e:
         SyncedSession([ds1, ds2])
 
-    assert 'same sampling rate' in str(e)
+    assert 'same sampling rate' in str(e.value)
 
 
 def test_disable_validation(dataset_synced):

@@ -55,7 +55,7 @@ def test_info_get_method(basic_session):
     with pytest.raises(ValueError) as e:
         basic_session.info.from_json('test')
 
-    assert 'from_json' in str(e)
+    assert 'from_json' in str(e.value)
 
 
 def test_dataset_attr_access(dataset_synced):
