@@ -501,6 +501,7 @@ class Dataset:
 
         datastreams = datastreams or self.active_sensors
         dfs = [s.data_as_df(include_units=include_units) for k, s in self.datastreams if k in datastreams]
+
         df = pd.concat(dfs, axis=1)
 
         if index:
