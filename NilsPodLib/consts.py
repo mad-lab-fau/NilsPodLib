@@ -27,7 +27,7 @@ SENSOR_LEGENDS = {
     'analog': tuple('analog_' + str(x) for x in range(3)),
     'ecg': tuple(['ecg']),
     'ppg': tuple(['ppg']),
-    'temperature': tuple(['battery'])
+    'temperature': tuple(['temp']),
 }
 
 #: Default units for all sensors
