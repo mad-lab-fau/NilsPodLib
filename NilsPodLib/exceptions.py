@@ -28,6 +28,18 @@ class SynchronisationError(Exception):
     pass
 
 
+class SynchronisationWarning(Warning):
+    """Indicate potential issues with sync."""
+
+    pass
+
+
+class LegacyWarning(Warning):
+    """Indicate potential issues due to older firmware versions."""
+
+    pass
+
+
 def datastream_does_not_exist_warning(sensor_name, operation):
     """Warn about not existing datastreams."""
     message = 'The datastream "{}" does not exist for the current session.\

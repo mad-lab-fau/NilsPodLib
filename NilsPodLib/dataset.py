@@ -21,7 +21,8 @@ from NilsPodLib.header import Header
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, inplace_or_copy, \
     get_header_and_data_bytes, \
     get_strict_version_from_header_bytes
-from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning
+from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning, \
+    SynchronisationWarning, LegacyWarning
 from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 
 if TYPE_CHECKING:
@@ -465,7 +466,8 @@ class Dataset:
             return inplace_or_copy(self, inplace)
         if warn_thres is not None and end is not True and self._check_sync_packages(warn_thres) is False:
             warnings.warn('The last sync package occured more than {} s before the end of the measurement.'
-                          'The last region of the data should not be trusted.'.format(warn_thres))
+                          'The last region of the data should not be trusted.'.format(warn_thres),
+                          SynchronisationWarning)
         end = self.info.sync_index_stop if end is True else None
         return self.cut(self.info.sync_index_start, end, inplace=inplace)
 
@@ -672,7 +674,7 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
 
     if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
         warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
-                      'This might indicate a corrupted file')
+                      'This might indicate a corrupted file', LegacyWarning)
 
     return sensor_data, counter, session_header
 

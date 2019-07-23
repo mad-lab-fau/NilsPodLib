@@ -7,6 +7,7 @@ from distutils.version import StrictVersion
 from typing import Tuple, Callable, Optional, Union
 import numpy as np
 
+from NilsPodLib.exceptions import LegacyWarning
 from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_version_from_header_bytes, \
     get_sample_size_from_header_bytes
 
@@ -229,7 +230,7 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
             msg = 'You are using a version completely unknown version: {}'.format(version)
 
     if as_warning is True:
-        warnings.warn(msg)
+        warnings.warn(msg, LegacyWarning)
     else:
         raise VersionError(msg)
 
