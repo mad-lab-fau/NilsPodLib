@@ -318,6 +318,75 @@ class SyncedSession(Session):
         """Return a list of all slave datasets in the session."""
         return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
 
+    def align_to_syncregion(self: Type[T], cut_start: bool = False, cut_end: bool = False, inplace: bool = False,
+                            warn_thres: Optional[int] = 30):
+        """Align all datasets based on regions where they were synchronised to the master.
+
+        At the end all datasets are cut to the same length, so that the maximum overlap between all datasets is
+        preserved.
+
+        Args:
+            cut_start: Whether the dataset should be cut at `info.sync_index_start`.
+                If `False` a new corrected counter value will be calculated for all packages before the first
+                syncpackage.
+                Usually it can be assumed that this extrapolation is valid for multiple seconds before the first
+                package.
+            cut_end: Whether the dataset should be cut at the `info.sync_index_stop`. Usually it can be assumed that the
+                data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
+                acceptable to just ignore the last syncpackage and just cut the start of the dataset.
+            warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
+                warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
+                This is not relevant if the end of the dataset is cut (e.g. `end=True`)
+            inplace: If operation should be performed on the current Session object, or on a copy
+
+        Warns:
+            If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
+
+        """
+        # Correct counter before first sync package
+        s = inplace_or_copy(self, inplace)
+
+        if s._fully_synced is True:
+            raise SynchronisationError('The session is already aligned/cut to the syncregion and can not be cut again')
+
+        if warn_thres is not None:
+            sync_start_warn = [d.info.sensor_id for d in s.slaves if
+                               d._check_sync_packages(warn_thres, where='start') is False]
+            sync_end_warn = [d.info.sensor_id for d in s.slaves if
+                             d._check_sync_packages(warn_thres, where='end') is False]
+            if any(sync_end_warn) and cut_end is not True:
+                warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
+                              'end of the dataset. '
+                              'The last section of this data should not be trusted.'.format(sync_end_warn, warn_thres))
+            if any(sync_start_warn) and cut_start is not True:
+                warnings.warn('For the sensors with the ids {} the first syncpackage occurred more than {} s after the '
+                              'start of the dataset. '
+                              'The first section of this data should not be trusted.'.format(sync_start_warn,
+                                                                                             warn_thres))
+
+        for slave in s.slaves:
+            sync_jump = slave.counter[slave.info.sync_index_start - 2: slave.info.sync_index_start]
+            diff = sync_jump[-1] - sync_jump[0] - 1
+            slave.counter[: slave.info.sync_index_start - 1] += diff
+
+        # Optionally cut to the syncregion
+        s = super(SyncedSession, s).cut_to_syncregion(start=cut_start, end=cut_end, inplace=True, warn_thres=None)
+
+        start_idx = [d.counter[0] for d in s.datasets]
+        stop_idx = [d.counter[-1] for d in s.datasets]
+        if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
+            raise ValueError('The provided datasets do not have a overlapping regions!')
+
+        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
+        stop_idx = [len(d.counter) for d in s.datasets]
+        s = super(SyncedSession, s).cut(stop=np.min(stop_idx), inplace=True)
+
+        # Finally set the master counter to all slaves to really ensure identical counters
+        for d in s.slaves:
+            d.counter = s.master.counter
+        s._fully_synced = True
+        return s
+
     def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,
                           warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
         """Cut all datasets to the regions where they were synchronised to the master.
@@ -335,35 +404,27 @@ class SyncedSession(Session):
                 This is not relevant if the end of the dataset is cut (e.g. `end=True`)
             inplace: If operation should be performed on the current Session object, or on a copy
 
+        Info:
+            `cut_to_syncregion` is deprecated and will be replaced by `align_to_syncregion`.
+            Use `align_to_syncregion(cut_start=True, ...)` to replicate the functionality of `cut_to_syncregion`.
+            `align_to_syncregion` does not support `only_to_master`.
+            This functionality is not supported anymore.
+
         Warns:
             If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
 
         """
-        s = inplace_or_copy(self, inplace)
-        if warn_thres is not None and end is not True:
-            sync_warn = [d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres) is False]
-            if any(sync_warn):
-                warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
-                              'end of the dataset. '
-                              'The last section of this data should not be trusted.'.format(sync_warn, warn_thres))
+        warnings.warn('"cut_to_syncregion" is deprecated and will be replaced by "align_to_syncregion". '
+                      'Use align_to_syncregion(cut_start=True, ...) to replicate the functionality of '
+                      'cut_to_syncregion.',
+                      DeprecationWarning)
 
-        s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
         if only_to_master is True:
+            s = inplace_or_copy(self, inplace)
+            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
             return s
 
-        start_idx = [d.counter[0] for d in s.datasets]
-        stop_idx = [d.counter[-1] for d in s.datasets]
-        if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
-            raise ValueError('The provided datasets do not have a overlapping regions where all are synced!')
-
-        s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
-        stop_idx = [len(d.counter) for d in s.datasets]
-        s = super(SyncedSession, s).cut(stop=np.min(stop_idx), inplace=True)
-
-        # Finally set the master counter to all slaves to really ensure identical counters
-        for d in s.slaves:
-            d.counter = s.master.counter
-        s._fully_synced = True
+        s = self.align_to_syncregion(cut_start=True, cut_end=end, warn_thres=warn_thres, inplace=inplace)
         return s
 
     def data_as_df(self,

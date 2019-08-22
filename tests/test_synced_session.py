@@ -133,25 +133,42 @@ def test_cut_to_sync_only_master_without_end(basic_synced_session):
     assert s.slaves[1].counter[-1] == basic_synced_session.slaves[1].counter[-1]
 
 
-def test_cut_to_sync_with_end(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(end=True, inplace=False)
+def test_align_to_sync_with_end(basic_synced_session):
+    s = basic_synced_session.align_to_syncregion(cut_start=True, cut_end=True, inplace=False)
 
     start = np.array([d.counter[d.info.sync_index_start] for d in basic_synced_session.slaves]).max()
-    stop = np.array([d.counter[d.info.sync_index_stop] + 1 for d in basic_synced_session.slaves]).min()
-    length = stop - start
+    stop = np.array([d.counter[d.info.sync_index_stop] for d in basic_synced_session.slaves]).min()
+    length = stop - start + 1
 
     for d in s.datasets:
         assert len(d.counter) == len(d.acc.data)
+        assert d.counter[-1] == stop
         assert len(d.counter) == length
         assert np.array_equal(d.counter, s.master.counter)
 
 
-def test_cut_to_sync_without_end(basic_synced_session):
+def test_align_to_sync_without_start(basic_synced_session):
+    s = basic_synced_session.align_to_syncregion(cut_start=False, cut_end=False, inplace=False)
+
+    start = np.array(
+        [d.counter[d.info.sync_index_start] - d.info.sync_index_start for d in basic_synced_session.datasets]).max()
+    stop = np.array([d.counter[d.info.sync_index_stop] + len(d.counter) - d.info.sync_index_stop for d in basic_synced_session.datasets]).min()
+    length = stop - start + 1
+
+    for d in s.datasets:
+        assert len(d.counter) == len(d.acc.data)
+        assert d.counter[0] == start
+        assert d.counter[-1] == stop
+        assert len(d.counter) == length
+        assert np.array_equal(d.counter, s.master.counter)
+
+
+def test_align_to_sync_without_end(basic_synced_session):
     s = basic_synced_session
     min_len = np.min([len(d.counter) for d in s.slaves])
     s.slaves[0].cut(stop=min_len - 200, inplace=True)
 
-    s = basic_synced_session.cut_to_syncregion(end=False, inplace=False)
+    s = basic_synced_session.align_to_syncregion(cut_start=True, cut_end=False, inplace=False)
 
     start = np.array([d.counter[d.info.sync_index_start] for d in basic_synced_session.slaves]).max()
     length = np.array([len(d.counter) - d.info.sync_index_start for d in basic_synced_session.slaves]).min()
@@ -163,29 +180,29 @@ def test_cut_to_sync_without_end(basic_synced_session):
         assert np.array_equal(d.counter, s.master.counter)
 
 
-def test_cut_to_sync_slave_longer_than_master(basic_synced_session):
+def test_align_to_sync_slave_longer_than_master(basic_synced_session):
     s = basic_synced_session
     min_len = np.min([len(d.counter) for d in s.slaves])
     s.master.cut(stop=min_len - 200, inplace=True)
 
-    s = s.cut_to_syncregion(inplace=False)
+    s = s.align_to_syncregion(cut_start=True, inplace=False)
 
     for d in s.datasets:
         assert len(d.counter) == len(d.acc.data)
         assert np.array_equal(d.counter, s.master.counter)
 
 
-def test_cut_to_sync_warn(basic_synced_session):
+def test_align_to_sync_warn_end(basic_synced_session):
     s = basic_synced_session
 
     with pytest.warns(None) as rec:
-        s.cut_to_syncregion(end=False)
+        s.align_to_syncregion(cut_start=True, cut_end=False)
 
     assert len(rec) == 0
 
     thres = 0
     with pytest.warns(UserWarning) as rec:
-        s.cut_to_syncregion(end=False, warn_thres=thres)
+        s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=thres)
 
     assert len(rec) == 1
     assert str(thres) in str(rec[0])
@@ -194,21 +211,45 @@ def test_cut_to_sync_warn(basic_synced_session):
     thres = 30
     s.slaves[0].info.sync_index_stop -= int(30 * s.slaves[0].info.sampling_rate_hz)
     with pytest.warns(UserWarning) as rec:
-        s.cut_to_syncregion(end=False, warn_thres=thres)
+        s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=thres)
 
     assert len(rec) == 1
     assert str(thres) in str(rec[0])
     assert str([s.slaves[0].info.sensor_id]) in str(rec[0])
 
-    thres = 30
-    s.slaves[0].info.sync_index_stop -= int(30 * s.slaves[0].info.sampling_rate_hz)
-    with pytest.warns(UserWarning) as rec:
-        s.cut_to_syncregion(end=False, warn_thres=thres, only_to_master=True)
+    with pytest.warns(None) as rec:
+        s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=None)
 
-    assert len(rec) == 1
+    assert len(rec) == 0
+
+
+def test_align_to_sync_warn_start(basic_synced_session):
+    s = basic_synced_session
 
     with pytest.warns(None) as rec:
-        s.cut_to_syncregion(end=False, warn_thres=None)
+        s.align_to_syncregion(cut_end=True, cut_start=False)
+
+    assert len(rec) == 0
+
+    thres = 0
+    with pytest.warns(UserWarning) as rec:
+        s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+    assert str([d.info.sensor_id for d in s.slaves]) in str(rec[0])
+
+    thres = 30
+    s.slaves[0].info.sync_index_start += int(30 * s.slaves[0].info.sampling_rate_hz)
+    with pytest.warns(UserWarning) as rec:
+        s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=thres)
+
+    assert len(rec) == 1
+    assert str(thres) in str(rec[0])
+    assert str([s.slaves[0].info.sensor_id]) in str(rec[0])
+
+    with pytest.warns(None) as rec:
+        s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=None)
 
     assert len(rec) == 0
 
@@ -240,7 +281,7 @@ def test_synced_time_info_error(basic_synced_session, method):
 
 
 def test_session_utc_datetime(basic_synced_session):
-    basic_synced_session = basic_synced_session.cut_to_syncregion()
+    basic_synced_session = basic_synced_session.align_to_syncregion(cut_start=True)
 
     start = basic_synced_session.session_utc_datetime_start
     end = basic_synced_session.session_utc_datetime_stop

@@ -388,7 +388,8 @@ class Dataset:
 
         for key, val in s.datastreams:
             setattr(s, key, val.cut(start, stop, step))
-        s.counter = s.counter[start:stop:step]
+        sl = slice(start, stop, step)
+        s.counter = s.counter[sl]
         return s
 
     def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
@@ -419,12 +420,17 @@ class Dataset:
 
         """
         if start:
+            if start < self.counter[0]:
+                raise ValueError('{} out of bounds for counter starting at {}'.format(start, self.counter))
             start = np.searchsorted(self.counter, start)
         if stop:
+            if stop > self.counter[-1]:
+                raise ValueError('{} out of bounds for counter ending at {}'.format(start, self.counter))
             stop = np.searchsorted(self.counter, stop)
         return self.cut(start, stop, step, inplace=inplace)
 
-    def cut_to_syncregion(self: Type[T], end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
+    def cut_to_syncregion(self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30,
+                          inplace: bool = False) -> T:
         """Cut the dataset to the region indicated by the first and last sync package received from master.
 
         This cuts the dataset to the values indicated by `info.sync_index_start` and `info.sync_index_stop`.
@@ -444,7 +450,10 @@ class Dataset:
             sync index values. Using methods that rely on these values might result in unexpected behaviour.
 
         Args:
-            end: Whether the dataset should be cut at the `info.last_sync_index`. Usually it can be assumed that the
+            start: Whether the dataset should be cut at the `info.sync_index_start`.
+                If this is False, a jump in the counter will remain.
+                The only usecase for not cutting at the start is when the counters are already perfectly aligned.
+            end: Whether the dataset should be cut at the `info.sync_index_stop`. Usually it can be assumed that the
                 data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
                 acceptable to just ignore the last syncpackage and just cut the start of the dataset.
             warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
@@ -469,7 +478,8 @@ class Dataset:
                           'The last region of the data should not be trusted.'.format(warn_thres),
                           SynchronisationWarning)
         end = self.info.sync_index_stop if end is True else None
-        return self.cut(self.info.sync_index_start, end, inplace=inplace)
+        start = self.info.sync_index_start if start is True else None
+        return self.cut(start, end, inplace=inplace)
 
     def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
                    include_units: Optional[bool] = False) -> pd.DataFrame:
@@ -616,7 +626,7 @@ class Dataset:
             ignore_file_not_found=ignore_file_not_found
         )
 
-    def _check_sync_packages(self, threshold_s: int = 30) -> bool:
+    def _check_sync_packages(self, threshold_s: int = 30, where='end') -> bool:
         """Check if the last sync package occurred far from the actual end of the recording.
 
         This can be the case, if the master stopped sending packages, or if the sensor could not receive any new sync
@@ -624,7 +634,13 @@ class Dataset:
         In particular in the latter case, careful review of the data is advised.
         """
         if self.info.sync_role == 'slave':
-            if len(self.counter) - self.info.sync_index_stop > threshold_s * self.info.sampling_rate_hz:
+            if where == 'end':
+                tmp = len(self.counter) - self.info.sync_index_stop
+            elif where == 'start':
+                tmp = self.info.sync_index_start
+            else:
+                raise ValueError('Invalid value for "where" encountered.')
+            if tmp > threshold_s * self.info.sampling_rate_hz:
                 return False
         return True
 
