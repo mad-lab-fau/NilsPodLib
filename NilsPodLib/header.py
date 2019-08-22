@@ -6,6 +6,7 @@
 
 import datetime
 import json
+import pprint
 import warnings
 from collections import OrderedDict
 from distutils.version import StrictVersion
@@ -128,6 +129,13 @@ class HeaderFields:
         return list(HeaderFields.__annotations__.keys())
 
     @property
+    def _all_header_fields(self) -> List[str]:
+        additional_fields = ['duration_s', 'utc_datetime_start', 'utc_datetime_stop', 'utc_datetime_start_day_midnight',
+                             'is_synchronised', 'has_position_info', 'sensor_id', 'strict_version_firmware']
+
+        return self._header_fields + additional_fields
+
+    @property
     def duration_s(self) -> int:
         """Length of the measurement."""
         return self.utc_stop - self.utc_start
@@ -176,6 +184,10 @@ class HeaderFields:
     def strict_version_firmware(self) -> StrictVersion:
         """Get the firmware as a StrictVersion object."""
         return StrictVersion(self.version_firmware[1:])
+
+    def __str__(self) -> str:
+        full_header = {k: getattr(self, k, None) for k in self._all_header_fields}
+        return pprint.pformat(full_header)
 
 
 class Header(HeaderFields):
@@ -309,9 +321,11 @@ class _ProxyHeader(HeaderFields):
         self._headers = headers
 
     def __getattribute__(self, name: str) -> Tuple[Any]:
-        if name == '_headers':
+        if name in ('_headers', '_all_header_fields', '_header_fields', '_ipython_display_'):
             return super().__getattribute__(name)
         if callable(getattr(self._headers[0], name)) is True:
+            if name.startswith('__'):
+                return super().__getattribute__(name)
             raise ValueError(
                 '_ProxyHeader only allows access to attributes of the info objects. {} is a callable method.'.format(
                     name))
@@ -325,3 +339,9 @@ class _ProxyHeader(HeaderFields):
 
     def __dir__(self):
         return chain(super().__dir__(), self._headers[0].__dir__())
+
+    def _ipython_display_(self):
+        import pandas as pd
+        from IPython import display
+        header = {k: getattr(self, k, None) for k in self._all_header_fields}
+        display.display(pd.DataFrame(header, index=self.sensor_id).T)
