@@ -6,6 +6,8 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_approx_equal
 
+from NilsPodLib.exceptions import SynchronisationWarning
+
 
 def test_size(dataset_master_simple):
     dataset, _ = dataset_master_simple
@@ -132,7 +134,7 @@ def test_cut_to_sync_warning(dataset_synced):
     assert len(rec) == 0
 
     thres = 0
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         ds.cut_to_syncregion(end=False, warn_thres=thres)
 
     assert len(rec) == 1
@@ -140,7 +142,7 @@ def test_cut_to_sync_warning(dataset_synced):
 
     thres = 30
     ds.info.sync_index_stop -= int(30 * ds.info.sampling_rate_hz)
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         ds.cut_to_syncregion(end=False, warn_thres=thres)
 
     assert len(rec) == 1

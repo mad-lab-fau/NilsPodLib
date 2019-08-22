@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from NilsPodLib import Dataset
+from NilsPodLib.exceptions import LegacyWarning
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import _fix_little_endian_counter, _convert_sensor_enabled_flag_11_2, _insert_missing_bytes_11_2, \
     _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0, find_conversion_function
@@ -148,7 +149,7 @@ def test_legacy_error(session, converter, request):
 
     assert 'legacy support' in str(e.value)
 
-    with pytest.warns(UserWarning) as e:
+    with pytest.warns(LegacyWarning) as e:
         try:
             Dataset.from_bin_file(path, legacy_support='warn')
         except:
