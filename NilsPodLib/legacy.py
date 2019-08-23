@@ -18,6 +18,8 @@ CONVERSION_DICT = {
              'max': StrictVersion('0.11.255')}
 }
 
+MIN_NON_LEGACY_VERSION = StrictVersion('0.14.0')
+
 
 def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True,
                              return_name: Optional[bool] = False) -> Union[Callable, str]:
@@ -25,6 +27,9 @@ def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] =
 
     This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
     """
+    if version > MIN_NON_LEGACY_VERSION:
+        return lambda x, y: (x, y)
+
     for k, v in CONVERSION_DICT.items():
         if v['min'] <= version < v['max']:
             n = 'load_' if in_memory else 'convert_'
