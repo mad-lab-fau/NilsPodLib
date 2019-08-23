@@ -10,7 +10,8 @@ from NilsPodLib import Dataset
 from NilsPodLib.exceptions import LegacyWarning
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import _fix_little_endian_counter, _convert_sensor_enabled_flag_11_2, _insert_missing_bytes_11_2, \
-    _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0, find_conversion_function
+    _split_sampling_rate_byte_11_2, convert_11_2, VersionError, convert_12_0, find_conversion_function, \
+    MIN_NON_LEGACY_VERSION
 from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12
 
@@ -172,6 +173,7 @@ def test_legacy_error(session, converter, request):
     (StrictVersion('0.11.2'), '11_2'),
     (StrictVersion('0.11.3'), '11_2'),
     (StrictVersion('0.15.0'), 'supported'),
+    (MIN_NON_LEGACY_VERSION, 'supported')
 ])
 def test_find_conversion_function(version, correct_func):
     if correct_func == 'supported':
