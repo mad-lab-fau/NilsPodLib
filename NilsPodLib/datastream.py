@@ -8,7 +8,7 @@ import copy
 from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
 
 import numpy as np
-from scipy.signal import decimate
+from scipy.signal import resample
 
 from NilsPodLib.consts import SENSOR_LEGENDS, SENSOR_UNITS
 from NilsPodLib.utils import inplace_or_copy
@@ -129,17 +129,15 @@ class Datastream:
         return s
 
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
-        """Downsample all datastreams by a factor.
-
-        This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
+        """Downsample the datastreams by a factor.
 
         Args:
-            factor: Factor by which the dataset should be downsampled.
+            factor: Factor by which the datastream should be downsampled.
             inplace: If True this methods modifies the current datastream object. If False, a copy of the datastream
 
         """
         s = inplace_or_copy(self, inplace)
-        s.data = decimate(s.data, factor, axis=0)
+        s.data = resample(s.data, len(s.data) // factor, axis=0)
         s.sampling_rate_hz /= factor
         return s
 

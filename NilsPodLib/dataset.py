@@ -11,19 +11,19 @@ from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequen
 
 import numpy as np
 import pandas as pd
-from scipy.signal import decimate
+from scipy.signal import resample
 
 from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_calibrations_for_sensor, \
     load_and_check_cal_info
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
+from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning, \
+    SynchronisationWarning, LegacyWarning
 from NilsPodLib.header import Header
+from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, inplace_or_copy, \
     get_header_and_data_bytes, \
     get_strict_version_from_header_bytes
-from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning, \
-    SynchronisationWarning, LegacyWarning
-from NilsPodLib.legacy import legacy_support_check, find_conversion_function
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -362,7 +362,7 @@ class Dataset:
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
             setattr(s, key, val.downsample(factor))
-        s.counter = decimate(s.counter, factor, axis=0)
+        s.counter = resample(s.counter, len(s.counter) // factor, axis=0)
         return s
 
     def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,

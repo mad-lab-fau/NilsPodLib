@@ -204,6 +204,6 @@ def test_downsample(dataset_master_simple, factor):
     ds.data = np.arange(100.)
     s = ds.downsample(factor)
     for k, d in s.datastreams:
-        assert len(d.data) == int(np.ceil(len(getattr(ds, k).data) / factor))
+        assert len(d.data) == int(len(getattr(ds, k).data) // factor)
         assert d.sampling_rate_hz == getattr(ds, k).sampling_rate_hz / factor
-    assert len(s.counter) == int(np.ceil(len(ds.counter) / factor))
+    assert len(s.counter) == int(len(ds.counter) // factor)
