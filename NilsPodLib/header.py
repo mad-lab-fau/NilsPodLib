@@ -100,11 +100,15 @@ class HeaderFields:
     }
 
     _SAMPLING_RATES = {
-        10: 102.4,
-        5: 204.8,
-        4: 256.0,
+        1: 1024.0,
         2: 512.0,
-        1: 1024.0
+        4: 256.0,
+        5: 204.8,
+        10: 102.4,
+        20: 51.2,
+        40: 25.6,
+        80: 12.8,
+        160: 6.4
     }
 
     _SESSION_TERMINATION = {
@@ -263,7 +267,7 @@ class Header(HeaderFields):
 
         # bin_array[2] = currently not used
 
-        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3] & 0x0F]
+        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3]]
 
         header_dict['session_termination'] = next(
             k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[4] & v) is True)
