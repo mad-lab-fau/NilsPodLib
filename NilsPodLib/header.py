@@ -267,7 +267,7 @@ class Header(HeaderFields):
 
         # bin_array[2] = currently not used
 
-        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3] & 0xFF]
+        header_dict['sampling_rate_hz'] = cls._SAMPLING_RATES[bin_array[3]]
 
         header_dict['session_termination'] = next(
             k for k, v in cls._SESSION_TERMINATION.items() if bool(bin_array[4] & v) is True)
