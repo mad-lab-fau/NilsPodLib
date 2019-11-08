@@ -1,7 +1,9 @@
-import pandas as pd
-import numpy as np
-import pytest
+import tempfile
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
 
 from NilsPodLib.header import HeaderFields
 from NilsPodLib.session import Session
@@ -34,6 +36,12 @@ def test_init_from_folder(dataset_synced):
     assert dataset_synced['slave1'][0].info.sensor_id in session.info.sensor_id
     assert dataset_synced['slave2'][0].info.sensor_id in session.info.sensor_id
     assert len(session.datasets) == 3
+
+
+def test_init_from_folder_empty(dataset_synced):
+    with tempfile.TemporaryDirectory() as folder:
+        with pytest.raises(ValueError):
+            Session.from_folder_path(folder)
 
 
 @pytest.mark.parametrize('name', [

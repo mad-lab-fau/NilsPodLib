@@ -10,10 +10,10 @@ from typing import Iterable, Tuple, TypeVar, Type, Optional, Union, TYPE_CHECKIN
 
 import numpy as np
 
+from NilsPodLib._session_base import _MultiDataset
 from NilsPodLib.dataset import Dataset
 from NilsPodLib.exceptions import SynchronisationError
 from NilsPodLib.header import _ProxyHeader
-from NilsPodLib._session_base import _MultiDataset
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
@@ -95,7 +95,10 @@ class Session(_MultiDataset):
                     conversions.
 
         """
-        return cls.from_file_paths(Path(base_path).glob(filter_pattern), legacy_support=legacy_support)
+        ds = list(Path(base_path).glob(filter_pattern))
+        if not ds:
+            raise ValueError('No files matching "{}" where found in {}'.format(filter_pattern, base_path))
+        return cls.from_file_paths(ds, legacy_support=legacy_support)
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
         """Get a specific dataset by its sensor id.
