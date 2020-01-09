@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 import numpy as np
+
+from NilsPodLib.exceptions import CalibrationWarning
 from imucal import FerrarisCalibrationInfo
 
 from NilsPodLib.calibration_utils import save_calibration, find_calibrations_for_sensor, \
@@ -179,7 +181,7 @@ def test_find_closest_before_after(dummy_cal_folder):
 
 
 def test_find_closest_warning(dummy_cal_folder):
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(CalibrationWarning) as rec:
         find_closest_calibration_to_date('tes1', datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder,
                                          warn_thres=datetime.timedelta(seconds=30))
 
@@ -206,4 +208,4 @@ def test_find_default_cal():
 
 def test_find_default_cal_wrong():
     with pytest.raises(ValueError):
-        cals = find_calibrations_for_sensor('FFFF')
+        find_calibrations_for_sensor('FFFF')
