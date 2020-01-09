@@ -194,4 +194,3 @@ def test_find_conversion_function(version, correct_func):
 
         func = find_conversion_function(version, in_memory=True, return_name=True)
         assert func == 'load_' + correct_func
-

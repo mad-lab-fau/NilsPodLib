@@ -13,6 +13,8 @@ from typing import TypeVar, Tuple
 import numpy as np
 from pathlib import Path
 
+from NilsPodLib.exceptions import CorruptedPackageWarning
+
 path_t = TypeVar('path_t', str, Path)
 T = TypeVar('T')
 
@@ -55,12 +57,12 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
                       ' firmware versions before 0.14.0. \n'
                       'The full file will be read to avoid data loss, but this might add up to {0} corrupted packages'
                       ' at the end of the datastream.'.format(page_size // packet_size, expected_samples,
-                                                              len(data_bytes) // packet_size))
+                                                              len(data_bytes) // packet_size), CorruptedPackageWarning)
         expected_length = (len(data_bytes) // packet_size) * packet_size
 
     elif expected_length > len(data_bytes):
         warnings.warn('The provided binary file contains less samples than indicated by the header.'
-                      ' This might mean that the file was corrupted.')
+                      ' This might mean that the file was corrupted.', CorruptedPackageWarning)
         expected_length = (len(data_bytes) // packet_size) * packet_size
 
     data_bytes = data_bytes[:expected_length]

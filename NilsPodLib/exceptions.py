@@ -40,6 +40,18 @@ class LegacyWarning(Warning):
     pass
 
 
+class CorruptedPackageWarning(Warning):
+    """Indicate potential issues with a recorded file."""
+
+    pass
+
+
+class CalibrationWarning(Warning):
+    """Indicate potential issues with a calibration."""
+
+    pass
+
+
 def datastream_does_not_exist_warning(sensor_name, operation):
     """Warn about not existing datastreams."""
     message = 'The datastream "{}" does not exist for the current session.\

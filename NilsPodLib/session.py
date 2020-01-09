@@ -12,7 +12,7 @@ import numpy as np
 
 from NilsPodLib._session_base import _MultiDataset
 from NilsPodLib.dataset import Dataset
-from NilsPodLib.exceptions import SynchronisationError
+from NilsPodLib.exceptions import SynchronisationError, SynchronisationWarning
 from NilsPodLib.header import _ProxyHeader
 from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
@@ -360,12 +360,14 @@ class SyncedSession(Session):
             if any(sync_end_warn) and cut_end is not True:
                 warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
                               'end of the dataset. '
-                              'The last section of this data should not be trusted.'.format(sync_end_warn, warn_thres))
+                              'The last section of this data should not be trusted.'.format(sync_end_warn, warn_thres),
+                              SynchronisationWarning)
             if any(sync_start_warn) and cut_start is not True:
                 warnings.warn('For the sensors with the ids {} the first syncpackage occurred more than {} s after the '
                               'start of the dataset. '
                               'The first section of this data should not be trusted.'.format(sync_start_warn,
-                                                                                             warn_thres))
+                                                                                             warn_thres),
+                              SynchronisationWarning)
 
         for slave in s.slaves:
             sync_jump = slave.counter[slave.info.sync_index_start - 2: slave.info.sync_index_start]

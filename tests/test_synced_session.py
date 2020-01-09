@@ -4,7 +4,7 @@ import pytest
 
 import numpy as np
 
-from NilsPodLib.exceptions import SynchronisationError
+from NilsPodLib.exceptions import SynchronisationError, SynchronisationWarning
 from NilsPodLib.session import SyncedSession
 
 
@@ -201,7 +201,7 @@ def test_align_to_sync_warn_end(basic_synced_session):
     assert len(rec) == 0
 
     thres = 0
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=thres)
 
     assert len(rec) == 1
@@ -210,7 +210,7 @@ def test_align_to_sync_warn_end(basic_synced_session):
 
     thres = 30
     s.slaves[0].info.sync_index_stop -= int(30 * s.slaves[0].info.sampling_rate_hz)
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=thres)
 
     assert len(rec) == 1
@@ -232,7 +232,7 @@ def test_align_to_sync_warn_start(basic_synced_session):
     assert len(rec) == 0
 
     thres = 0
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=thres)
 
     assert len(rec) == 1
@@ -241,7 +241,7 @@ def test_align_to_sync_warn_start(basic_synced_session):
 
     thres = 30
     s.slaves[0].info.sync_index_start += int(30 * s.slaves[0].info.sampling_rate_hz)
-    with pytest.warns(UserWarning) as rec:
+    with pytest.warns(SynchronisationWarning) as rec:
         s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=thres)
 
     assert len(rec) == 1

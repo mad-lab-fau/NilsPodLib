@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 import re
 import numpy as np
 
+from NilsPodLib.exceptions import CalibrationWarning
 from NilsPodLib.utils import path_t
 
 if TYPE_CHECKING:
@@ -167,7 +168,8 @@ def find_closest_calibration_to_date(sensor_id: str,
     if warn_thres < datetime.timedelta(seconds=min_dist):
         warnings.warn('For the sensor {} no calibration could be located that was in {} of the {}.'
                       'The closest calibration is {} away.'.format(sensor_id, warn_thres, cal_time,
-                                                                   datetime.timedelta(seconds=min_dist)))
+                                                                   datetime.timedelta(seconds=min_dist)),
+                      CalibrationWarning)
 
     return potential_list[int(np.nanargmin(np.abs(diffs)))]
 
