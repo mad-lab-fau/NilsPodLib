@@ -298,3 +298,15 @@ def test_session_utc_datetime(basic_synced_session):
     duration = basic_synced_session.session_duration
 
     assert duration == 46.845703125
+
+
+@pytest.mark.parametrize('start_idx', list(range(0, 2)))
+def test_align_sync_region_with_imidiate_sync(basic_synced_session, start_idx):
+    """Test edgecases where the sync happens in the first two samples."""
+    s = basic_synced_session
+    s.slaves[0].info.sync_index_start = start_idx
+
+    s.align_to_syncregion()
+
+    for d in s.datasets:
+        assert len(d.counter) == len(d.acc.data)
