@@ -369,9 +369,17 @@ class SyncedSession(Session):
                                                                                              warn_thres),
                               SynchronisationWarning)
 
+        # Correct the jump at the beginning of the sync region in the slave counter.
+        # This is important because the datasets are later cut based on their first counter value
         for slave in s.slaves:
-            sync_jump = slave.counter[slave.info.sync_index_start - 2: slave.info.sync_index_start]
-            diff = sync_jump[-1] - sync_jump[0] - 1
+            if slave.info.sync_index_start <= 1:
+                # Unlikely edge case, but let's handle it
+                # We do not need to do anything in this case
+                continue
+            # slave.info.sync_index_start is the first sample (as in # samples) were the index is correct.
+            # Therefore, the jump occurs between sample (sync_index_start - 1) and sync_index_start.
+            # or equivalently between index (starting at 0) (sync_index_start - 2) and (sync_index_start - 1)
+            diff = slave.counter[slave.info.sync_index_start - 1] - slave.counter[slave.info.sync_index_start - 2] - 1
             slave.counter[: slave.info.sync_index_start - 1] += diff
 
         # Optionally cut to the syncregion
