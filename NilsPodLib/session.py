@@ -376,8 +376,8 @@ class SyncedSession(Session):
                 # Unlikely edge case, but let's handle it
                 # We do not need to do anything in this case
                 continue
-            sync_jump = slave.counter[slave.info.sync_index_start - 1: slave.info.sync_index_start]
-            diff = sync_jump[-1] - sync_jump[0]
+            sync_jump = slave.counter[slave.info.sync_index_start - 2: slave.info.sync_index_start]
+            diff = sync_jump[-1] - sync_jump[0] - 1
             slave.counter[: slave.info.sync_index_start - 1] += diff
 
         # Optionally cut to the syncregion
