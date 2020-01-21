@@ -376,6 +376,9 @@ class SyncedSession(Session):
                 # Unlikely edge case, but let's handle it
                 # We do not need to do anything in this case
                 continue
+            # slave.info.sync_index_start is the first sample (as in # samples) were the index is correct.
+            # Therefore, the jump occurs between sample (sync_index_start - 1) and sync_index_start.
+            # or equivalently between index (starting at 0) (sync_index_start - 2) and (sync_index_start - 1)
             sync_jump = slave.counter[slave.info.sync_index_start - 2: slave.info.sync_index_start - 1]
             diff = sync_jump[-1] - sync_jump[0]
             slave.counter[: slave.info.sync_index_start - 1] += diff
