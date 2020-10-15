@@ -9,7 +9,7 @@ A simple example on how to work with a single Dataset.
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-from NilsPodLib import Dataset
+from nilspodlib import Dataset
 
 FILEPATH = Path("../tests/test_data/synced_sample_session/NilsPodX-7FAD_20190430_0933.bin")
 
@@ -17,7 +17,7 @@ FILEPATH = Path("../tests/test_data/synced_sample_session/NilsPodX-7FAD_20190430
 dataset = Dataset.from_bin_file(FILEPATH)
 
 # You can access the metainformation about your dataset using the `info` attr.
-# For a full list of available attributes see NilsPodLib.header.HeaderFields
+# For a full list of available attributes see nilspodlib.header.HeaderFields
 print("Sensor ID:", dataset.info.sensor_id)
 print("Start Date (UTC):", dataset.info.utc_datetime_start)
 print("Stop Date (UTC):", dataset.info.utc_datetime_stop)

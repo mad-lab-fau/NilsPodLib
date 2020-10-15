@@ -8,7 +8,7 @@ A simple example showing how to work with Sensor Sessions.
 from pathlib import Path
 import numpy as np
 
-from NilsPodLib import Dataset, Session, SyncedSession
+from nilspodlib import Dataset, Session, SyncedSession
 
 FILEPATH = Path("../tests/test_data/synced_sample_session/")
 

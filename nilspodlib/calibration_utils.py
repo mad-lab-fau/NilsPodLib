@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, List, Optional, Union
 import re
 import numpy as np
 
-from NilsPodLib.exceptions import CalibrationWarning
-from NilsPodLib.utils import path_t
+from nilspodlib.exceptions import CalibrationWarning
+from nilspodlib.utils import path_t
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -36,7 +36,7 @@ def save_calibration(
     Args:
         calibration: The CalibrationInfo object ot be saved
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilsPodLib.header.Header.sensor_id`
+            :py:meth:`nilspodlib.header.Header.sensor_id`
         cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
             value in UTC timezone, as this is in line with the time handling in the rest of the library.
         folder: Basepath of the folder, where the file will be stored.
@@ -67,7 +67,7 @@ def find_calibrations_for_sensor(
 
     Args:
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilsPodLib.header.Header.sensor_id`
+            :py:meth:`nilspodlib.header.Header.sensor_id`
         folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
         filter_cal_type: Whether only files obtain with a certain calibration type should be found.
@@ -121,7 +121,7 @@ def find_closest_calibration_to_date(
 
     Args:
         sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`NilsPodLib.header.Header.sensor_id`
+            :py:meth:`nilspodlib.header.Header.sensor_id`
         cal_time: time and date to look for
         folder: Basepath of the folder to search. If None, tries to find a default calibration
         recursive: If the folder should be searched recursive or not.
@@ -141,7 +141,7 @@ def find_closest_calibration_to_date(
         the calibration before the measurement will be chosen. This can be overwritten using the `before_after` para.
 
     See Also:
-        :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
+        :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
 
     """
     if before_after not in ("before", "after", None):

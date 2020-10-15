@@ -23,7 +23,7 @@ This will automatically pick a conversion function, apply it and then load you D
 
 Here is an example for a session using the legacy 0.11.2 format:
 ```python
-from NilsPodLib import Dataset
+from nilspodlib import Dataset
 
 file_path = '...'  # Path to original file
 
@@ -35,8 +35,8 @@ If you do not want to convert your file every time, you can perform the conversi
 Here is an example for a session using the legacy 0.11.2 format.
 
 ```python
-from NilsPodLib.legacy import convert_11_2
-from NilsPodLib import Dataset
+from nilspodlib.legacy import convert_11_2
+from nilspodlib import Dataset
 
 file_path = '...'  # Path to original file
 new_file_path = '...'  # new path to converted file

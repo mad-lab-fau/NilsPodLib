@@ -10,11 +10,11 @@ from typing import Iterable, Tuple, TypeVar, Type, Optional, Union, TYPE_CHECKIN
 
 import numpy as np
 
-from NilsPodLib._session_base import _MultiDataset
-from NilsPodLib.dataset import Dataset
-from NilsPodLib.exceptions import SynchronisationError, SynchronisationWarning
-from NilsPodLib.header import _ProxyHeader
-from NilsPodLib.utils import validate_existing_overlap, inplace_or_copy, path_t
+from nilspodlib._session_base import _MultiDataset
+from nilspodlib.dataset import Dataset
+from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
+from nilspodlib.header import _ProxyHeader
+from nilspodlib.utils import validate_existing_overlap, inplace_or_copy, path_t
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -46,18 +46,18 @@ class Session(_MultiDataset):
     def info(self):
         """Get metainfo for all datasets.
 
-        All attributes of :py:class:`NilsPodLib.header.HeaderInfo` are supported in read-only mode.
+        All attributes of :py:class:`nilspodlib.header.HeaderInfo` are supported in read-only mode.
         """
         return _ProxyHeader(tuple(d.info for d in self.datasets))
 
     def __init__(self, datasets: Iterable[Dataset]):
         """Create new session.
 
-        Instead of this init you can also use the factory methods :py:meth:`~NilsPodLib.session.Session.from_file_paths`
-        and :py:meth:`~NilsPodLib.session.Session.from_folder_path`.
+        Instead of this init you can also use the factory methods :py:meth:`~nilspodlib.session.Session.from_file_paths`
+        and :py:meth:`~nilspodlib.session.Session.from_folder_path`.
 
         Args:
-            datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+            datasets: List of :py:class:`nilspodlib.dataset.Dataset` instances, which should be grouped into a session.
 
         """
         self.datasets = tuple(datasets)
@@ -121,7 +121,7 @@ class Session(_MultiDataset):
                 dataset objects is created
 
         See Also:
-            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_imu`
+            :py:meth:`nilspodlib.dataset.Dataset.calibrate_imu`
 
         """
         s = inplace_or_copy(self, inplace)
@@ -139,7 +139,7 @@ class Session(_MultiDataset):
                 dataset objects is created
 
         See Also:
-            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+            :py:meth:`nilspodlib.dataset.Dataset.calibrate_acc`
 
         """
         s = inplace_or_copy(self, inplace)
@@ -157,7 +157,7 @@ class Session(_MultiDataset):
                 dataset objects is created
 
         See Also:
-            :py:meth:`NilsPodLib.dataset.Dataset.calibrate_acc`
+            :py:meth:`nilspodlib.dataset.Dataset.calibrate_acc`
 
         """
         s = inplace_or_copy(self, inplace)
@@ -174,7 +174,7 @@ class SyncedSession(Session):
     You can also use the `self.info` object to access header information of all datasets at the same time.
     All return values will be in the same order as `self.datasets`.
 
-    To synchronise a dataset, you usually want to call :py:method:`~NilsPodLib.session.SyncedSession.cut_to_syncregion`
+    To synchronise a dataset, you usually want to call :py:method:`~nilspodlib.session.SyncedSession.cut_to_syncregion`
     on the session.
     The resulting session is considered fully synchronised (depending on the parameters chosen).
     This means that all datasets have the same length and the exact same counter.
@@ -184,7 +184,7 @@ class SyncedSession(Session):
     etc.)
 
     See Also:
-        :py:class:`NilsPodLib.session.Session`
+        :py:class:`nilspodlib.session.Session`
 
     Attributes:
         VALIDATE_ON_INIT: If True all synced sessions will be checked on init.
@@ -252,14 +252,14 @@ class SyncedSession(Session):
         """Create new synced session.
 
         Instead of this init you can also use the factory methods
-        :py:meth:`~NilsPodLib.session.SyncedSession.from_file_paths` and
-        :py:meth:`~NilsPodLib.session.SyncedSession.from_folder_path`.
+        :py:meth:`~nilspodlib.session.SyncedSession.from_file_paths` and
+        :py:meth:`~nilspodlib.session.SyncedSession.from_folder_path`.
 
         This init performs basic validation on the datasets.
-        See :py:meth:`~NilsPodLib.session.SyncedSession.validate` for details.
+        See :py:meth:`~nilspodlib.session.SyncedSession.validate` for details.
 
         Args:
-            datasets: List of :py:class:`NilsPodLib.dataset.Dataset` instances, which should be grouped into a session.
+            datasets: List of :py:class:`nilspodlib.dataset.Dataset` instances, which should be grouped into a session.
 
         """
         super().__init__(datasets)
@@ -470,7 +470,7 @@ class SyncedSession(Session):
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         See Also:
-            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
+            :py:meth:`nilspodlib.dataset.Dataset.data_as_df`
 
         Args:
             datastreams: Optional list of datastream names, if only specific ones should be included. Datastreams that
@@ -511,9 +511,9 @@ class SyncedSession(Session):
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also:
-            :py:meth:`NilsPodLib.session.SyncedSession.data_as_df`
-            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
-            :py:meth:`NilsPodLib.dataset.Dataset.imu_data_as_df`
+            :py:meth:`nilspodlib.session.SyncedSession.data_as_df`
+            :py:meth:`nilspodlib.dataset.Dataset.data_as_df`
+            :py:meth:`nilspodlib.dataset.Dataset.imu_data_as_df`
 
         Args:
             index: Specify which index should be used for the dataset. The options are:

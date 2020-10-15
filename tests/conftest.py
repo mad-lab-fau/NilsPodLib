@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 import pytest
-from NilsPodLib.dataset import Dataset
+from nilspodlib.dataset import Dataset
 
 HERE = Path(__file__).parent
 TEST_LEGACY_DATA_11 = HERE / "test_data/11_2_legacy_sample"

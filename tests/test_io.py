@@ -3,12 +3,12 @@ import json
 
 import pandas as pd
 import pytest
-from NilsPodLib.exceptions import InvalidInputFileError
+from nilspodlib.exceptions import InvalidInputFileError
 
-from NilsPodLib.dataset import parse_binary, split_into_sensor_data
-from NilsPodLib.datastream import Datastream
-from NilsPodLib.header import Header
-from NilsPodLib.utils import get_header_and_data_bytes, read_binary_uint8
+from nilspodlib.dataset import parse_binary, split_into_sensor_data
+from nilspodlib.datastream import Datastream
+from nilspodlib.header import Header
+from nilspodlib.utils import get_header_and_data_bytes, read_binary_uint8
 
 
 def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, dataset_master_data_csv):

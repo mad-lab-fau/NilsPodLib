@@ -4,8 +4,8 @@ import pytest
 
 import numpy as np
 
-from NilsPodLib.exceptions import SynchronisationError, SynchronisationWarning
-from NilsPodLib.session import SyncedSession
+from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
+from nilspodlib.session import SyncedSession
 
 
 @pytest.fixture()

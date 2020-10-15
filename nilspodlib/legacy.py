@@ -7,8 +7,8 @@ from distutils.version import StrictVersion
 from typing import Tuple, Callable, Optional, Union
 import numpy as np
 
-from NilsPodLib.exceptions import LegacyWarning
-from NilsPodLib.utils import (
+from nilspodlib.exceptions import LegacyWarning
+from nilspodlib.utils import (
     path_t,
     get_header_and_data_bytes,
     get_strict_version_from_header_bytes,

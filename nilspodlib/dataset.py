@@ -13,23 +13,23 @@ import numpy as np
 import pandas as pd
 from scipy.signal import resample
 
-from NilsPodLib.calibration_utils import (
+from nilspodlib.calibration_utils import (
     find_closest_calibration_to_date,
     find_calibrations_for_sensor,
     load_and_check_cal_info,
 )
-from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
-from NilsPodLib.datastream import Datastream
-from NilsPodLib.exceptions import (
+from nilspodlib.consts import SENSOR_SAMPLE_LENGTH
+from nilspodlib.datastream import Datastream
+from nilspodlib.exceptions import (
     InvalidInputFileError,
     RepeatedCalibrationError,
     datastream_does_not_exist_warning,
     SynchronisationWarning,
     LegacyWarning,
 )
-from NilsPodLib.header import Header
-from NilsPodLib.legacy import legacy_support_check, find_conversion_function
-from NilsPodLib.utils import (
+from nilspodlib.header import Header
+from nilspodlib.legacy import legacy_support_check, find_conversion_function
+from nilspodlib.utils import (
     path_t,
     read_binary_uint8,
     convert_little_endian,
@@ -53,9 +53,9 @@ class Dataset:
         The respective methods have specific warnings in their docstring.
 
     Each instance has 3 important (groups of attributes):
-        self.info: A instance of `NilsPodLib.header.Header` containing all the meta info about the measurement
+        self.info: A instance of `nilspodlib.header.Header` containing all the meta info about the measurement
         self.counter: The continuous counter created by the sensor. It is in particular important to synchronise
-            multiple datasets that were recorded at the same time (see `NilsPodLib.session.SyncedSession`)
+            multiple datasets that were recorded at the same time (see `nilspodlib.session.SyncedSession`)
         datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
             Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
 
@@ -358,7 +358,7 @@ class Dataset:
         """Downsample all datastreams by a factor.
 
         This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
-        See :py:meth:`NilsPodLib.datastream.Datastream.downsample` for details.
+        See :py:meth:`nilspodlib.datastream.Datastream.downsample` for details.
 
         Warnings:
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
@@ -561,7 +561,7 @@ class Dataset:
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
         See Also:
-            :py:meth:`NilsPodLib.dataset.Dataset.data_as_df`
+            :py:meth:`nilspodlib.dataset.Dataset.data_as_df`
 
         Args:
             index: Specify which index should be used for the dataset. The options are:
@@ -605,7 +605,7 @@ class Dataset:
                 calibration files were found for the specific sensor.
 
         See Also:
-            :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
+            :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
 
         """
         # TODO: Test
@@ -646,8 +646,8 @@ class Dataset:
 
 
         See Also:
-            :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
-            :py:func:`NilsPodLib.calibration_utils.find_closest_calibration_to_date`
+            :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
+            :py:func:`nilspodlib.calibration_utils.find_closest_calibration_to_date`
 
         """
         # TODO: Test

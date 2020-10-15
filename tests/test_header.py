@@ -1,7 +1,7 @@
 from distutils.version import StrictVersion
 
 import pytest
-from NilsPodLib.header import Header
+from nilspodlib.header import Header
 
 
 def test_header_init_warning():

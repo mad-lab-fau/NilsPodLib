@@ -33,7 +33,7 @@ See the [SensorCalibration](https://mad-srv.informatik.uni-erlangen.de/MadLab/Ga
 Using the same library a calibration measurement can be converted into a `CalibrationInfo` object:
 
 ```python
-from NilsPodLib.dataset import Dataset
+from nilspodlib.dataset import Dataset
 from imucal import FerrarisCalibration  # This example shows a ferraris calibration, but any other method will work similar
 
 path = ... # Path to the .bin file of the calibration measurement
@@ -49,7 +49,7 @@ Note, that *NilsPodLib* assumes a certain naming scheme to make it easier to sea
 Therefore, it is suggested to use the `save_calibration` function of this library instead of the simple `.to_json` method provided by the *SensorCalibration* library:
 
 ```python
-from NilsPodLib.calibration_utils import save_calibration
+from nilspodlib.calibration_utils import save_calibration
 
 save_calibration(cal_info, ds.info.sensor_id, ds.info.utc_datetime_start, '/my/custom/cal/folder')  # This will save a json with the correct nameing scheme in the custom cal folder.
 ```
@@ -70,7 +70,7 @@ If not, the **reference calibrations will be used automatically**.
 List all calibrations, which belong to a sensor:
 
 ```python
-from NilsPodLib.calibration_utils import find_calibrations_for_sensor
+from nilspodlib.calibration_utils import find_calibrations_for_sensor
 
 ds = ...  # Dataset object
 cals = find_calibrations_for_sensor(ds.info.sensor_id)
@@ -81,7 +81,7 @@ cal = cals[0] # Select the first session. Note the list is not ordered in any wa
 Find the calibrations, which belong to a sensor and is closest to the measurement date:
 
 ```python
-from NilsPodLib.calibration_utils import find_closest_calibration_to_date
+from nilspodlib.calibration_utils import find_closest_calibration_to_date
 
 ds = ...  # Dataset object
 cal = find_closest_calibration_to_date(ds.info.sensor_id, ds.info.utc_datetime_start)
@@ -93,7 +93,7 @@ Filter for calibrations of one type:
 This is available for all search functions. For a full list of possible calibration types see the *SensorCalibration* library.
 
 ```python
-from NilsPodLib.calibration_utils import find_calibrations_for_sensor
+from nilspodlib.calibration_utils import find_calibrations_for_sensor
 
 ds = ...  # Dataset object
 cals = find_calibrations_for_sensor(ds.info.sensor_id, filter_cal_type='turntable')
@@ -106,7 +106,7 @@ Search a set of custom calibrations:
 This is available for all search functions.
 
 ```python
-from NilsPodLib.calibration_utils import find_calibrations_for_sensor
+from nilspodlib.calibration_utils import find_calibrations_for_sensor
 
 ds = ...  # Dataset object
 cals = find_calibrations_for_sensor(ds.info.sensor_id, folder='/my/custom/cal/folder')

@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 import numpy as np
 
-from NilsPodLib.exceptions import CalibrationWarning
+from nilspodlib.exceptions import CalibrationWarning
 from imucal import FerrarisCalibrationInfo
 
-from NilsPodLib.calibration_utils import (
+from nilspodlib.calibration_utils import (
     save_calibration,
     find_calibrations_for_sensor,
     find_closest_calibration_to_date,

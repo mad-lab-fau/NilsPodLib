@@ -1,6 +1,6 @@
 import pytest
 
-from NilsPodLib.datastream import Datastream
+from nilspodlib.datastream import Datastream
 import numpy as np
 
 
