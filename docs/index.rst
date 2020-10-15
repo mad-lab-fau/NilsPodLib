@@ -1,24 +1,13 @@
+========================
 NilsPodLib Docu Overview
 ========================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    README.md
    Legacy.md
    Calibration.md
    Warnings.md
+   modules/index.rst
    examples/index.rst
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Docs
-
-   modules/modules.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
