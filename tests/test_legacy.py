@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from NilsPodLib import Dataset
-from NilsPodLib.exceptions import LegacyWarning
-from NilsPodLib.header import Header
-from NilsPodLib.legacy import (
+from nilspodlib import Dataset
+from nilspodlib.exceptions import LegacyWarning
+from nilspodlib.header import Header
+from nilspodlib.legacy import (
     _fix_little_endian_counter,
     _convert_sensor_enabled_flag_11_2,
     _insert_missing_bytes_11_2,
@@ -20,7 +20,7 @@ from NilsPodLib.legacy import (
     find_conversion_function,
     MIN_NON_LEGACY_VERSION,
 )
-from NilsPodLib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
+from nilspodlib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12
 
 

@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from NilsPodLib.header import HeaderFields
-from NilsPodLib.session import Session
+from nilspodlib.header import HeaderFields
+from nilspodlib.session import Session
 
 
 @pytest.fixture()

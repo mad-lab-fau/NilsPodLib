@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_approx_equal
 
-from NilsPodLib.exceptions import SynchronisationWarning
+from nilspodlib.exceptions import SynchronisationWarning
 
 
 def test_size(dataset_master_simple):

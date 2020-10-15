@@ -7,7 +7,7 @@ To ignore warnings, you can use Python's `warnings` package:
 
 ```python
 import warnings
-from NilsPodLib.exceptions import LegacyWarning, CorruptedPackageWarning
+from nilspodlib.exceptions import LegacyWarning, CorruptedPackageWarning
 
 warnings.simplefilter('ignore', (LegacyWarning, CorruptedPackageWarning))
 ```

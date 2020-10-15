@@ -1,4 +1,4 @@
-from NilsPodLib.utils import convert_little_endian, validate_existing_overlap
+from nilspodlib.utils import convert_little_endian, validate_existing_overlap
 import pytest
 import numpy as np
 

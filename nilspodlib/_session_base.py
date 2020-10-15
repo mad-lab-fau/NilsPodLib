@@ -8,13 +8,13 @@ from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequ
 
 import numpy as np
 
-from NilsPodLib import Dataset
-from NilsPodLib.utils import path_t, inplace_or_copy, remove_docstring_indent
+from nilspodlib import Dataset
+from nilspodlib.utils import path_t, inplace_or_copy, remove_docstring_indent
 
 T = TypeVar("T")
 
 if TYPE_CHECKING:
-    from NilsPodLib.datastream import Datastream  # noqa: F401
+    from nilspodlib.datastream import Datastream  # noqa: F401
     import pandas as pd  # noqa: F401
 
 
@@ -59,11 +59,11 @@ def call_dataset(autogen_doc=True):  # noqa: D202
             else:
                 cascading_access.__doc__ = (
                     "Apply `Dataset.{0}` to all datasets of the session.\n\n"
-                    "See :py:meth:`NilsPodLib.dataset.Dataset.{0}` for more details. "
+                    "See :py:meth:`nilspodlib.dataset.Dataset.{0}` for more details. "
                     "The docstring of this method is included below:\n\n".format(method.__name__)
                 )
             cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
-            cascading_access.__doc__ += "\nSee Also:\n" "   :py:meth:`NilsPodLib.dataset.Dataset.{0}`".format(
+            cascading_access.__doc__ += "\nSee Also:\n" "   :py:meth:`nilspodlib.dataset.Dataset.{0}`".format(
                 method.__name__
             )
         return cascading_access

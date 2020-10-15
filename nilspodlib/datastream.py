@@ -10,8 +10,8 @@ from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
 import numpy as np
 from scipy.signal import resample
 
-from NilsPodLib.consts import SENSOR_LEGENDS, SENSOR_UNITS
-from NilsPodLib.utils import inplace_or_copy
+from nilspodlib.consts import SENSOR_LEGENDS, SENSOR_UNITS
+from nilspodlib.utils import inplace_or_copy
 
 T = TypeVar("T")
 
@@ -53,7 +53,7 @@ class Datastream:
             unit: The unit of the data stored in the datastream.
                 This is only used, if `self.is_calibrated` is set to `True`
             sensor_type: Type of sensor the data is produced from. This allows to automatically get default values for
-                columns and units from :py:mod:`NilsPodLib.consts
+                columns and units from :py:mod:`nilspodlib.consts
 
         """
         self.data = data
@@ -72,7 +72,7 @@ class Datastream:
         """Get the unit of the data contained in the datastream.
 
         This will return either `a.u.` if the datastream is not yet calibrated, the value of `self._unit` if set or
-        the default unit from :py:data:`NilsPodLib.consts.SENSOR_UNITS`
+        the default unit from :py:data:`nilspodlib.consts.SENSOR_UNITS`
         """
         if self.is_calibrated is True:
             if self._unit:
@@ -86,7 +86,7 @@ class Datastream:
         """Get the column headers for the data contained in the datastream.
 
         This will return `self._columns` if set on init or will try to get the default columns from
-        :py:data:`NilsPodLib.consts.SENSOR_LEGENDS`.
+        :py:data:`nilspodlib.consts.SENSOR_LEGENDS`.
         If none of the above is applicable the columns wil be numbered starting with 0.
         """
         if self._columns:

@@ -13,7 +13,7 @@ from typing import TypeVar, Tuple
 import numpy as np
 from pathlib import Path
 
-from NilsPodLib.exceptions import CorruptedPackageWarning
+from nilspodlib.exceptions import CorruptedPackageWarning
 
 path_t = TypeVar("path_t", str, Path)
 T = TypeVar("T")
