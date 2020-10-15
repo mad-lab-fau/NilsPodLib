@@ -55,5 +55,7 @@ class CalibrationWarning(Warning):
 def datastream_does_not_exist_warning(sensor_name, operation):
     """Warn about not existing datastreams."""
     message = 'The datastream "{}" does not exist for the current session.\
-     The performed operation "{}" will have not effect'.format(sensor_name, operation)
+     The performed operation "{}" will have not effect'.format(
+        sensor_name, operation
+    )
     return warnings.warn(message)

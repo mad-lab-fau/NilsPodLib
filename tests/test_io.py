@@ -27,7 +27,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     assert dataset.ppg is None
     assert dataset.ecg is None
 
-    pd.testing.assert_frame_equal(dataset.data_as_df(index='time'), dataset_master_data_csv)
+    pd.testing.assert_frame_equal(dataset.data_as_df(index="time"), dataset_master_data_csv)
 
     # Header
     # Check all direct values
@@ -37,7 +37,7 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     assert info.utc_datetime_stop == datetime.datetime(2019, 6, 11, 11, 48, 10)
     assert info.is_synchronised is True
     assert info.has_position_info is False
-    assert info.sensor_id == '4bfa'
+    assert info.sensor_id == "4bfa"
 
     assert info.sync_index_start == 0
     assert info.sync_index_stop == 0

@@ -13,22 +13,35 @@ import numpy as np
 import pandas as pd
 from scipy.signal import resample
 
-from NilsPodLib.calibration_utils import find_closest_calibration_to_date, find_calibrations_for_sensor, \
-    load_and_check_cal_info
+from NilsPodLib.calibration_utils import (
+    find_closest_calibration_to_date,
+    find_calibrations_for_sensor,
+    load_and_check_cal_info,
+)
 from NilsPodLib.consts import SENSOR_SAMPLE_LENGTH
 from NilsPodLib.datastream import Datastream
-from NilsPodLib.exceptions import InvalidInputFileError, RepeatedCalibrationError, datastream_does_not_exist_warning, \
-    SynchronisationWarning, LegacyWarning
+from NilsPodLib.exceptions import (
+    InvalidInputFileError,
+    RepeatedCalibrationError,
+    datastream_does_not_exist_warning,
+    SynchronisationWarning,
+    LegacyWarning,
+)
 from NilsPodLib.header import Header
 from NilsPodLib.legacy import legacy_support_check, find_conversion_function
-from NilsPodLib.utils import path_t, read_binary_uint8, convert_little_endian, inplace_or_copy, \
-    get_header_and_data_bytes, \
-    get_strict_version_from_header_bytes
+from NilsPodLib.utils import (
+    path_t,
+    read_binary_uint8,
+    convert_little_endian,
+    inplace_or_copy,
+    get_header_and_data_bytes,
+    get_strict_version_from_header_bytes,
+)
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class Dataset:
@@ -49,14 +62,14 @@ class Dataset:
     """
 
     path: path_t
-    acc: Optional['Datastream'] = None
-    gyro: Optional['Datastream'] = None
-    mag: Optional['Datastream'] = None
-    baro: Optional['Datastream'] = None
-    analog: Optional['Datastream'] = None
-    ecg: Optional['Datastream'] = None
-    ppg: Optional['Datastream'] = None
-    temperature: Optional['Datastream'] = None
+    acc: Optional["Datastream"] = None
+    gyro: Optional["Datastream"] = None
+    mag: Optional["Datastream"] = None
+    baro: Optional["Datastream"] = None
+    analog: Optional["Datastream"] = None
+    ecg: Optional["Datastream"] = None
+    ppg: Optional["Datastream"] = None
+    temperature: Optional["Datastream"] = None
     counter: np.ndarray
     info: Header
 
@@ -81,7 +94,7 @@ class Dataset:
             setattr(self, k, v)
 
     @classmethod
-    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = 'error') -> T:
+    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error") -> T:
         """Create a new Dataset from a valid .bin file.
 
         Args:
@@ -98,7 +111,7 @@ class Dataset:
 
         """
         path = Path(path)
-        if not path.suffix == '.bin':
+        if not path.suffix == ".bin":
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
         sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support)
@@ -118,7 +131,7 @@ class Dataset:
             This is planned but not yet supported
 
         """
-        raise NotImplementedError('CSV importer coming soon')
+        raise NotImplementedError("CSV importer coming soon")
 
     @property
     def size(self) -> int:
@@ -144,14 +157,14 @@ class Dataset:
     @property
     def utc_datetime_counter(self) -> np.ndarray:
         """Counter as np.datetime64 in UTC timezone."""
-        return (self.utc_counter * 1e6).astype('datetime64[us]')
+        return (self.utc_counter * 1e6).astype("datetime64[us]")
 
     @property
     def time_counter(self) -> np.ndarray:
         """Counter in seconds since first sample."""
         return (self.counter - self.counter[0]) / self.info.sampling_rate_hz
 
-    def calibrate_imu(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+    def calibrate_imu(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Acc and Gyro datastreams.
 
         The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
@@ -167,7 +180,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        check = [self._check_calibration(s.acc, 'acc'), self._check_calibration(s.gyro, 'gyro')]
+        check = [self._check_calibration(s.acc, "acc"), self._check_calibration(s.gyro, "gyro")]
         if all(check):
             calibration = load_and_check_cal_info(calibration)
             acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
@@ -179,7 +192,7 @@ class Dataset:
             s.gyro._unit = calibration.GYRO_UNIT
         return s
 
-    def calibrate_acc(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+    def calibrate_acc(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Acc datastream.
 
         The final units of the datastream will depend on the used calibration values, but must likely they will be "g"
@@ -192,7 +205,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.acc, 'acc') is True:
+        if self._check_calibration(s.acc, "acc") is True:
             calibration = load_and_check_cal_info(calibration)
             acc = calibration.calibrate_acc(s.acc.data)
             s.acc.data = acc
@@ -200,7 +213,7 @@ class Dataset:
             s.acc._unit = calibration.ACC_UNIT
         return s
 
-    def calibrate_gyro(self: T, calibration: Union['CalibrationInfo', path_t], inplace: bool = False) -> T:
+    def calibrate_gyro(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Gyro datastream.
 
         The final units of the datastreams will depend on the used calibration values, but must likely they will be
@@ -213,7 +226,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.gyro, 'gyro') is True:
+        if self._check_calibration(s.gyro, "gyro") is True:
             calibration = load_and_check_cal_info(calibration)
             gyro = calibration.calibrate_gyro(s.gyro.data)
             s.gyro.data = gyro
@@ -258,7 +271,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.gyro, 'gyro') is True:
+        if self._check_calibration(s.gyro, "gyro") is True:
             s.gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
             s.gyro.is_calibrated = True
         return s
@@ -278,7 +291,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.acc, 'acc') is True:
+        if self._check_calibration(s.acc, "acc") is True:
             s.acc.data /= 2 ** 16 / self.info.acc_range_g / 2
             s.acc.is_calibrated = True
         return s
@@ -298,7 +311,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.baro, 'baro') is True:
+        if self._check_calibration(s.baro, "baro") is True:
             s.baro.data = (s.baro.data + 101325) / 100.0
             s.baro.is_calibrated = True
         return s
@@ -316,7 +329,7 @@ class Dataset:
 
         """
         s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.temperature, 'temperature') is True:
+        if self._check_calibration(s.temperature, "temperature") is True:
             s.temperature.data = s.temperature.data * (2 ** -9) + 23
             s.temperature.is_calibrated = True
         return s
@@ -338,7 +351,7 @@ class Dataset:
                 raise RepeatedCalibrationError(name)
             return True
         else:
-            datastream_does_not_exist_warning(name, 'calibration')
+            datastream_does_not_exist_warning(name, "calibration")
             return False
 
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
@@ -365,8 +378,13 @@ class Dataset:
         s.counter = resample(s.counter, len(s.counter) // factor, axis=0)
         return s
 
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
+    def cut(
+        self: T,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        inplace: bool = False,
+    ) -> T:
         """Cut all datastreams of the dataset.
 
         This is equivalent to applying the following slicing to all datastreams and the counter: array[start:stop:step]
@@ -392,8 +410,13 @@ class Dataset:
         s.counter = s.counter[sl]
         return s
 
-    def cut_counter_val(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-                        inplace: bool = False) -> T:
+    def cut_counter_val(
+        self: T,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        inplace: bool = False,
+    ) -> T:
         """Cut the dataset based on values in the counter and not the index.
 
         Instead of just cutting the datastream based on its index, it is cut based on the counter value.
@@ -421,16 +444,17 @@ class Dataset:
         """
         if start:
             if start < self.counter[0]:
-                raise ValueError('{} out of bounds for counter starting at {}'.format(start, self.counter))
+                raise ValueError("{} out of bounds for counter starting at {}".format(start, self.counter))
             start = np.searchsorted(self.counter, start)
         if stop:
             if stop > self.counter[-1]:
-                raise ValueError('{} out of bounds for counter ending at {}'.format(start, self.counter))
+                raise ValueError("{} out of bounds for counter ending at {}".format(start, self.counter))
             stop = np.searchsorted(self.counter, stop)
         return self.cut(start, stop, step, inplace=inplace)
 
-    def cut_to_syncregion(self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30,
-                          inplace: bool = False) -> T:
+    def cut_to_syncregion(
+        self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+    ) -> T:
         """Cut the dataset to the region indicated by the first and last sync package received from master.
 
         This cuts the dataset to the values indicated by `info.sync_index_start` and `info.sync_index_stop`.
@@ -470,19 +494,25 @@ class Dataset:
 
         """
         if self.info.is_synchronised is False:
-            raise ValueError('Only synchronised Datasets can be cut to the syncregion')
-        if self.info.sync_role == 'master':
+            raise ValueError("Only synchronised Datasets can be cut to the syncregion")
+        if self.info.sync_role == "master":
             return inplace_or_copy(self, inplace)
         if warn_thres is not None and end is not True and self._check_sync_packages(warn_thres) is False:
-            warnings.warn('The last sync package occured more than {} s before the end of the measurement.'
-                          'The last region of the data should not be trusted.'.format(warn_thres),
-                          SynchronisationWarning)
+            warnings.warn(
+                "The last sync package occured more than {} s before the end of the measurement."
+                "The last region of the data should not be trusted.".format(warn_thres),
+                SynchronisationWarning,
+            )
         end = self.info.sync_index_stop if end is True else None
         start = self.info.sync_index_start if start is True else None
         return self.cut(start, end, inplace=inplace)
 
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
-                   include_units: Optional[bool] = False) -> pd.DataFrame:
+    def data_as_df(
+        self,
+        datastreams: Optional[Sequence[str]] = None,
+        index: Optional[str] = None,
+        include_units: Optional[bool] = False,
+    ) -> pd.DataFrame:
         """Export the datastreams of the dataset in a single pandas DataFrame.
 
         Args:
@@ -504,10 +534,11 @@ class Dataset:
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        index_names = {None: 'n_samples', 'counter': 'n_samples', 'time': 't', 'utc': 'utc', 'utc_datetime': 'date'}
+        index_names = {None: "n_samples", "counter": "n_samples", "time": "t", "utc": "utc", "utc_datetime": "date"}
         if index and index not in index_names.keys():
             raise ValueError(
-                'Supplied value for index ({}) is not allowed. Allowed values: {}'.format(index, index_names.keys()))
+                "Supplied value for index ({}) is not allowed. Allowed values: {}".format(index, index_names.keys())
+            )
 
         index_name = index_names[index]
 
@@ -517,8 +548,8 @@ class Dataset:
         df = pd.concat(dfs, axis=1)
 
         if index:
-            if index != 'counter':
-                index += '_counter'
+            if index != "counter":
+                index += "_counter"
             index = getattr(self, index, None)
             df.index = index
         else:
@@ -549,12 +580,15 @@ class Dataset:
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        return self.data_as_df(datastreams=['acc', 'gyro'], index=index, include_units=include_units)
+        return self.data_as_df(datastreams=["acc", "gyro"], index=index, include_units=include_units)
 
-    def find_calibrations(self, folder: Optional[path_t] = None,
-                          recursive: bool = True,
-                          filter_cal_type: Optional[str] = None,
-                          ignore_file_not_found: Optional[bool] = False) -> List[Path]:
+    def find_calibrations(
+        self,
+        folder: Optional[path_t] = None,
+        recursive: bool = True,
+        filter_cal_type: Optional[str] = None,
+        ignore_file_not_found: Optional[bool] = False,
+    ) -> List[Path]:
         """Find all calibration infos that belong to a given sensor.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -580,16 +614,18 @@ class Dataset:
             folder=folder,
             recursive=recursive,
             filter_cal_type=filter_cal_type,
-            ignore_file_not_found=ignore_file_not_found
+            ignore_file_not_found=ignore_file_not_found,
         )
 
-    def find_closest_calibration(self,
-                                 folder: Optional[path_t] = None,
-                                 recursive: bool = True,
-                                 filter_cal_type: Optional[str] = None,
-                                 before_after: Optional[str] = None,
-                                 warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
-                                 ignore_file_not_found: Optional[bool] = False) -> Path:
+    def find_closest_calibration(
+        self,
+        folder: Optional[path_t] = None,
+        recursive: bool = True,
+        filter_cal_type: Optional[str] = None,
+        before_after: Optional[str] = None,
+        warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
+        ignore_file_not_found: Optional[bool] = False,
+    ) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -623,20 +659,20 @@ class Dataset:
             filter_cal_type=filter_cal_type,
             before_after=before_after,
             warn_thres=warn_thres,
-            ignore_file_not_found=ignore_file_not_found
+            ignore_file_not_found=ignore_file_not_found,
         )
 
-    def _check_sync_packages(self, threshold_s: int = 30, where='end') -> bool:
+    def _check_sync_packages(self, threshold_s: int = 30, where="end") -> bool:
         """Check if the last sync package occurred far from the actual end of the recording.
 
         This can be the case, if the master stopped sending packages, or if the sensor could not receive any new sync
         info for a prelonged period of time.
         In particular in the latter case, careful review of the data is advised.
         """
-        if self.info.sync_role == 'slave':
-            if where == 'end':
+        if self.info.sync_role == "slave":
+            if where == "end":
                 tmp = len(self.counter) - self.info.sync_index_stop
-            elif where == 'start':
+            elif where == "start":
                 tmp = self.info.sync_index_start
             else:
                 raise ValueError('Invalid value for "where" encountered.')
@@ -645,9 +681,7 @@ class Dataset:
         return True
 
 
-def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str, np.ndarray],
-                                                                       np.ndarray,
-                                                                       Header]:
+def parse_binary(path: path_t, legacy_support: str = "error") -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
     Args:
@@ -672,10 +706,10 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
 
     version = get_strict_version_from_header_bytes(header_bytes)
 
-    if legacy_support == 'resolve':
+    if legacy_support == "resolve":
         header_bytes, data_bytes = find_conversion_function(version, in_memory=True)(header_bytes, data_bytes)
-    elif legacy_support in ['error', 'warn']:
-        legacy_support_check(version, as_warning=(legacy_support == 'warn'))
+    elif legacy_support in ["error", "warn"]:
+        legacy_support_check(version, as_warning=(legacy_support == "warn"))
     else:
         raise ValueError("legacy_support must be one of 'resolve',  'error' or 'warn'")
 
@@ -688,9 +722,12 @@ def parse_binary(path: path_t, legacy_support: str = 'error') -> Tuple[Dict[str,
 
     counter, sensor_data = split_into_sensor_data(data, session_header)
 
-    if session_header.strict_version_firmware >= StrictVersion('0.13.0') and len(counter) != session_header.n_samples:
-        warnings.warn('The number of samples in the dataset does not match the number indicated by the header.'
-                      'This might indicate a corrupted file', LegacyWarning)
+    if session_header.strict_version_firmware >= StrictVersion("0.13.0") and len(counter) != session_header.n_samples:
+        warnings.warn(
+            "The number of samples in the dataset does not match the number indicated by the header."
+            "This might indicate a corrupted file",
+            LegacyWarning,
+        )
 
     return sensor_data, counter, session_header
 
@@ -705,20 +742,23 @@ def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np
         bits_per_channel = bits // channel
         tmp = np.full((len(data), channel), np.nan)
         for i in range(channel):
-            tmp[:, i] = convert_little_endian(np.atleast_2d(data[:, idx:idx + bits_per_channel]).T,
-                                              dtype=dtype).astype(float)
+            tmp[:, i] = convert_little_endian(
+                np.atleast_2d(data[:, idx : idx + bits_per_channel]).T, dtype=dtype
+            ).astype(float)
             idx += bits_per_channel
         sensor_data[sensor] = tmp
 
-    len_counter, _, counter_dtype = SENSOR_SAMPLE_LENGTH['counter']
+    len_counter, _, counter_dtype = SENSOR_SAMPLE_LENGTH["counter"]
 
     # Sanity Check:
     if not idx + len_counter == data.shape[-1]:
         expected_cols = idx
         all_cols = data.shape[-1] - len_counter
         raise InvalidInputFileError(
-            'The input file has an invalid format. {} data columns expected based on the header, but {} exist.'.format(
-                expected_cols, all_cols))
+            "The input file has an invalid format. {} data columns expected based on the header, but {} exist.".format(
+                expected_cols, all_cols
+            )
+        )
 
     counter = convert_little_endian(np.atleast_2d(data[:, -len_counter:]).T, dtype=counter_dtype)
 
