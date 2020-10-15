@@ -15,8 +15,8 @@ from pathlib import Path
 
 from NilsPodLib.exceptions import CorruptedPackageWarning
 
-path_t = TypeVar('path_t', str, Path)
-T = TypeVar('T')
+path_t = TypeVar("path_t", str, Path)
+T = TypeVar("T")
 
 
 def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
@@ -52,17 +52,24 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
     expected_length = expected_samples * packet_size
     page_size = 2048
     if abs(len(data_bytes) - expected_length) > page_size // packet_size:
-        warnings.warn('The provided binary file contains more or less than {0} packages than indicated by the header'
-                      ' ({1} vs. {2}). This can be caused by a bug affecting all synchronised sessions recorded with'
-                      ' firmware versions before 0.14.0. \n'
-                      'The full file will be read to avoid data loss, but this might add up to {0} corrupted packages'
-                      ' at the end of the datastream.'.format(page_size // packet_size, expected_samples,
-                                                              len(data_bytes) // packet_size), CorruptedPackageWarning)
+        warnings.warn(
+            "The provided binary file contains more or less than {0} packages than indicated by the header"
+            " ({1} vs. {2}). This can be caused by a bug affecting all synchronised sessions recorded with"
+            " firmware versions before 0.14.0. \n"
+            "The full file will be read to avoid data loss, but this might add up to {0} corrupted packages"
+            " at the end of the datastream.".format(
+                page_size // packet_size, expected_samples, len(data_bytes) // packet_size
+            ),
+            CorruptedPackageWarning,
+        )
         expected_length = (len(data_bytes) // packet_size) * packet_size
 
     elif expected_length > len(data_bytes):
-        warnings.warn('The provided binary file contains less samples than indicated by the header.'
-                      ' This might mean that the file was corrupted.', CorruptedPackageWarning)
+        warnings.warn(
+            "The provided binary file contains less samples than indicated by the header."
+            " This might mean that the file was corrupted.",
+            CorruptedPackageWarning,
+        )
         expected_length = (len(data_bytes) // packet_size) * packet_size
 
     data_bytes = data_bytes[:expected_length]
@@ -72,14 +79,14 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
 
 def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
     """Separate a binary file into its header and data part."""
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         header = f.read(1)
         header_size = header[0]
         header += f.read(header_size - 1)
-        data_bytes = np.fromfile(f, dtype=np.dtype('B'))
+        data_bytes = np.fromfile(f, dtype=np.dtype("B"))
 
     header = bytearray(header)
-    header_bytes = np.asarray(struct.unpack(str(header_size) + 'b', header[0:header_size]), dtype=np.uint8)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + "b", header[0:header_size]), dtype=np.uint8)
 
     return header_bytes, data_bytes
 
@@ -91,7 +98,7 @@ def get_sample_size_from_header_bytes(header_bytes: np.ndarray) -> int:
 
 def get_strict_version_from_header_bytes(header_bytes: np.ndarray) -> StrictVersion:
     """Extract the version number from a byte header."""
-    return StrictVersion('{}.{}.{}'.format(*(int(x) for x in header_bytes[-3:])))
+    return StrictVersion("{}.{}.{}".format(*(int(x) for x in header_bytes[-3:])))
 
 
 def inplace_or_copy(obj: T, inplace: bool) -> T:
@@ -109,7 +116,7 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
 
     """
     if not all(i < j for i, j in zip(start_vals, end_vals)):
-        raise ValueError('The start values need to be smaller then their respective end values!')
+        raise ValueError("The start values need to be smaller then their respective end values!")
     return np.max(start_vals) < np.min(end_vals)
 
 
@@ -118,7 +125,7 @@ def remove_docstring_indent(doc_str: str) -> str:
 
     This can be helpful, if docstrings are combined programmatically.
     """
-    lines = doc_str.split('\n')
+    lines = doc_str.split("\n")
     if len(lines) <= 1:
         return doc_str
     first_non_summary_line = next(l for l in lines[1:] if l)
@@ -126,4 +133,4 @@ def remove_docstring_indent(doc_str: str) -> str:
     cut_lines = [lines[0]]
     for l in lines:
         cut_lines.append(l[indent:])
-    return '\n'.join(cut_lines)
+    return "\n".join(cut_lines)

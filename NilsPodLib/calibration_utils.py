@@ -18,8 +18,9 @@ if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
 
 
-def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: datetime.datetime,
-                     folder: path_t) -> Path:
+def save_calibration(
+    calibration: "CalibrationInfo", sensor_id: str, cal_time: datetime.datetime, folder: path_t
+) -> Path:
     """Save a calibration info object in the correct format and file name for NilsPods.
 
     The files will be saved in the format:
@@ -41,22 +42,25 @@ def save_calibration(calibration: 'CalibrationInfo', sensor_id: str, cal_time: d
         folder: Basepath of the folder, where the file will be stored.
 
     """
-    if not re.fullmatch(r'\w{4}', sensor_id):
+    if not re.fullmatch(r"\w{4}", sensor_id):
         raise ValueError(
-            'The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}'.format(
-                sensor_id))
+            "The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}".format(
+                sensor_id
+            )
+        )
     Path(folder).mkdir(parents=True, exist_ok=True)
-    f_name = Path(folder) / '{}_{}.json'.format(
-        sensor_id.lower(),
-        cal_time.strftime('%Y-%m-%d_%H-%M')
-    )
+    f_name = Path(folder) / "{}_{}.json".format(sensor_id.lower(), cal_time.strftime("%Y-%m-%d_%H-%M"))
     calibration.to_json_file(f_name)
     return f_name
 
 
-def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None, recursive: bool = True,
-                                 filter_cal_type: Optional[str] = None,
-                                 ignore_file_not_found: Optional[bool] = False) -> List[Path]:
+def find_calibrations_for_sensor(
+    sensor_id: str,
+    folder: Optional[path_t] = None,
+    recursive: bool = True,
+    filter_cal_type: Optional[str] = None,
+    ignore_file_not_found: Optional[bool] = False,
+) -> List[Path]:
     """Find possible calibration files based on the filename.
 
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
@@ -78,36 +82,39 @@ def find_calibrations_for_sensor(sensor_id: str, folder: Optional[path_t] = None
         try:
             from NilsPodRefCal import CAL_PATH
         except ImportError:
-            raise ImportError('The module NilsPodRefCal is not installed. If you want support for default calibrations,'
-                              ' please install it from'
-                              ' https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal')
+            raise ImportError(
+                "The module NilsPodRefCal is not installed. If you want support for default calibrations,"
+                " please install it from"
+                " https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal"
+            )
         folder = CAL_PATH
 
-    method = 'glob'
+    method = "glob"
     if recursive is True:
-        method = 'rglob'
+        method = "rglob"
 
-    r = sensor_id.lower() + r'_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}'
+    r = sensor_id.lower() + r"_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}"
 
-    matches = [f for f in getattr(Path(folder), method)('{}_*.json'.format(sensor_id)) if
-               re.fullmatch(r, f.stem)]
+    matches = [f for f in getattr(Path(folder), method)("{}_*.json".format(sensor_id)) if re.fullmatch(r, f.stem)]
 
     if filter_cal_type:
-        matches = [f for f in matches if json.load(f.open())['cal_type'].lower() == filter_cal_type.lower()]
+        matches = [f for f in matches if json.load(f.open())["cal_type"].lower() == filter_cal_type.lower()]
 
     if not matches and ignore_file_not_found is not True:
-        raise ValueError('No Calibration for the sensor with the id {} could be found'.format(sensor_id))
+        raise ValueError("No Calibration for the sensor with the id {} could be found".format(sensor_id))
     return matches
 
 
-def find_closest_calibration_to_date(sensor_id: str,
-                                     cal_time: datetime.datetime,
-                                     folder: Optional[path_t] = None,
-                                     recursive: bool = True,
-                                     filter_cal_type: Optional[str] = None,
-                                     before_after: Optional[str] = None,
-                                     warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
-                                     ignore_file_not_found: Optional[bool] = False) -> Optional[Path]:
+def find_closest_calibration_to_date(
+    sensor_id: str,
+    cal_time: datetime.datetime,
+    folder: Optional[path_t] = None,
+    recursive: bool = True,
+    filter_cal_type: Optional[str] = None,
+    before_after: Optional[str] = None,
+    warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
+    ignore_file_not_found: Optional[bool] = False,
+) -> Optional[Path]:
     """Find the calibration file for a sensor, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
@@ -137,48 +144,56 @@ def find_closest_calibration_to_date(sensor_id: str,
         :py:func:`NilsPodLib.calibration_utils.find_calibrations_for_sensor`
 
     """
-    if before_after not in ('before', 'after', None):
+    if before_after not in ("before", "after", None):
         raise ValueError('Invalid value for `before_after`. Only "before", "after" or None are allowed')
 
-    potential_list = find_calibrations_for_sensor(sensor_id=sensor_id, folder=folder, recursive=recursive,
-                                                  filter_cal_type=filter_cal_type,
-                                                  ignore_file_not_found=ignore_file_not_found)
+    potential_list = find_calibrations_for_sensor(
+        sensor_id=sensor_id,
+        folder=folder,
+        recursive=recursive,
+        filter_cal_type=filter_cal_type,
+        ignore_file_not_found=ignore_file_not_found,
+    )
     if not potential_list:
         if ignore_file_not_found is True:
             return None
-        raise ValueError('No Calibration for the sensor with the id {} could be found'.format(sensor_id))
+        raise ValueError("No Calibration for the sensor with the id {} could be found".format(sensor_id))
 
-    dates = [datetime.datetime.strptime('_'.join(d.stem.split('_')[1:]), '%Y-%m-%d_%H-%M') for d in potential_list]
+    dates = [datetime.datetime.strptime("_".join(d.stem.split("_")[1:]), "%Y-%m-%d_%H-%M") for d in potential_list]
 
-    dates = np.array(dates, dtype='datetime64[s]')
+    dates = np.array(dates, dtype="datetime64[s]")
     potential_list, _ = zip(*sorted(zip(potential_list, dates), key=lambda x: x[1]))
     dates.sort()
 
-    diffs = (dates - np.datetime64(cal_time, 's')).astype(float)
+    diffs = (dates - np.datetime64(cal_time, "s")).astype(float)
 
-    if before_after == 'after':
+    if before_after == "after":
         diffs[diffs < 0] = np.nan
-    elif before_after == 'before':
+    elif before_after == "before":
         diffs[diffs > 0] = np.nan
 
     if np.all(diffs) == np.nan:
-        raise ValueError('No calibrations {} {} were found.'.format(before_after, cal_time))
+        raise ValueError("No calibrations {} {} were found.".format(before_after, cal_time))
 
     min_dist = float(np.nanmin(np.abs(diffs)))
     if warn_thres < datetime.timedelta(seconds=min_dist):
-        warnings.warn('For the sensor {} no calibration could be located that was in {} of the {}.'
-                      'The closest calibration is {} away.'.format(sensor_id, warn_thres, cal_time,
-                                                                   datetime.timedelta(seconds=min_dist)),
-                      CalibrationWarning)
+        warnings.warn(
+            "For the sensor {} no calibration could be located that was in {} of the {}."
+            "The closest calibration is {} away.".format(
+                sensor_id, warn_thres, cal_time, datetime.timedelta(seconds=min_dist)
+            ),
+            CalibrationWarning,
+        )
 
     return potential_list[int(np.nanargmin(np.abs(diffs)))]
 
 
-def load_and_check_cal_info(calibration: Union['CalibrationInfo', path_t]) -> 'CalibrationInfo':
+def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "CalibrationInfo":
     """Load a calibration from path or check if the provided object is already a valid calibration."""
     from imucal import CalibrationInfo  # noqa: F811
+
     if isinstance(calibration, (Path, str)):
         calibration = CalibrationInfo.from_json_file(calibration)
     if not isinstance(calibration, CalibrationInfo):
-        raise ValueError('No valid CalibrationInfo object provided')
+        raise ValueError("No valid CalibrationInfo object provided")
     return calibration

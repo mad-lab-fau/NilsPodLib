@@ -11,7 +11,7 @@ import numpy as np
 from NilsPodLib import Dataset
 from NilsPodLib.utils import path_t, inplace_or_copy, remove_docstring_indent
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     from NilsPodLib.datastream import Datastream  # noqa: F401
@@ -47,7 +47,7 @@ def call_dataset(autogen_doc=True):  # noqa: D202
             return_vals = tuple(getattr(d, method.__name__)(*args[1:], **kwargs) for d in session.datasets)
 
             if all(isinstance(d, Dataset) for d in return_vals):
-                inplace = kwargs.get('inplace', False)
+                inplace = kwargs.get("inplace", False)
                 s = inplace_or_copy(session, inplace)
                 s.datasets = return_vals
                 return s
@@ -55,14 +55,17 @@ def call_dataset(autogen_doc=True):  # noqa: D202
 
         if autogen_doc:
             if cascading_access.__doc__:
-                cascading_access.__doc__ += '\n\n'
+                cascading_access.__doc__ += "\n\n"
             else:
-                cascading_access.__doc__ = 'Apply `Dataset.{0}` to all datasets of the session.\n\n' \
-                                           'See :py:meth:`NilsPodLib.dataset.Dataset.{0}` for more details. ' \
-                                           'The docstring of this method is included below:\n\n'.format(method.__name__)
+                cascading_access.__doc__ = (
+                    "Apply `Dataset.{0}` to all datasets of the session.\n\n"
+                    "See :py:meth:`NilsPodLib.dataset.Dataset.{0}` for more details. "
+                    "The docstring of this method is included below:\n\n".format(method.__name__)
+                )
             cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
-            cascading_access.__doc__ += '\nSee Also:\n' \
-                                        '   :py:meth:`NilsPodLib.dataset.Dataset.{0}`'.format(method.__name__)
+            cascading_access.__doc__ += "\nSee Also:\n" "   :py:meth:`NilsPodLib.dataset.Dataset.{0}`".format(
+                method.__name__
+            )
         return cascading_access
 
     return wrapped
@@ -81,18 +84,18 @@ class _MultiDataset:
     """
 
     path: path_t = CascadingDatasetField()
-    acc: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    gyro: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    mag: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    baro: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    analog: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    ecg: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    ppg: Tuple[Optional['Datastream']] = CascadingDatasetField()
-    temperature: Tuple[Optional['Datastream']] = CascadingDatasetField()
+    acc: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    gyro: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    mag: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    baro: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    analog: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    ecg: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    ppg: Tuple[Optional["Datastream"]] = CascadingDatasetField()
+    temperature: Tuple[Optional["Datastream"]] = CascadingDatasetField()
     counter: Tuple[np.ndarray] = CascadingDatasetField()
 
     size: Tuple[int] = CascadingDatasetField()
-    datastreams: Tuple[Iterable['Datastream']] = CascadingDatasetField()
+    datastreams: Tuple[Iterable["Datastream"]] = CascadingDatasetField()
 
     ACTIVE_SENSORS: Tuple[Tuple[str]] = CascadingDatasetField()
 
@@ -120,14 +123,23 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def cut(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
+    def cut(
+        self: Type[T],
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        inplace: bool = False,
+    ) -> T:
         pass
 
     @call_dataset()
-    def cut_counter_val(self: Type[T], start: Optional[int] = None, stop: Optional[int] = None,
-                        step: Optional[int] = None,
-                        inplace: bool = False) -> T:
+    def cut_counter_val(
+        self: Type[T],
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        inplace: bool = False,
+    ) -> T:
         pass
 
     @call_dataset()
@@ -135,26 +147,35 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def data_as_df(self, datastreams: Optional[Sequence[str]] = None, index: Optional[str] = None,
-                   include_units: Optional[bool] = True) -> Tuple['pd.DataFrame']:
+    def data_as_df(
+        self,
+        datastreams: Optional[Sequence[str]] = None,
+        index: Optional[str] = None,
+        include_units: Optional[bool] = True,
+    ) -> Tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple['pd.DataFrame']:
+    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
-    def find_closest_calibration(self,
-                                 folder: Optional[path_t] = None,
-                                 recursive: bool = False,
-                                 filter_cal_type: Optional[str] = None,
-                                 before_after: Optional[str] = None,
-                                 ignore_file_not_found: Optional[bool] = False):
+    def find_closest_calibration(
+        self,
+        folder: Optional[path_t] = None,
+        recursive: bool = False,
+        filter_cal_type: Optional[str] = None,
+        before_after: Optional[str] = None,
+        ignore_file_not_found: Optional[bool] = False,
+    ):
         pass
 
     @call_dataset()
-    def find_calibrations(self, folder: Optional[path_t] = None,
-                          recursive: bool = True,
-                          filter_cal_type: Optional[str] = None,
-                          ignore_file_not_found: Optional[bool] = False):
+    def find_calibrations(
+        self,
+        folder: Optional[path_t] = None,
+        recursive: bool = True,
+        filter_cal_type: Optional[str] = None,
+        ignore_file_not_found: Optional[bool] = False,
+    ):
         pass

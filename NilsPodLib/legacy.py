@@ -8,21 +8,24 @@ from typing import Tuple, Callable, Optional, Union
 import numpy as np
 
 from NilsPodLib.exceptions import LegacyWarning
-from NilsPodLib.utils import path_t, get_header_and_data_bytes, get_strict_version_from_header_bytes, \
-    get_sample_size_from_header_bytes
+from NilsPodLib.utils import (
+    path_t,
+    get_header_and_data_bytes,
+    get_strict_version_from_header_bytes,
+    get_sample_size_from_header_bytes,
+)
 
 CONVERSION_DICT = {
-    '12_0': {'min': StrictVersion('0.11.255'),
-             'max': StrictVersion('0.13.255')},
-    '11_2': {'min': StrictVersion('0.11.2'),
-             'max': StrictVersion('0.11.255')}
+    "12_0": {"min": StrictVersion("0.11.255"), "max": StrictVersion("0.13.255")},
+    "11_2": {"min": StrictVersion("0.11.2"), "max": StrictVersion("0.11.255")},
 }
 
-MIN_NON_LEGACY_VERSION = StrictVersion('0.14.0')
+MIN_NON_LEGACY_VERSION = StrictVersion("0.14.0")
 
 
-def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] = True,
-                             return_name: Optional[bool] = False) -> Union[Callable, str]:
+def find_conversion_function(
+    version: StrictVersion, in_memory: Optional[bool] = True, return_name: Optional[bool] = False
+) -> Union[Callable, str]:
     """Return a suitable conversion function for a specific legacy version.
 
     This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
@@ -31,12 +34,12 @@ def find_conversion_function(version: StrictVersion, in_memory: Optional[bool] =
         return lambda x, y: (x, y)
 
     for k, v in CONVERSION_DICT.items():
-        if v['min'] <= version < v['max']:
-            n = 'load_' if in_memory else 'convert_'
+        if v["min"] <= version < v["max"]:
+            n = "load_" if in_memory else "convert_"
             if return_name:
                 return n + k
             return globals()[n + k]
-    raise VersionError('No suitable conversion function found for {}'.format(version))
+    raise VersionError("No suitable conversion function found for {}".format(version))
 
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
@@ -57,7 +60,7 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_12_0(header, data_bytes)
 
-    with open(out_path, 'wb+') as f:
+    with open(out_path, "wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
 
@@ -77,13 +80,15 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
         data_bytes: raw bytes representing the data
 
     """
-    min_v = CONVERSION_DICT['12_0']['min']
-    max_v = CONVERSION_DICT['12_0']['max']
+    min_v = CONVERSION_DICT["12_0"]["min"]
+    max_v = CONVERSION_DICT["12_0"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
-        raise VersionError('This converter is meant for files recorded with Firmware version after {} and before {}'
-                           ' not {}'.format(min_v, max_v, version))
+        raise VersionError(
+            "This converter is meant for files recorded with Firmware version after {} and before {}"
+            " not {}".format(min_v, max_v, version)
+        )
 
     header = _shift_bytes_12_0(header)
 
@@ -113,7 +118,7 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_11_2(header, data_bytes)
 
-    with open(out_path, 'wb+') as f:
+    with open(out_path, "wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
 
@@ -134,13 +139,15 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
         data_bytes: raw bytes representing the data
 
     """
-    min_v = CONVERSION_DICT['11_2']['min']
-    max_v = CONVERSION_DICT['11_2']['max']
+    min_v = CONVERSION_DICT["11_2"]["min"]
+    max_v = CONVERSION_DICT["11_2"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
     if not (min_v <= version < max_v):
-        raise VersionError('This converter is meant for files recorded with Firmware version after {} and before {}'
-                           ' not {}'.format(min_v, max_v, version))
+        raise VersionError(
+            "This converter is meant for files recorded with Firmware version after {} and before {}"
+            " not {}".format(min_v, max_v, version)
+        )
 
     packet_size = get_sample_size_from_header_bytes(header)
 
@@ -163,7 +170,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 def _fix_little_endian_counter(data_bytes, packet_size):
     """Convert the big endian counter of older firmware versions to a small endian counter."""
     expected_samples = len(data_bytes) // packet_size
-    data_bytes = data_bytes[:expected_samples * packet_size]
+    data_bytes = data_bytes[: expected_samples * packet_size]
     data = np.reshape(data_bytes, (expected_samples, int(packet_size)))
     data[:, -4:] = np.flip(data[:, -4:], axis=-1)
     return data
@@ -171,12 +178,7 @@ def _fix_little_endian_counter(data_bytes, packet_size):
 
 def _convert_sensor_enabled_flag_11_2(byte):
     """Convert the old sensor enabled flags to the new one."""
-    conversion_map = {
-        0x01: 0x02,  # gyro
-        0x02: 0x10,  # analog
-        0x04: 0x08,  # baro
-        0x08: 0x80  # temperature
-    }
+    conversion_map = {0x01: 0x02, 0x02: 0x10, 0x04: 0x08, 0x08: 0x80}  # gyro  # analog  # baro  # temperature
 
     # always enable acc for old sessions:
     out_byte = 0x01
@@ -221,18 +223,20 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
         as_warning: If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
 
     """
-    if version < StrictVersion('0.11.2'):
-        msg = 'You are using a version ({}) previous to 0.11.2. This version is not supported!'.format(version)
-    elif version >= StrictVersion('0.13.255'):
+    if version < StrictVersion("0.11.2"):
+        msg = "You are using a version ({}) previous to 0.11.2. This version is not supported!".format(version)
+    elif version >= StrictVersion("0.13.255"):
         return
     else:
         try:
             converter = find_conversion_function(version, in_memory=False, return_name=True)
-            msg = 'You are using a version ({}) which is only supported by legacy support.' \
-                  ' Use `{}` to update the binary format to a newer version' \
-                  ' or use `legacy_support="resolve"` when loading the file'.format(version, converter)
+            msg = (
+                "You are using a version ({}) which is only supported by legacy support."
+                " Use `{}` to update the binary format to a newer version"
+                ' or use `legacy_support="resolve"` when loading the file'.format(version, converter)
+            )
         except VersionError:
-            msg = 'You are using a version completely unknown version: {}'.format(version)
+            msg = "You are using a version completely unknown version: {}".format(version)
 
     if as_warning is True:
         warnings.warn(msg, LegacyWarning)

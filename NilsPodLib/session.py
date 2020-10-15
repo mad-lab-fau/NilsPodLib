@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
     import pandas as pd  # noqa: F401
 
-T = TypeVar('T', bound='Session')
+T = TypeVar("T", bound="Session")
 
 
 class Session(_MultiDataset):
@@ -63,7 +63,7 @@ class Session(_MultiDataset):
         self.datasets = tuple(datasets)
 
     @classmethod
-    def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_support: str = 'error') -> T:
+    def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_support: str = "error") -> T:
         """Create a new session from a list of files pointing to valid .bin files.
 
         Args:
@@ -80,8 +80,9 @@ class Session(_MultiDataset):
         return cls(ds)
 
     @classmethod
-    def from_folder_path(cls: Type[T], base_path: path_t, filter_pattern: str = '*.bin',
-                         legacy_support: str = 'error') -> T:
+    def from_folder_path(
+        cls: Type[T], base_path: path_t, filter_pattern: str = "*.bin", legacy_support: str = "error"
+    ) -> T:
         """Create a new session from a folder path containing valid .bin files.
 
         Args:
@@ -109,7 +110,7 @@ class Session(_MultiDataset):
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
-    def calibrate_imu(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+    def calibrate_imu(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -127,7 +128,7 @@ class Session(_MultiDataset):
         s.datasets = [d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
         return s
 
-    def calibrate_acc(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+    def calibrate_acc(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
         """Calibrate the accs of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -145,7 +146,7 @@ class Session(_MultiDataset):
         s.datasets = [d.calibrate_acc(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
         return s
 
-    def calibrate_gyro(self: T, calibrations: Iterable[Union['CalibrationInfo', path_t]], inplace: bool = False) -> T:
+    def calibrate_gyro(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
         """Calibrate the gyros of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -230,9 +231,10 @@ class SyncedSession(Session):
         You need to `cut_to_sync_region` before you can obtain this value.
         """
         if not self._fully_synced:
-            raise SynchronisationError('Only fully synced datasets, have valid start and stop times.')
+            raise SynchronisationError("Only fully synced datasets, have valid start and stop times.")
         return self.master.info.utc_datetime_start_day_midnight + datetime.timedelta(
-            seconds=self.master.counter[0] / self.master.info.sampling_rate_hz)
+            seconds=self.master.counter[0] / self.master.info.sampling_rate_hz
+        )
 
     @property
     def session_utc_datetime_stop(self) -> datetime.datetime:
@@ -241,9 +243,10 @@ class SyncedSession(Session):
         You need to `cut_to_sync_region` before you can obtain this value.
         """
         if not self._fully_synced:
-            raise SynchronisationError('Only fully synced datasets, have valid start and stop times.')
+            raise SynchronisationError("Only fully synced datasets, have valid start and stop times.")
         return self.master.info.utc_datetime_start_day_midnight + datetime.timedelta(
-            seconds=self.master.counter[-1] / self.master.info.sampling_rate_hz)
+            seconds=self.master.counter[-1] / self.master.info.sampling_rate_hz
+        )
 
     def __init__(self, datasets: Iterable[Dataset]):
         """Create new synced session.
@@ -276,16 +279,16 @@ class SyncedSession(Session):
 
         """
         if not self._validate_sync_groups():
-            raise ValueError('The provided datasets are not part of the same sync_group')
+            raise ValueError("The provided datasets are not part of the same sync_group")
         master_valid, slaves_valid = self._validate_sync_role()
         if not master_valid:
-            raise ValueError('SyncedSessions require exactly 1 master.')
+            raise ValueError("SyncedSessions require exactly 1 master.")
         if not slaves_valid:
-            raise ValueError('One of the provided sessions is not correctly set to either slave or master')
+            raise ValueError("One of the provided sessions is not correctly set to either slave or master")
         if not self._validate_sampling_rate():
-            raise ValueError('All provided sessions need to have the same sampling rate')
+            raise ValueError("All provided sessions need to have the same sampling rate")
         if not self._validate_overlapping_record_time():
-            raise ValueError('The provided datasets do not have any overlapping time period.')
+            raise ValueError("The provided datasets do not have any overlapping time period.")
 
     def _validate_sync_groups(self) -> bool:
         """Check that all _headers belong to the same sync group."""
@@ -296,8 +299,8 @@ class SyncedSession(Session):
     def _validate_sync_role(self) -> Tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""
         roles = self.info.sync_role
-        master_valid = len([i for i in roles if i == 'master']) == 1
-        slaves_valid = len([i for i in roles if i == 'slave']) == len(roles) - 1
+        master_valid = len([i for i in roles if i == "master"]) == 1
+        slaves_valid = len([i for i in roles if i == "slave"]) == len(roles) - 1
         return master_valid, slaves_valid
 
     def _validate_sampling_rate(self) -> bool:
@@ -314,15 +317,20 @@ class SyncedSession(Session):
     @property
     def master(self) -> Dataset:
         """Return the master dataset of the session."""
-        return next(d for d in self.datasets if d.info.sync_role == 'master')
+        return next(d for d in self.datasets if d.info.sync_role == "master")
 
     @property
     def slaves(self) -> Tuple[Dataset]:
         """Return a list of all slave datasets in the session."""
-        return tuple(d for d in self.datasets if d.info.sync_role == 'slave')
+        return tuple(d for d in self.datasets if d.info.sync_role == "slave")
 
-    def align_to_syncregion(self: Type[T], cut_start: bool = False, cut_end: bool = False, inplace: bool = False,
-                            warn_thres: Optional[int] = 30):
+    def align_to_syncregion(
+        self: Type[T],
+        cut_start: bool = False,
+        cut_end: bool = False,
+        inplace: bool = False,
+        warn_thres: Optional[int] = 30,
+    ):
         """Align all datasets based on regions where they were synchronised to the master.
 
         At the end all datasets are cut to the same length, so that the maximum overlap between all datasets is
@@ -350,24 +358,29 @@ class SyncedSession(Session):
         s = inplace_or_copy(self, inplace)
 
         if s._fully_synced is True:
-            raise SynchronisationError('The session is already aligned/cut to the syncregion and can not be cut again')
+            raise SynchronisationError("The session is already aligned/cut to the syncregion and can not be cut again")
 
         if warn_thres is not None:
-            sync_start_warn = [d.info.sensor_id for d in s.slaves if
-                               d._check_sync_packages(warn_thres, where='start') is False]
-            sync_end_warn = [d.info.sensor_id for d in s.slaves if
-                             d._check_sync_packages(warn_thres, where='end') is False]
+            sync_start_warn = [
+                d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres, where="start") is False
+            ]
+            sync_end_warn = [
+                d.info.sensor_id for d in s.slaves if d._check_sync_packages(warn_thres, where="end") is False
+            ]
             if any(sync_end_warn) and cut_end is not True:
-                warnings.warn('For the sensors with the ids {} the last syncpackage occurred more than {} s before the '
-                              'end of the dataset. '
-                              'The last section of this data should not be trusted.'.format(sync_end_warn, warn_thres),
-                              SynchronisationWarning)
+                warnings.warn(
+                    "For the sensors with the ids {} the last syncpackage occurred more than {} s before the "
+                    "end of the dataset. "
+                    "The last section of this data should not be trusted.".format(sync_end_warn, warn_thres),
+                    SynchronisationWarning,
+                )
             if any(sync_start_warn) and cut_start is not True:
-                warnings.warn('For the sensors with the ids {} the first syncpackage occurred more than {} s after the '
-                              'start of the dataset. '
-                              'The first section of this data should not be trusted.'.format(sync_start_warn,
-                                                                                             warn_thres),
-                              SynchronisationWarning)
+                warnings.warn(
+                    "For the sensors with the ids {} the first syncpackage occurred more than {} s after the "
+                    "start of the dataset. "
+                    "The first section of this data should not be trusted.".format(sync_start_warn, warn_thres),
+                    SynchronisationWarning,
+                )
 
         # Correct the jump at the beginning of the sync region in the slave counter.
         # This is important because the datasets are later cut based on their first counter value
@@ -388,7 +401,7 @@ class SyncedSession(Session):
         start_idx = [d.counter[0] for d in s.datasets]
         stop_idx = [d.counter[-1] for d in s.datasets]
         if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
-            raise ValueError('The provided datasets do not have a overlapping regions!')
+            raise ValueError("The provided datasets do not have a overlapping regions!")
 
         s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
         stop_idx = [len(d.counter) for d in s.datasets]
@@ -400,8 +413,13 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def cut_to_syncregion(self: Type[T], end: bool = False, only_to_master: bool = False,
-                          warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
+    def cut_to_syncregion(
+        self: Type[T],
+        end: bool = False,
+        only_to_master: bool = False,
+        warn_thres: Optional[int] = 30,
+        inplace: bool = False,
+    ) -> T:
         """Cut all datasets to the regions where they were synchronised to the master.
 
         Args:
@@ -427,10 +445,12 @@ class SyncedSession(Session):
             If a syncpackage occurred far before the last sample in any of the dataset. See arg `warn_thres`.
 
         """
-        warnings.warn('"cut_to_syncregion" is deprecated and will be replaced by "align_to_syncregion". '
-                      'Use align_to_syncregion(cut_start=True, ...) to replicate the functionality of '
-                      'cut_to_syncregion.',
-                      DeprecationWarning)
+        warnings.warn(
+            '"cut_to_syncregion" is deprecated and will be replaced by "align_to_syncregion". '
+            "Use align_to_syncregion(cut_start=True, ...) to replicate the functionality of "
+            "cut_to_syncregion.",
+            DeprecationWarning,
+        )
 
         if only_to_master is True:
             s = inplace_or_copy(self, inplace)
@@ -440,11 +460,13 @@ class SyncedSession(Session):
         s = self.align_to_syncregion(cut_start=True, cut_end=end, warn_thres=warn_thres, inplace=inplace)
         return s
 
-    def data_as_df(self,
-                   datastreams: Optional[Sequence[str]] = None,
-                   index: Optional[str] = None,
-                   include_units: Optional[bool] = False,
-                   concat_df: Optional[bool] = False) -> Union[Tuple['pd.DataFrame'], 'pd.DataFrame']:
+    def data_as_df(
+        self,
+        datastreams: Optional[Sequence[str]] = None,
+        index: Optional[str] = None,
+        include_units: Optional[bool] = False,
+        concat_df: Optional[bool] = False,
+    ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         See Also:
@@ -475,15 +497,17 @@ class SyncedSession(Session):
 
         """
         import pandas as pd  # noqa: F811
+
         dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
             if not self._fully_synced:
-                raise SynchronisationError('Only fully synced datasets, can be exported as a df with unified index.')
+                raise SynchronisationError("Only fully synced datasets, can be exported as a df with unified index.")
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
 
-    def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False,
-                       concat_df: Optional[bool] = False) -> Union[Tuple['pd.DataFrame'], 'pd.DataFrame']:
+    def imu_data_as_df(
+        self, index: Optional[str] = None, include_units: Optional[bool] = False, concat_df: Optional[bool] = False
+    ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also:
@@ -513,4 +537,4 @@ class SyncedSession(Session):
             ValueError: If any other than the allowed `index` values are used.
 
         """
-        return self.data_as_df(datastreams=['acc', 'gyro'], index=index, include_units=include_units)
+        return self.data_as_df(datastreams=["acc", "gyro"], index=index, include_units=include_units)

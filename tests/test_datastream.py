@@ -14,16 +14,16 @@ def test_basic_init():
 
 def test_full_init():
     data = np.ones((100, 3))
-    ds = Datastream(data, 100., list('abc'))
+    ds = Datastream(data, 100.0, list("abc"))
     assert np.array_equal(ds.data, data)
-    assert ds.sampling_rate_hz == 100.
-    assert ds.columns == ['a', 'b', 'c']
+    assert ds.sampling_rate_hz == 100.0
+    assert ds.columns == ["a", "b", "c"]
 
 
 @pytest.fixture()
 def simple_ds():
     data = np.ones((100, 3))
-    ds = Datastream(data, 100., list('abc'))
+    ds = Datastream(data, 100.0, list("abc"))
     return ds
 
 
@@ -37,16 +37,16 @@ def test_normalize(simple_ds):
 
 
 def test_cut(simple_ds):
-    simple_ds.data = np.arange(100.)
+    simple_ds.data = np.arange(100.0)
     c = simple_ds.cut(10, 90, 2)
-    assert c.data[0] == 10.
-    assert c.data[1] == 12.
+    assert c.data[0] == 10.0
+    assert c.data[1] == 12.0
     assert c.data[-1] == 88
 
 
-@pytest.mark.parametrize('factor', [2, 4, 5])
+@pytest.mark.parametrize("factor", [2, 4, 5])
 def test_downsample(simple_ds, factor):
-    simple_ds.data = np.arange(100.)
+    simple_ds.data = np.arange(100.0)
     d = simple_ds.downsample(factor)
     assert len(d.data) == len(simple_ds.data) / factor
     assert d.sampling_rate_hz == simple_ds.sampling_rate_hz / factor
@@ -65,36 +65,36 @@ def test_columns():
 
     assert ds.columns == [0, 1]
 
-    ds = Datastream(np.zeros((100, 3)), sensor_type='acc')
+    ds = Datastream(np.zeros((100, 3)), sensor_type="acc")
 
-    assert ds.columns == ['acc_x', 'acc_y', 'acc_z']
+    assert ds.columns == ["acc_x", "acc_y", "acc_z"]
 
-    ds = Datastream(np.zeros((100, 3)), columns=['col1', 'col2', 'col3'])
+    ds = Datastream(np.zeros((100, 3)), columns=["col1", "col2", "col3"])
 
-    assert ds.columns == ['col1', 'col2', 'col3']
+    assert ds.columns == ["col1", "col2", "col3"]
 
 
 def test_unit():
     ds = Datastream(np.zeros((100, 3)))
 
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."
     ds.is_calibrated = True
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."
 
-    ds = Datastream(np.zeros((100, 3)), sensor_type='acc')
+    ds = Datastream(np.zeros((100, 3)), sensor_type="acc")
 
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."
     ds.is_calibrated = True
-    assert ds.unit == 'g'
+    assert ds.unit == "g"
 
-    ds = Datastream(np.zeros((100, 3)), unit='test', sensor_type='acc')
+    ds = Datastream(np.zeros((100, 3)), unit="test", sensor_type="acc")
 
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."
     ds.is_calibrated = True
-    assert ds.unit == 'test'
+    assert ds.unit == "test"
 
-    ds = Datastream(np.zeros((100, 3)), sensor_type='not_sensor')
+    ds = Datastream(np.zeros((100, 3)), sensor_type="not_sensor")
 
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."
     ds.is_calibrated = True
-    assert ds.unit == 'a.u.'
+    assert ds.unit == "a.u."

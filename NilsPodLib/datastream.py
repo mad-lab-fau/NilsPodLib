@@ -13,7 +13,7 @@ from scipy.signal import resample
 from NilsPodLib.consts import SENSOR_LEGENDS, SENSOR_UNITS
 from NilsPodLib.utils import inplace_or_copy
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 if TYPE_CHECKING:
     import pandas as pd  # noqa: F401
@@ -33,8 +33,14 @@ class Datastream:
     _unit: str
     _columns: Optional[List]
 
-    def __init__(self, data: np.ndarray, sampling_rate: float = 1., columns: Optional[Iterable] = None,
-                 unit: Optional[str] = None, sensor_type: Optional[str] = None):
+    def __init__(
+        self,
+        data: np.ndarray,
+        sampling_rate: float = 1.0,
+        columns: Optional[Iterable] = None,
+        unit: Optional[str] = None,
+        sensor_type: Optional[str] = None,
+    ):
         """Get new datastream instance.
 
         Args:
@@ -57,10 +63,9 @@ class Datastream:
         self._unit = unit
 
     def __repr__(self):
-        return 'Datastream(sensor={}, sampling_rate_hz={}, is_calibrated={}, data={}'.format(self.sensor,
-                                                                                             self.sampling_rate_hz,
-                                                                                             self.is_calibrated,
-                                                                                             self.data)
+        return "Datastream(sensor={}, sampling_rate_hz={}, is_calibrated={}, data={}".format(
+            self.sensor, self.sampling_rate_hz, self.is_calibrated, self.data
+        )
 
     @property
     def unit(self):
@@ -74,7 +79,7 @@ class Datastream:
                 return self._unit
             if self.sensor and SENSOR_UNITS.get(self.sensor, None):
                 return SENSOR_UNITS[self.sensor]
-        return 'a.u.'
+        return "a.u."
 
     @property
     def columns(self):
@@ -101,7 +106,7 @@ class Datastream:
         """
         return np.linalg.norm(self.data, axis=-1)
 
-    def normalize(self) -> 'Datastream':
+    def normalize(self) -> "Datastream":
         """Get the normalized data.
 
         Normalization is performed by dividing the data by its maximum absolute value.
@@ -110,8 +115,13 @@ class Datastream:
         ds.data /= np.abs(ds.data).max(axis=0)
         return ds
 
-    def cut(self: T, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None,
-            inplace: bool = False) -> T:
+    def cut(
+        self: T,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        step: Optional[int] = None,
+        inplace: bool = False,
+    ) -> T:
         """Cut the datastream.
 
         This is equivalent to applying the following slicing to the data of the datastream: `array[start:stop:step]`
@@ -141,7 +151,7 @@ class Datastream:
         s.sampling_rate_hz /= factor
         return s
 
-    def data_as_df(self, index_as_time: bool = True, include_units=False) -> 'pd.DataFrame':
+    def data_as_df(self, index_as_time: bool = True, include_units=False) -> "pd.DataFrame":
         """Return the datastream as pandas Dataframe.
 
         This will use `self.columns` as columns for the dataframe.
@@ -153,11 +163,12 @@ class Datastream:
 
         """
         import pandas as pd  # noqa: F811
+
         columns = self.columns
         if include_units is True:
-            columns = ['{}_{}'.format(c, self.unit) for c in columns]
+            columns = ["{}_{}".format(c, self.unit) for c in columns]
         df = pd.DataFrame(self.data, columns=columns)
         if index_as_time:
             df.index /= self.sampling_rate_hz
-            df.index.name = 't'
+            df.index.name = "t"
         return df
