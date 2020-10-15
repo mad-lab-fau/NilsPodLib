@@ -22,24 +22,33 @@ def save_calibration(
     calibration: "CalibrationInfo", sensor_id: str, cal_time: datetime.datetime, folder: path_t
 ) -> Path:
     """Save a calibration info object in the correct format and file name for NilsPods.
-
-    The files will be saved in the format:
-        folder / {sensor_id}_%Y-%m-%d_%H-%M.json
-
+    
+    The files will be saved in the format: `folder / {sensor_id}_%Y-%m-%d_%H-%M.json`
+    
     The naming schema and format is of course just a suggestion, and any structure can be used as long as it can be
     converted back into a CalibrationInfo object.
     However, following the naming convention will allow to use other calibration utils to search for suitable
     calibration files.
+    
+    .. note:: If the folder does not exist it will be created.
 
-    Note: If the folder does not exist it will be created.
+    Parameters
+    ----------
+    calibration :
+        The CalibrationInfo object ot be saved
+    sensor_id :
+        The for 4 letter/digit identifier of a sensor, as obtained from
+        :py:meth:`nilspodlib.header.Header.sensor_id`
+    cal_time :
+        The date and time (min precision) when the calibration was performed. It is preferable to pass this
+        value in UTC timezone, as this is in line with the time handling in the rest of the library.
+    folder :
+        Basepath of the folder, where the file will be stored.
 
-    Args:
-        calibration: The CalibrationInfo object ot be saved
-        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`nilspodlib.header.Header.sensor_id`
-        cal_time: The date and time (min precision) when the calibration was performed. It is preferable to pass this
-            value in UTC timezone, as this is in line with the time handling in the rest of the library.
-        folder: Basepath of the folder, where the file will be stored.
+    Returns
+    -------
+    output_file_name
+        The name under which the calibration file was saved
 
     """
     if not re.fullmatch(r"\w{4}", sensor_id):
@@ -62,20 +71,31 @@ def find_calibrations_for_sensor(
     ignore_file_not_found: Optional[bool] = False,
 ) -> List[Path]:
     """Find possible calibration files based on the filename.
-
+    
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
 
-    Args:
-        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`nilspodlib.header.Header.sensor_id`
-        folder: Basepath of the folder to search. If None, tries to find a default calibration
-        recursive: If the folder should be searched recursive or not.
-        filter_cal_type: Whether only files obtain with a certain calibration type should be found.
-            This will look for the `CalType` inside the json file and hence cause performance problems.
-            If None, all found files will be returned.
-            For possible values, see the `imucal` library.
-        ignore_file_not_found: If True this function will not raise an error, but rather return an empty list, if no
-            calibration files were found for the specific sensor.
+    Parameters
+    ----------
+    sensor_id :
+        The for 4 letter/digit identifier of a sensor, as obtained from
+        :py:meth:`nilspodlib.header.Header.sensor_id`
+    folder :
+        Basepath of the folder to search. If None, tries to find a default calibration
+    recursive :
+        If the folder should be searched recursive or not.
+    filter_cal_type :
+        Whether only files obtain with a certain calibration type should be found.
+        This will look for the `CalType` inside the json file and hence cause performance problems.
+        If None, all found files will be returned.
+        For possible values, see the `imucal` library.
+    ignore_file_not_found :
+        If True this function will not raise an error, but rather return an empty list, if no
+        calibration files were found for the specific sensor.
+
+    Returns
+    -------
+        list_of_cals
+            List of paths pointing to available calibration objects.
 
     """
     if not folder:
@@ -116,32 +136,57 @@ def find_closest_calibration_to_date(
     ignore_file_not_found: Optional[bool] = False,
 ) -> Optional[Path]:
     """Find the calibration file for a sensor, that is closes to a given date.
-
+    
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
 
-    Args:
-        sensor_id: The for 4 letter/digit identifier of a sensor, as obtained from
-            :py:meth:`nilspodlib.header.Header.sensor_id`
-        cal_time: time and date to look for
-        folder: Basepath of the folder to search. If None, tries to find a default calibration
-        recursive: If the folder should be searched recursive or not.
-        filter_cal_type: Whether only files obtain with a certain calibration type should be found.
-            This will look for the `CalType` inside the json file and hence cause performance problems.
-            If None, all found files will be returned.
-            For possible values, see the `imucal` library.
-        before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
-            either before or after the specified date. If None the closest value ignoring if it was before or after the
-            measurement.
-        warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
-        ignore_file_not_found: If True this function will not raise an error, but rather return `None`, if no
-            calibration files were found for the specific sensor.
-
-    Notes:
+    Parameters
+    ----------
+    sensor_id :
+        The for 4 letter/digit identifier of a sensor, as obtained from
+        :py:meth:`nilspodlib.header.Header.sensor_id`
+    cal_time :
+        time and date to look for
+    folder :
+        Basepath of the folder to search. If None, tries to find a default calibration
+    recursive :
+        If the folder should be searched recursive or not.
+    filter_cal_type :
+        Whether only files obtain with a certain calibration type should be found.
+        This will look for the `CalType` inside the json file and hence cause performance problems.
+        If None, all found files will be returned.
+        For possible values, see the `imucal` library.
+    before_after :
+        Can either be 'before' or 'after', if the search should be limited to calibrations that were
+        either before or after the specified date. If None the closest value ignoring if it was before or after the
+        measurement.
+    warn_thres :
+        If the distance to the closest calibration is larger than this threshold, a warning is emitted
+    ignore_file_not_found :
+        If True this function will not raise an error, but rather return `None`, if no
+        calibration files were found for the specific sensor.
+        Notes:
+    ignore_file_not_found :
+        If True this function will not raise an error, but rather return `None`, if no
+        calibration files were found for the specific sensor.
+        Notes:
         If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
-        the calibration before the measurement will be chosen. This can be overwritten using the `before_after` para.
+    ignore_file_not_found :
+        If True this function will not raise an error, but rather return `None`, if no
+        calibration files were found for the specific sensor.
 
-    See Also:
-        :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
+    Notes
+    -----
+    If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
+    the calibration before the measurement will be chosen. This can be overwritten using the `before_after` para.
+
+    See Also
+    --------
+    nilspodlib.calibration_utils.find_calibrations_for_sensor
+
+    Returns
+    -------
+    cal_file_path or None
+        The path to a suitable calibration file, or `None`, if no suitable file could be found.
 
     """
     if before_after not in ("before", "after", None):
