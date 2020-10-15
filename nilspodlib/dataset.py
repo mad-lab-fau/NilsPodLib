@@ -47,7 +47,7 @@ T = TypeVar("T")
 class Dataset:
     """Class representing a logged session of a single NilsPod.
 
-    Warning:
+    :: warning:
         Some operations on the dataset should not be performed after each other, as they can lead to unexpected
         results.
         The respective methods have specific warnings in their docstring.
@@ -76,15 +76,19 @@ class Dataset:
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         """Get new Dataset instance.
 
-        Note:
+        .. note::
             Usually you shouldn't use this init directly.
             Use the provided `from_bin_file` constructor to handle loading recorded NilsPod Sessions.
 
-        Args:
-            sensor_data: dictionary with name of sensor and sensor data as np.array.
-                The data needs to be 2D with time/counter as first dimension
-            counter: The counter created by the sensor. Should have the same length as all datasets
-            info: Header instance containing all Metainfo about the measurement.
+        Parameter
+        ---------
+        sensor_data :
+            Dictionary with name of sensor and sensor data as np.array
+            The data needs to be 2D with time/counter as first dimension
+        counter :
+            The counter created by the sensor. Should have the same length as all datasets
+        info :
+            Header instance containing all Metainfo about the measurement.
 
         """
         self.counter = counter
@@ -97,21 +101,26 @@ class Dataset:
     def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error") -> T:
         """Create a new Dataset from a valid .bin file.
 
-        Args:
-            path: Path to the file
-            legacy_support: This indicates how to deal with old firmware versions.
-                If `error`: An error is raised, if an unsupported version is detected.
-                If `warn`: A warning is raised, but the file is parsed without modification
-                If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
-                    an error is raised. See the `legacy` package and the README to learn more about available
-                    conversions.
+        Parameters
+        ----------
+        path :
+            Path to the file
+        legacy_support :
+            This indicates how to deal with old firmware versions.
+            If `error`: An error is raised, if an unsupported version is detected.
+            If `warn`: A warning is raised, but the file is parsed without modification
+            If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
+            an error is raised. See the `legacy` package and the README to learn more about available
+            conversions.
 
-        Raises:
-             VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is True
+        Raises
+        ------
+        VersionError
+            If unsupported FirmwareVersion is detected and `legacy_error` is True
 
         """
         path = Path(path)
-        if not path.suffix == ".bin":
+        if path.suffix != ".bin":
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
         sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support)
@@ -124,11 +133,16 @@ class Dataset:
     def from_csv_file(cls, path: path_t):
         """Create a new Dataset from a valid .csv file.
 
-        Args:
-            path: Path to the file
+        Parameters
+        ----------
+        path :
+            Path to the file
+        path :
+            Path to the file
 
-        Notes:
-            This is planned but not yet supported
+        Notes
+        -----
+        This is planned but not yet supported
 
         """
         raise NotImplementedError("CSV importer coming soon")
@@ -170,12 +184,18 @@ class Dataset:
         The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
         for the Acc and "dps" (degrees per second) for the Gyro.
 
-        Args:
-            calibration: calibration object or path to .json file, that can be used to create one.
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                datastream objects is created
-
-        Notes:
+        Parameters
+        ----------
+        calibration :
+            calibration object or path to .json file, that can be used to create one.
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
+            Notes:
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
+            Notes:
             This just combines `calibrate_acc` and `calibrate_gyro`.
 
         """
@@ -198,10 +218,13 @@ class Dataset:
         The final units of the datastream will depend on the used calibration values, but must likely they will be "g"
         for Acc.
 
-        Args:
-            calibration: calibration object or path to .json file, that can be used to create one.
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                datastream objects is created
+        Parameters
+        ----------
+        calibration :
+            calibration object or path to .json file, that can be used to create one.
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -219,10 +242,13 @@ class Dataset:
         The final units of the datastreams will depend on the used calibration values, but must likely they will be
         "dps" (degrees per second) for the Gyro.
 
-        Args:
-            calibration: calibration object or path to .json file, that can be used to create one.
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                datastream objects is created
+        Parameters
+        ----------
+        calibration :
+            calibration object or path to .json file, that can be used to create one.
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -243,11 +269,12 @@ class Dataset:
 
         The final units of the output will be "g" for the Acc and "dps" (degrees per second) for the Gyro.
 
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
-
-        Notes:
+        Parameters
+        ----------
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
+            Notes:
             This just combines `factory_calibrate_acc` and `factory_calibrate_gyro`.
 
         """
@@ -265,9 +292,11 @@ class Dataset:
 
         The final units of the output will be "dps" (degrees per second) for the Gyro.
 
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -285,9 +314,11 @@ class Dataset:
 
         The final units of the output will be "g" for the Acc.
 
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -305,9 +336,11 @@ class Dataset:
 
         The final units of the output will be "millibar" (equivalent to Hectopacal) for the Baro.
 
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -323,9 +356,11 @@ class Dataset:
 
         The final unit is Celsius.
 
-        Args:
-             inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -341,18 +376,21 @@ class Dataset:
         In case the datastream is already calibrated a `RepeatedCalibrationError` is raised.
         In case the datastream does not exist, a warning is raised.
 
-        Args:
-            ds: datastream object or None
-            name: name of the datastream object. Used to provide additional info in error messages.
+        Parameters
+        ----------
+        ds :
+            datastream object or None
+        name :
+            name of the datastream object. Used to provide additional info in error messages.
+        ds: Optional[Datastream] :
 
         """
         if ds is not None:
             if ds.is_calibrated is True:
                 raise RepeatedCalibrationError(name)
             return True
-        else:
-            datastream_does_not_exist_warning(name, "calibration")
-            return False
+        datastream_does_not_exist_warning(name, "calibration")
+        return False
 
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
         """Downsample all datastreams by a factor.
@@ -360,16 +398,19 @@ class Dataset:
         This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
         See :py:meth:`nilspodlib.datastream.Datastream.downsample` for details.
 
-        Warnings:
+        .. warning::
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
             sync index values. Using methods that rely on these values might result in unexpected behaviour.
             For example `cut_to_syncregion` will not work correctly, if `cut`, `cut_counter_val`, or `downsample` was
             used before.
 
-        Args:
-            factor: Factor by which the dataset should be downsampled.
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        factor :
+            Factor by which the dataset should be downsampled.
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -389,17 +430,22 @@ class Dataset:
 
         This is equivalent to applying the following slicing to all datastreams and the counter: array[start:stop:step]
 
-        Warnings:
+        .. warning ::
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
             sync index values. Using methods that rely on these values might result in unexpected behaviour.
             For example `cut_to_syncregion` will not work correctly, if `cut` or `cut_counter_val` was used before.
 
-        Args:
-            start: Start index
-            stop: Stop index
-            step: Step size of the cut
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        start :
+            Start index
+        stop :
+            Stop index
+        step :
+            Step size of the cut
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         s = inplace_or_copy(self, inplace)
@@ -423,23 +469,29 @@ class Dataset:
         This is equivalent to applying the following pandas style slicing to all datastreams and the counter:
         array.loc[start:stop:step]
 
-        Warnings:
+        .. warning::
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
             sync index values. Using methods that rely on these values might result in unexpected behaviour.
             For example `cut_to_syncregion` will not work correctly, if `cut` or `cut_counter_val` was used before.
 
-        Notes:
-            The method searches the respective index for the start and the stop value in the `counter` and calls `cut`
-            with these values.
-            The step size will be passed directly and not modified (i.e. the step size will not respect downsampling or
-            similar operations done beforehand).
+        Notes
+        -----
+        The method searches the respective index for the start and the stop value in the `counter` and calls `cut`
+        with these values.
+        The step size will be passed directly and not modified (i.e. the step size will not respect downsampling or
+        similar operations done beforehand).
 
-        Args:
-            start: Start value in counter
-            stop: Stop value in counter
-            step: Step size of the cut
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Parameters
+        ----------
+        start :
+            Start value in counter
+        stop :
+            Stop value in counter
+        step :
+            Step size of the cut
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
 
         """
         if start:
@@ -461,35 +513,49 @@ class Dataset:
         In case the dataset was a sync-master (`info.sync_role = 'master'`) this will have no effect and the dataset
         will be returned unmodified.
 
-        Notes:
-            Usually to work with multiple syncronised datasets, a `SyncedSession` should be used instead of cutting
-            the datasets manually. `SyncedSession.cut_to_syncregion` will cover multiple edge cases involving multiple
-            datasets, which can not be handled by this method.
-
-        Warnings:
+        .. warning::
             This function should not be used after any other methods that can modify the counter (e.g. `cut` or
             `downsample`).
 
+        .. warning::
             This will not modify any values in the header/info the dataset. I.e. the number of samples in the header/
             sync index values. Using methods that rely on these values might result in unexpected behaviour.
 
-        Args:
-            start: Whether the dataset should be cut at the `info.sync_index_start`.
-                If this is False, a jump in the counter will remain.
-                The only usecase for not cutting at the start is when the counters are already perfectly aligned.
-            end: Whether the dataset should be cut at the `info.sync_index_stop`. Usually it can be assumed that the
-                data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
-                acceptable to just ignore the last syncpackage and just cut the start of the dataset.
-            warn_thres: Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
-                warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
-                This is not relevant if the end of the dataset is cut (e.g. `end=True`)
-            inplace: If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-                 datastream objects is created
+        Notes
+        -----
+        Usually to work with multiple syncronised datasets, a `SyncedSession` should be used instead of cutting
+        the datasets manually. `SyncedSession.cut_to_syncregion` will cover multiple edge cases involving multiple
+        datasets, which can not be handled by this method.
 
-        Raises:
-            ValueError: If the dataset does not have any sync infos
 
-        Warns:
+        Parameters
+        ----------
+        start :
+            Whether the dataset should be cut at the `info.sync_index_start`.
+            If this is False, a jump in the counter will remain.
+            The only usecase for not cutting at the start is when the counters are already perfectly aligned.
+        end :
+            Whether the dataset should be cut at the `info.sync_index_stop`. Usually it can be assumed that the
+            data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
+            acceptable to just ignore the last syncpackage and just cut the start of the dataset.
+        warn_thres :
+            Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
+            warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
+            This is not relevant if the end of the dataset is cut (e.g. `end=True`)
+        inplace :
+            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
+            datastream objects is created
+
+        Raises
+        ------
+        ValueError
+            If the dataset does not have any sync infos
+        ValueError
+            If the dataset does not have any sync infos
+
+        Warnings
+        --------
+        UserWarning
             If a syncpackage occurred far before the last sample in the dataset. See arg `warn_thres`.
 
         """
@@ -515,23 +581,37 @@ class Dataset:
     ) -> pd.DataFrame:
         """Export the datastreams of the dataset in a single pandas DataFrame.
 
-        Args:
-            datastreams: Optional list of datastream names, if only specific ones should be included. Datastreams that
-                are not part of the current dataset will be silently ignored.
-            index: Specify which index should be used for the dataset. The options are:
-                "counter": For the actual counter
-                "time": For the time in seconds since the first sample
-                "utc": For the utc time stamp of each sample
-                "utc_datetime": for a pandas DateTime index in UTC time
-                None: For a simple index (0...N)
-            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
-
-        Notes:
+        Parameters
+        ----------
+        datastreams :
+            Optional list of datastream names, if only specific ones should be included. Datastreams that
+            are not part of the current dataset will be silently ignored.
+        index :
+            Specify which index should be used for the dataset. The options are:
+            "counter": For the actual counter
+            "time": For the time in seconds since the first sample
+            "utc": For the utc time stamp of each sample
+            "utc_datetime": for a pandas DateTime index in UTC time
+            None: For a simple index (0...N)
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
+            Notes:
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
+            Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
-            Therefore, it will use the column information of each datastream.
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
 
-        Raises:
-            ValueError: If any other than the allowed `index` values are used.
+        Notes
+        -----
+        This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+        Therefore, it will use the column information of each datastream.
+
+        Raises
+        ------
+        ValueError
+            If any other than the allowed `index` values are used.
 
         """
         index_names = {None: "n_samples", "counter": "n_samples", "time": "t", "utc": "utc", "utc_datetime": "date"}
@@ -560,24 +640,39 @@ class Dataset:
     def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False) -> pd.DataFrame:
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
-        See Also:
-            :py:meth:`nilspodlib.dataset.Dataset.data_as_df`
+        See Also
+        --------
+        nilspodlib.dataset.Dataset.data_as_df
 
-        Args:
-            index: Specify which index should be used for the dataset. The options are:
-                "counter": For the actual counter
-                "time": For the time in seconds since the first sample
-                "utc": For the utc time stamp of each sample
-                "utc_datetime": for a pandas DateTime index in UTC time
-                None: For a simple index (0...N)
-            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
-
-        Notes:
+        Parameters
+        ----------
+        index :
+            Specify which index should be used for the dataset. The options are:
+            "counter": For the actual counter
+            "time": For the time in seconds since the first sample
+            "utc": For the utc time stamp of each sample
+            "utc_datetime": for a pandas DateTime index in UTC time
+            None: For a simple index (0...N)
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
+            Notes:
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
+            Notes:
             This method calls the `data_as_df` methods of each Datastream object and then concats the results.
-            Therefore, it will use the column information of each datastream.
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an `_`
 
-        Raises:
-            ValueError: If any other than the allowed `index` values are used.
+        Notes
+        -----
+        This method calls the `data_as_df` methods of each Datastream object and then concats the results.
+        Therefore, it will use the column information of each datastream.
+
+
+        Raises
+        ------
+        ValueError
+            If any other than the allowed `index` values are used.
 
         """
         return self.data_as_df(datastreams=["acc", "gyro"], index=index, include_units=include_units)
@@ -594,18 +689,24 @@ class Dataset:
         As this only checks the filenames, this might return a false positive depending on your folder structure and
         naming.
 
-        Args:
-            folder: Basepath of the folder to search. If None, tries to find a default calibration
-            recursive: If the folder should be searched recursive or not.
-            filter_cal_type: Whether only files obtain with a certain calibration type should be found.
-                This will look for the `CalType` inside the json file and hence cause performance problems.
-                If None, all found files will be returned.
-                For possible values, see the `imucal` library.
-            ignore_file_not_found: If True this function will not raise an error, but rather return an empty list, if no
-                calibration files were found for the specific sensor.
+        Parameters
+        ----------
+        folder :
+            Basepath of the folder to search. If None, tries to find a default calibration
+        recursive :
+            If the folder should be searched recursive or not.
+        filter_cal_type :
+            Whether only files obtain with a certain calibration type should be found.
+            This will look for the `CalType` inside the json file and hence cause performance problems.
+            If None, all found files will be returned.
+            For possible values, see the `imucal` library.
+        ignore_file_not_found :
+            If True this function will not raise an error, but rather return an empty list, if no
+            calibration files were found for the specific sensor.
 
-        See Also:
-            :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
+        See Also
+        --------
+        nilspodlib.calibration_utils.find_calibrations_for_sensor
 
         """
         # TODO: Test
@@ -631,23 +732,30 @@ class Dataset:
         As this only checks the filenames, this might return a false positive depending on your folder structure and
         naming.
 
-        Args:
-            folder: Basepath of the folder to search. If None, tries to find a default calibration
-            recursive: If the folder should be searched recursive or not.
-            filter_cal_type: Whether only files obtain with a certain calibration type should be found.
-                This will look for the `CalType` inside the json file and hence cause performance problems.
-                If None, all found files will be returned.
-                For possible values, see the `imucal` library.
-            before_after: Can either be 'before' or 'after', if the search should be limited to calibrations that were
-                either before or after the specified date.
-            warn_thres: If the distance to the closest calibration is larger than this threshold, a warning is emitted
-            ignore_file_not_found: If True this function will not raise an error, but rather return `None`, if no
-                calibration files were found for the specific sensor.
+        Parameters
+        ----------
+        folder :
+            Basepath of the folder to search. If None, tries to find a default calibration
+        recursive :
+            If the folder should be searched recursive or not.
+        filter_cal_type :
+            Whether only files obtain with a certain calibration type should be found.
+            This will look for the `CalType` inside the json file and hence cause performance problems.
+            If None, all found files will be returned.
+            For possible values, see the `imucal` library.
+        before_after :
+            Can either be 'before' or 'after', if the search should be limited to calibrations that were
+            either before or after the specified date.
+        warn_thres :
+            If the distance to the closest calibration is larger than this threshold, a warning is emitted
+        ignore_file_not_found :
+            If True this function will not raise an error, but rather return `None`, if no
+            calibration files were found for the specific sensor.
 
-
-        See Also:
-            :py:func:`nilspodlib.calibration_utils.find_calibrations_for_sensor`
-            :py:func:`nilspodlib.calibration_utils.find_closest_calibration_to_date`
+        See Also
+        --------
+        nilspodlib.calibration_utils.find_calibrations_for_sensor
+        nilspodlib.calibration_utils.find_closest_calibration_to_date
 
         """
         # TODO: Test
@@ -684,22 +792,32 @@ class Dataset:
 def parse_binary(path: path_t, legacy_support: str = "error") -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
-    Args:
-        path: Path to the file
-        legacy_support: This indicates how to deal with old firmware versions.
-            If `error`: An error is raised, if an unsupported version is detected.
-            If `warn`: A warning is raised, but the file is parsed without modification
-            If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
-                an error is raised. See the `legacy` package and the README to learn more about available conversions.
+    Parameters
+    ----------
+    path :
+        Path to the file
+    legacy_support :
+        This indicates how to deal with old firmware versions.
+        If `error`, An error is raised, if an unsupported version is detected.
+        If `warn`, A warning is raised, but the file is parsed without modification
+        If `resolve`, A legacy conversion is performed to load old files. If no suitable conversion is found,
+        an error is raised. See the `legacy` package and the README to learn more about available conversions.
 
-    Returns:
+    Returns
+    -------
+    sensor_data :
         The sensor data as dictionary
+    counter :
         The counter values
+    session_header :
         The session header
 
-    Raises:
-        VersionError: If unsupported FirmwareVersion is detected and `legacy_error` is `error`
-        VersionError: If `legacy_error` is `resolve`, but no suitable conversion is found.
+    Raises
+    ------
+    VersionError
+        If unsupported FirmwareVersion is detected and `legacy_error` is `error`
+    VersionError
+        If `legacy_error` is `resolve`, but no suitable conversion is found.
 
     """
     header_bytes, data_bytes = get_header_and_data_bytes(path)

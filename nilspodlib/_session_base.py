@@ -31,18 +31,47 @@ class CascadingDatasetField:
 
 def call_dataset(autogen_doc=True):  # noqa: D202
     """Forward all method calls to all datasets of a session.
-
+    
     This function respects the inplace feature and will create a copy of the session object if required.
 
-    Args:
-        autogen_doc: If True, the docstring of the respective dataset method is copied to the method with short pretext.
-            If a docstring already exists, the dataset docstring will be appended WITHOUT pretext.
+    Parameters
+    ----------
+    autogen_doc :
+        If True, the docstring of the respective dataset method is copied to the method with short pretext.
+        If a docstring already exists, the dataset docstring will be appended WITHOUT pretext. (Default value = True)
+
+    Returns
+    -------
 
     """
 
     def wrapped(method):
+        """
+
+        Parameters
+        ----------
+        method :
+            
+
+        Returns
+        -------
+
+        """
         @wraps(method)
         def cascading_access(*args, **kwargs):
+            """
+
+            Parameters
+            ----------
+            *args :
+                
+            **kwargs :
+                
+
+            Returns
+            -------
+
+            """
             session = args[0]
             return_vals = tuple(getattr(d, method.__name__)(*args[1:], **kwargs) for d in session.datasets)
 
@@ -73,10 +102,11 @@ def call_dataset(autogen_doc=True):  # noqa: D202
 
 class _MultiDataset:
     """Wrapper that holds all attributes and methods that can be simply called on multiple datasets.
-
-    Note:
-        This class should not be used as public interface and is only relevant as base for the session class
-
+    
+    Notes
+    -----
+    This class should not be used as public interface and is only relevant as base for the session class
+    
     This class uses a decorator for methods and a descriptor for attributes to automatically forward all calls to
     multiple datasets.
     See the implementation of `CascadingDatasetField` and `call_dataset` for details.
