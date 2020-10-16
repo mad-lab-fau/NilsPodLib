@@ -12,15 +12,16 @@
 #
 import os
 import re
-import sys
 from datetime import datetime
 from importlib import import_module
 from inspect import getsourcelines, getsourcefile
 from pathlib import Path
 
-import nilspodlib
+import sys
 
 sys.path.insert(0, os.path.abspath(".."))
+
+import nilspodlib
 
 URL = "https://github.com/mad-lab-fau/NilsPodLib"
 
@@ -29,11 +30,7 @@ URL = "https://github.com/mad-lab-fau/NilsPodLib"
 
 project = "nilspodlib"
 copyright = "2018 - {}, MaD-Lab FAU, Digital Health and Gait-Analysis Group".format(datetime.now().year)
-author = (
-    "Arne Küderle <arne.kuederle@fau.de>, "
-    "Nils Roth <nils.roth@fau.de>, "
-    "Robert Richer <robert.richer@fau.de>"
-)
+author = "Arne Küderle <arne.kuederle@fau.de>, Nils Roth <nils.roth@fau.de>, Robert Richer <robert.richer@fau.de>"
 
 # The full version, including alpha/beta/rc tags
 release = "1.0.0"
@@ -101,9 +98,7 @@ add_function_parentheses = False
 #
 # Activate the theme.
 html_theme = "pydata_sphinx_theme"
-html_theme_options = {
-  "show_prev_next": False
-}
+html_theme_options = {"show_prev_next": False}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -134,8 +129,8 @@ sphinx_gallery_conf = {
     "backreferences_dir": "modules/generated/backreferences",
     "doc_module": ("nilspodlib",),
     "filename_pattern": re.escape(os.sep),
-    'remove_config_comments': True,
-    'show_memory': True,
+    "remove_config_comments": True,
+    "show_memory": True,
 }
 
 # Linkcode
@@ -158,7 +153,7 @@ def linkcode_resolve(domain, info):
     module = import_module(info["module"])
     obj = get_nested_attr(module, info["fullname"])
     code_line = None
-    filename = ''
+    filename = ""
     try:
         filename = str(Path(getsourcefile(obj)).relative_to(Path(getsourcefile(nilspodlib)).parent.parent))
     except:
@@ -181,4 +176,3 @@ def skip_properties(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-skip-member", skip_properties)
-

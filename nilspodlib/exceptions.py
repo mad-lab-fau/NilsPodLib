@@ -1,7 +1,4 @@
-"""Exceptions and warnings used in the library.
-
-@author: Arne Küderle
-"""
+"""Exceptions and warnings used in the library. """
 import warnings
 
 
@@ -52,10 +49,16 @@ class CalibrationWarning(Warning):
     pass
 
 
-def datastream_does_not_exist_warning(sensor_name, operation):
+class VersionError(Exception):
+    """Error related to Firmware Version issues."""
+
+    pass
+
+
+def datastream_does_not_exist_warning(sensor_type, operation):
     """Warn about not existing datastreams."""
     message = 'The datastream "{}" does not exist for the current session.\
      The performed operation "{}" will have not effect'.format(
-        sensor_name, operation
+        sensor_type, operation
     )
     return warnings.warn(message)

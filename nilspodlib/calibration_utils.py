@@ -1,7 +1,4 @@
-"""A set of utilities to save and find calibrations for NilsPod sensors.
-
-@author: Arne Küderle
-"""
+"""A set of utilities to save and find calibrations for NilsPod sensors."""
 
 import datetime
 import json
@@ -37,7 +34,7 @@ def save_calibration(
     calibration :
         The CalibrationInfo object ot be saved
     sensor_id :
-        The for 4 letter/digit identifier of a sensor, as obtained from
+        The for 4 letter/digit identifier of a sensor_type, as obtained from
         :py:meth:`nilspodlib.header.Header.sensor_id`
     cal_time :
         The date and time (min precision) when the calibration was performed. It is preferable to pass this
@@ -77,7 +74,7 @@ def find_calibrations_for_sensor(
     Parameters
     ----------
     sensor_id :
-        The for 4 letter/digit identifier of a sensor, as obtained from
+        The for 4 letter/digit identifier of a sensor_type, as obtained from
         :py:meth:`nilspodlib.header.Header.sensor_id`
     folder :
         Basepath of the folder to search. If None, tries to find a default calibration
@@ -90,7 +87,7 @@ def find_calibrations_for_sensor(
         For possible values, see the `imucal` library.
     ignore_file_not_found :
         If True this function will not raise an error, but rather return an empty list, if no
-        calibration files were found for the specific sensor.
+        calibration files were found for the specific sensor_type.
 
     Returns
     -------
@@ -121,7 +118,7 @@ def find_calibrations_for_sensor(
         matches = [f for f in matches if json.load(f.open())["cal_type"].lower() == filter_cal_type.lower()]
 
     if not matches and ignore_file_not_found is not True:
-        raise ValueError("No Calibration for the sensor with the id {} could be found".format(sensor_id))
+        raise ValueError("No Calibration for the sensor_type with the id {} could be found".format(sensor_id))
     return matches
 
 
@@ -135,14 +132,14 @@ def find_closest_calibration_to_date(
     warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
     ignore_file_not_found: Optional[bool] = False,
 ) -> Optional[Path]:
-    """Find the calibration file for a sensor, that is closes to a given date.
+    """Find the calibration file for a sensor_type, that is closes to a given date.
     
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
 
     Parameters
     ----------
     sensor_id :
-        The for 4 letter/digit identifier of a sensor, as obtained from
+        The for 4 letter/digit identifier of a sensor_type, as obtained from
         :py:meth:`nilspodlib.header.Header.sensor_id`
     cal_time :
         time and date to look for
@@ -163,16 +160,16 @@ def find_closest_calibration_to_date(
         If the distance to the closest calibration is larger than this threshold, a warning is emitted
     ignore_file_not_found :
         If True this function will not raise an error, but rather return `None`, if no
-        calibration files were found for the specific sensor.
+        calibration files were found for the specific sensor_type.
         Notes:
     ignore_file_not_found :
         If True this function will not raise an error, but rather return `None`, if no
-        calibration files were found for the specific sensor.
+        calibration files were found for the specific sensor_type.
         Notes:
         If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
     ignore_file_not_found :
         If True this function will not raise an error, but rather return `None`, if no
-        calibration files were found for the specific sensor.
+        calibration files were found for the specific sensor_type.
 
     Notes
     -----
@@ -202,7 +199,7 @@ def find_closest_calibration_to_date(
     if not potential_list:
         if ignore_file_not_found is True:
             return None
-        raise ValueError("No Calibration for the sensor with the id {} could be found".format(sensor_id))
+        raise ValueError("No Calibration for the sensor_type with the id {} could be found".format(sensor_id))
 
     dates = [datetime.datetime.strptime("_".join(d.stem.split("_")[1:]), "%Y-%m-%d_%H-%M") for d in potential_list]
 
@@ -223,7 +220,7 @@ def find_closest_calibration_to_date(
     min_dist = float(np.nanmin(np.abs(diffs)))
     if warn_thres < datetime.timedelta(seconds=min_dist):
         warnings.warn(
-            "For the sensor {} no calibration could be located that was in {} of the {}."
+            "For the sensor_type {} no calibration could be located that was in {} of the {}."
             "The closest calibration is {} away.".format(
                 sensor_id, warn_thres, cal_time, datetime.timedelta(seconds=min_dist)
             ),

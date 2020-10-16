@@ -11,7 +11,7 @@ Classes
 
 .. autosummary::
    :toctree: generated/dataset
-   :template: class_with_private.rst
+   :template: class.rst
 
     Dataset
 

@@ -1,13 +1,10 @@
-"""Legacy support helper to convert older NilsPod files into new versions.
-
-@author: Arne Küderle
-"""
+"""Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
 from distutils.version import StrictVersion
 from typing import Tuple, Callable, Optional, Union
 import numpy as np
 
-from nilspodlib.exceptions import LegacyWarning
+from nilspodlib.exceptions import LegacyWarning, VersionError
 from nilspodlib.utils import (
     path_t,
     get_header_and_data_bytes,
@@ -26,9 +23,9 @@ MIN_NON_LEGACY_VERSION = StrictVersion("0.14.0")
 def find_conversion_function(
     version: StrictVersion, in_memory: Optional[bool] = True, return_name: Optional[bool] = False
 ) -> Union[Callable, str]:
-    """Return a suitable conversion function for a specific legacy version.
+    """Find a method that is able to convert a recording from one version to the other.
 
-    This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False
+    This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False.
     """
     if version >= MIN_NON_LEGACY_VERSION:
         return lambda x, y: (x, y)
@@ -44,17 +41,19 @@ def find_conversion_function(
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
-
+    
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
+    
+    .. warning:: After the update the following features will not work:
+                    - The sync group was removed and hence can not be read anymore
 
-    Warnings:
-        After the update the following features will not work:
-            - The sync group was removed and hence can not be read anymore
-
-    Args:
-        in_path: path to 0.12.x / 0.13.x file
-        out_path: path to converted 0.13.255 file
+    Parameters
+    ----------
+    in_path :
+        path to 0.12.x / 0.13.x file
+    out_path :
+        path to converted 0.13.255 file
 
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
@@ -67,17 +66,19 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
 
 def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
-
+    
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
+    
+    .. warning:: After the update the following features will not work:
+                    - The sync group was removed and hence can not be read anymore
 
-    Warnings:
-        After the update the following features will not work:
-            - The sync group was removed and hence can not be read anymore
-
-    Args:
-        header: bytes containing all the legacy header information
-        data_bytes: raw bytes representing the data
+    Parameters
+    ----------
+    header :
+        bytes containing all the legacy header information
+    data_bytes :
+        raw bytes representing the data
 
     """
     min_v = CONVERSION_DICT["12_0"]["min"]
@@ -105,14 +106,16 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
 
-    Warnings:
-        After the update the following features will not work:
-            - The battery sensor does not exist anymore and hence, is not supported in the converted files
-            - The sync group was removed and hence can not be read anymore
+    .. warning:: After the update the following features will not work:
+                    - The battery sensor_type does not exist anymore and hence, is not supported in the converted files
+                    - The sync group was removed and hence can not be read anymore
 
-    Args:
-        in_path: path to 0.11.2 file
-        out_path: path to converted 0.13.255 file
+    Parameters
+    ----------
+    in_path :
+        path to 0.11.2 file
+    out_path :
+        path to converted 0.13.255 file
 
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
@@ -129,14 +132,16 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
 
-    Warnings:
-        After the update the following features will not work:
-            - The battery sensor does not exist anymore and hence, is not supported in the converted files
-            - The sync group was removed and hence can not be read anymore
+    .. warning:: After the update the following features will not work:
+                    - The battery sensor_type does not exist anymore and hence, is not supported in the converted files
+                    - The sync group was removed and hence can not be read anymore
 
-    Args:
-        header: bytes containing all the legacy header information
-        data_bytes: raw bytes representing the data
+    Parameters
+    ----------
+    header :
+        Bytes containing all the legacy header information
+    data_bytes :
+        Raw bytes representing the data
 
     """
     min_v = CONVERSION_DICT["11_2"]["min"]
@@ -191,7 +196,7 @@ def _convert_sensor_enabled_flag_11_2(byte):
 
 
 def _insert_missing_bytes_11_2(header_bytes):
-    """Insert header byter that were added after 11.2."""
+    """Insert header bytes that were added after 11.2."""
     header_bytes = np.insert(header_bytes, 4, 0x00)
 
     header_bytes = np.insert(header_bytes, 47, [0x00] * 2)
@@ -218,9 +223,12 @@ def _split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
 def legacy_support_check(version: StrictVersion, as_warning: bool = False):
     """Check if a file recorded with a specific fileformat version can be converted using legacy support.
 
-    Args:
-        version: The version to check for.
-        as_warning: If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
+    Parameters
+    ----------
+    version :
+        The version to check for.
+    as_warning :
+        If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
 
     """
     if version < StrictVersion("0.11.2"):
@@ -242,9 +250,3 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
         warnings.warn(msg, LegacyWarning)
     else:
         raise VersionError(msg)
-
-
-class VersionError(Exception):
-    """Error related to Firmware Version issues."""
-
-    pass

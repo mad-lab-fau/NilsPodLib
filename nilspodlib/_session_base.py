@@ -1,7 +1,4 @@
-"""Internal bases for sessions to make it easier to call dataset methods on the session object.
-
-@author: Arne Küderle
-"""
+"""Internal bases for sessions to make it easier to call dataset methods on the session object."""
 
 from functools import wraps
 from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequence
@@ -40,38 +37,11 @@ def call_dataset(autogen_doc=True):  # noqa: D202
         If True, the docstring of the respective dataset method is copied to the method with short pretext.
         If a docstring already exists, the dataset docstring will be appended WITHOUT pretext. (Default value = True)
 
-    Returns
-    -------
-
     """
 
-    def wrapped(method):
-        """
-
-        Parameters
-        ----------
-        method :
-            
-
-        Returns
-        -------
-
-        """
+    def _wrapped(method):
         @wraps(method)
-        def cascading_access(*args, **kwargs):
-            """
-
-            Parameters
-            ----------
-            *args :
-                
-            **kwargs :
-                
-
-            Returns
-            -------
-
-            """
+        def _cascading_access(*args, **kwargs):
             session = args[0]
             return_vals = tuple(getattr(d, method.__name__)(*args[1:], **kwargs) for d in session.datasets)
 
@@ -83,21 +53,18 @@ def call_dataset(autogen_doc=True):  # noqa: D202
             return return_vals
 
         if autogen_doc:
-            if cascading_access.__doc__:
-                cascading_access.__doc__ += "\n\n"
+            if _cascading_access.__doc__:
+                _cascading_access.__doc__ += "\n\n"
             else:
-                cascading_access.__doc__ = (
+                _cascading_access.__doc__ = (
                     "Apply `Dataset.{0}` to all datasets of the session.\n\n"
                     "See :py:meth:`nilspodlib.dataset.Dataset.{0}` for more details. "
                     "The docstring of this method is included below:\n\n".format(method.__name__)
                 )
-            cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
-            cascading_access.__doc__ += "\nSee Also:\n" "   :py:meth:`nilspodlib.dataset.Dataset.{0}`".format(
-                method.__name__
-            )
-        return cascading_access
+            _cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
+        return _cascading_access
 
-    return wrapped
+    return _wrapped
 
 
 class _MultiDataset:

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fundamental Datastream class, which holds any type of sensor data and handles basic interactions with it.
-
-@author: Nils Roth, Arne Küderle
-"""
+"""Fundamental Datastream class, which holds any type of sensor_type data and handles basic interactions with it."""
 
 import copy
 from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
@@ -20,16 +17,29 @@ if TYPE_CHECKING:
 
 
 class Datastream:
-    """Object representing a single set of data of one sensor.
+    """Object representing a single set of data of one sensor_type.
 
     Usually it is not required to directly interact with the datastream object (besides accessing the data attribute).
     Most important functionality can/should be used via a dataset or session object to manage multiple datasets at once.
+
+    Attributes
+    ----------
+    data
+        The actual data of the sensor_type as `np.array`.
+        Can have multiple dimensions depending on the sensor_type.
+    sensor
+        The name of the sensor_type
+    is_calibrated
+        If the sensor_type is in a raw format or the expected final output units
+    sampling_rate_hz
+        The sampling rate of the datastream
+
     """
 
     data: np.ndarray
     is_calibrated: bool = False
     sampling_rate_hz: float
-    sensor: Optional[str]
+    sensor_type: Optional[str]
     _unit: str
     _columns: Optional[List]
 
@@ -43,28 +53,36 @@ class Datastream:
     ):
         """Get new datastream instance.
 
-        Args:
-            data: The actual data to be stored in the datastream. Should be 2D (even if only 1D data is stored).
-                First dimension should be the time axis and second dimension the different data vector entries
-                (e.g. acc_x, acc_y, acc_z)
-            sampling_rate: The sampling rate of the datastream. Is used for all calculations that require sampling info
-            columns: Optional list of names for the data vector entries. Only used to make it easier to understand the
-                content of a datastream
-            unit: The unit of the data stored in the datastream.
-                This is only used, if `self.is_calibrated` is set to `True`
-            sensor_type: Type of sensor the data is produced from. This allows to automatically get default values for
-                columns and units from :py:mod:`nilspodlib.consts
+        Parameters
+        ----------
+        data :
+            The actual data to be stored in the datastream.
+            Should be 2D (even if only 1D data is stored).
+            First dimension should be the time axis and second dimension the different data vector entries
+            (e.g. acc_x, acc_y, acc_z).
+        sampling_rate :
+            The sampling rate of the datastream.
+            Is used for all calculations that require sampling info.
+        columns :
+            Optional list of names for the data vector entries.
+            Only used to make it easier to understand the content of a datastream.
+        unit :
+            The unit of the data stored in the datastream.
+            This is only used, if `self.is_calibrated` is set to `True`.
+        sensor_type :
+            Type of sensor_type the data is produced from.
+            This allows to automatically get default values for columns and units from :py:mod:`nilspodlib.consts`.
 
         """
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
-        self.sensor = sensor_type
+        self.sensor_type = sensor_type
         self._columns = list(columns) if columns else columns
         self._unit = unit
 
     def __repr__(self):
-        return "Datastream(sensor={}, sampling_rate_hz={}, is_calibrated={}, data={}".format(
-            self.sensor, self.sampling_rate_hz, self.is_calibrated, self.data
+        return "Datastream(sensor_type={}, sampling_rate_hz={}, is_calibrated={}, data={}".format(
+            self.sensor_type, self.sampling_rate_hz, self.is_calibrated, self.data
         )
 
     @property
@@ -77,8 +95,8 @@ class Datastream:
         if self.is_calibrated is True:
             if self._unit:
                 return self._unit
-            if self.sensor and SENSOR_UNITS.get(self.sensor, None):
-                return SENSOR_UNITS[self.sensor]
+            if self.sensor_type and SENSOR_UNITS.get(self.sensor_type, None):
+                return SENSOR_UNITS[self.sensor_type]
         return "a.u."
 
     @property
@@ -91,9 +109,9 @@ class Datastream:
         """
         if self._columns:
             return self._columns
-        elif self.sensor:
-            if SENSOR_LEGENDS.get(self.sensor, None):
-                return list(SENSOR_LEGENDS[self.sensor])
+        elif self.sensor_type:
+            if SENSOR_LEGENDS.get(self.sensor_type, None):
+                return list(SENSOR_LEGENDS[self.sensor_type])
         return list(range(self.data.shape[-1]))
 
     def __len__(self):
@@ -110,6 +128,7 @@ class Datastream:
         """Get the normalized data.
 
         Normalization is performed by dividing the data by its maximum absolute value.
+        This will always return a copy of the datastream.
         """
         ds = copy.deepcopy(self)
         ds.data /= np.abs(ds.data).max(axis=0)
@@ -126,11 +145,16 @@ class Datastream:
 
         This is equivalent to applying the following slicing to the data of the datastream: `array[start:stop:step]`
 
-        Args:
-            start: Start index
-            stop: Stop index
-            step: Step size of the cut
-            inplace: If True this methods modifies the current datastream object. If False, a copy of the datastream
+        Parameters
+        ----------
+        start :
+            Start index
+        stop :
+            Stop index
+        step :
+            Step size of the cut
+        inplace :
+            If True this methods modifies the current datastream object. If False, a copy of the datastream is returned.
 
         """
         s = inplace_or_copy(self, inplace)
@@ -141,9 +165,12 @@ class Datastream:
     def downsample(self: T, factor: int, inplace: bool = False) -> T:
         """Downsample the datastreams by a factor.
 
-        Args:
-            factor: Factor by which the datastream should be downsampled.
-            inplace: If True this methods modifies the current datastream object. If False, a copy of the datastream
+        Parameters
+        ----------
+        factor :
+            Factor by which the datastream should be downsampled.
+        inplace :
+            If True this methods modifies the current datastream object. If False, a copy of the datastream is returned.
 
         """
         s = inplace_or_copy(self, inplace)
@@ -152,14 +179,18 @@ class Datastream:
         return s
 
     def data_as_df(self, index_as_time: bool = True, include_units=False) -> "pd.DataFrame":
-        """Return the datastream as pandas Dataframe.
+        """Export the datastream as pandas DataFrame using `self.columns` as colummns.
 
-        This will use `self.columns` as columns for the dataframe.
+        Parameters
+        ----------
+        index_as_time :
+            If True the index will be divided by the sampling rate to represent time since start of the measurement
+        include_units :
+            If True the column names will have the unit of the datastream concatenated with an (Default value = False)
 
-        Args:
-            index_as_time: If True the index will be divided by the sampling rate to represent time since start of the
-                measurement.
-            include_units: If True the column names will have the unit of the datastream concatenated with an `_`
+        Returns
+        -------
+        DataFrame
 
         """
         import pandas as pd  # noqa: F811

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Dataset represents a measurement session of a single sensor.
-
-@author: Nils Roth, Arne Küderle
-"""
+"""Dataset represents a measurement session of a single sensor_type."""
 import datetime
 import warnings
 from distutils.version import StrictVersion
@@ -47,17 +44,57 @@ T = TypeVar("T")
 class Dataset:
     """Class representing a logged session of a single NilsPod.
 
-    :: warning:
-        Some operations on the dataset should not be performed after each other, as they can lead to unexpected
-        results.
-        The respective methods have specific warnings in their docstring.
+    .. warning:: Some operations on the dataset should not be performed after each other, as they can lead to unexpected
+                 results.
+                 The respective methods have specific warnings in their docstring.
 
     Each instance has 3 important (groups of attributes):
-        self.info: A instance of `nilspodlib.header.Header` containing all the meta info about the measurement
-        self.counter: The continuous counter created by the sensor. It is in particular important to synchronise
-            multiple datasets that were recorded at the same time (see `nilspodlib.session.SyncedSession`)
-        datastream: The actual sensor data accessed directly by the name of the sensor (e.g. acc, gyro, baro, ...)
-            Each sensor data is wrapped in a `NilPodLib.datastream.Datastream` object.
+
+    - self.info: A instance of `nilspodlib.header.Header` containing all the meta info about the measurement.
+    - self.counter: The continuous counter created by the sensor.
+      It is in particular important to synchronise multiple datasets that were recorded at the same time
+      (see `nilspodlib.session.SyncedSession`).
+    - datastream: The actual sensor_type data accessed directly by the name of the sensor_type
+      (e.g. acc, gyro, baro, ...).
+      Each sensor_type data is wrapped in a `NilPodLib.datastream.Datastream` object.
+
+    Attributes
+    ----------
+    path :
+        Path pointing to the recording file (if dataset was loaded from a file)
+    info :
+        Metadata of the recording
+    size :
+        The number of samples in the dataset.
+    counter :
+        The continuous counter of the sensor.
+    time_counter :
+        Counter in seconds since first sample.
+    utc_counter :
+        Counter as utc timestamps.
+    utc_datetime_counter :
+        Counter as np.datetime64 in UTC timezone.
+    active_sensor :
+        The enabled sensors in the dataset.
+    datastreams :
+        Iterator over all available datastreams/sensors
+    acc :
+        Optional accelerometer datastream.
+    gyro :
+        Optional gyroscope datastream.
+    mag :
+        Optional magnetometer datastream.
+    baro :
+        Optional barometer datastream.
+    analog :
+        Optional analog datastream.
+        Its content will depend on the exact recording and sensor used.
+    ecg :
+        Optional ECG datastream.
+    ppg :
+        Optional PPG datastream.
+    temperature :
+        Optional temperature reading datastream.
 
     """
 
@@ -73,6 +110,37 @@ class Dataset:
     counter: np.ndarray
     info: Header
 
+    @property
+    def size(self) -> int:
+        """Get the number of samples in the Dataset."""
+        return len(self.counter)
+
+    @property
+    def active_sensors(self) -> Tuple[str]:
+        """Get the enabled sensors in the dataset."""
+        return tuple(self.info.enabled_sensors)
+
+    @property
+    def datastreams(self) -> Iterable[Datastream]:
+        """Iterate through all available datastreams."""
+        for i in self.active_sensors:
+            yield i, getattr(self, i)
+
+    @property
+    def utc_counter(self) -> np.ndarray:
+        """Counter as utc timestamps."""
+        return self.info.utc_datetime_start_day_midnight.timestamp() + self.counter / self.info.sampling_rate_hz
+
+    @property
+    def utc_datetime_counter(self) -> np.ndarray:
+        """Counter as np.datetime64 in UTC timezone."""
+        return (self.utc_counter * 1e6).astype("datetime64[us]")
+
+    @property
+    def time_counter(self) -> np.ndarray:
+        """Counter in seconds since first sample."""
+        return (self.counter - self.counter[0]) / self.info.sampling_rate_hz
+
     def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
         """Get new Dataset instance.
 
@@ -80,13 +148,13 @@ class Dataset:
             Usually you shouldn't use this init directly.
             Use the provided `from_bin_file` constructor to handle loading recorded NilsPod Sessions.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         sensor_data :
-            Dictionary with name of sensor and sensor data as np.array
+            Dictionary with name of sensor_type and sensor_type data as np.array
             The data needs to be 2D with time/counter as first dimension
         counter :
-            The counter created by the sensor. Should have the same length as all datasets
+            The counter created by the sensor_type. Should have the same length as all datasets
         info :
             Header instance containing all Metainfo about the measurement.
 
@@ -146,37 +214,6 @@ class Dataset:
 
         """
         raise NotImplementedError("CSV importer coming soon")
-
-    @property
-    def size(self) -> int:
-        """Get the number of samples in the Dataset."""
-        return len(self.counter)
-
-    @property
-    def active_sensors(self) -> Tuple[str]:
-        """Get the enabled sensors in the dataset."""
-        return tuple(self.info.enabled_sensors)
-
-    @property
-    def datastreams(self) -> Iterable[Datastream]:
-        """Iterate through all available datastreams."""
-        for i in self.active_sensors:
-            yield i, getattr(self, i)
-
-    @property
-    def utc_counter(self) -> np.ndarray:
-        """Counter as utc timestamps."""
-        return self.info.utc_datetime_start_day_midnight.timestamp() + self.counter / self.info.sampling_rate_hz
-
-    @property
-    def utc_datetime_counter(self) -> np.ndarray:
-        """Counter as np.datetime64 in UTC timezone."""
-        return (self.utc_counter * 1e6).astype("datetime64[us]")
-
-    @property
-    def time_counter(self) -> np.ndarray:
-        """Counter in seconds since first sample."""
-        return (self.counter - self.counter[0]) / self.info.sampling_rate_hz
 
     def calibrate_imu(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Acc and Gyro datastreams.
@@ -263,8 +300,8 @@ class Dataset:
     def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
         """Apply a calibration to the Acc and Gyro datastreams.
 
-        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
-        For any tasks requiring precise sensor outputs, `calibrate_imu` should be used with measured calibration
+        The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
+        For any tasks requiring precise sensor_type outputs, `calibrate_imu` should be used with measured calibration
         values.
 
         The final units of the output will be "g" for the Acc and "dps" (degrees per second) for the Gyro.
@@ -286,8 +323,8 @@ class Dataset:
     def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
         """Apply a factory calibration to the Gyro datastream.
 
-        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
-        For any tasks requiring precise sensor outputs, `calibrate_gyro` should be used with measured calibration
+        The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
+        For any tasks requiring precise sensor_type outputs, `calibrate_gyro` should be used with measured calibration
         values.
 
         The final units of the output will be "dps" (degrees per second) for the Gyro.
@@ -308,8 +345,8 @@ class Dataset:
     def factory_calibrate_acc(self: T, inplace: bool = False) -> T:
         """Apply a factory calibration to the Acc datastream.
 
-        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
-        For any tasks requiring precise sensor outputs, `calibrate_acc` should be used with measured calibration
+        The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
+        For any tasks requiring precise sensor_type outputs, `calibrate_acc` should be used with measured calibration
         values.
 
         The final units of the output will be "g" for the Acc.
@@ -330,7 +367,7 @@ class Dataset:
     def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
         """Apply a calibration to the Baro datastream.
 
-        The values used for that are taken from the datasheet of the sensor and are likely not to be accurate.
+        The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
         In general, if baro measurements are used to estimate elevation, the estimation should be calibrated relative to
         a reference altitude.
 
@@ -352,7 +389,7 @@ class Dataset:
     def factory_calibrate_temperature(self: Type[T], inplace: bool = False):
         """Apply a factory calibration to the temperature datastream.
 
-        The values used for that are taken from the datasheet of the sensor
+        The values used for that are taken from the datasheet of the sensor_type
 
         The final unit is Celsius.
 
@@ -684,7 +721,7 @@ class Dataset:
         filter_cal_type: Optional[str] = None,
         ignore_file_not_found: Optional[bool] = False,
     ) -> List[Path]:
-        """Find all calibration infos that belong to a given sensor.
+        """Find all calibration infos that belong to a given sensor_type.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
         naming.
@@ -702,7 +739,7 @@ class Dataset:
             For possible values, see the `imucal` library.
         ignore_file_not_found :
             If True this function will not raise an error, but rather return an empty list, if no
-            calibration files were found for the specific sensor.
+            calibration files were found for the specific sensor_type.
 
         See Also
         --------
@@ -750,7 +787,7 @@ class Dataset:
             If the distance to the closest calibration is larger than this threshold, a warning is emitted
         ignore_file_not_found :
             If True this function will not raise an error, but rather return `None`, if no
-            calibration files were found for the specific sensor.
+            calibration files were found for the specific sensor_type.
 
         See Also
         --------
