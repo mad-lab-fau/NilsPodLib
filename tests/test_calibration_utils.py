@@ -206,13 +206,13 @@ def test_find_closest_warning(dummy_cal_folder):
 
     assert len(rec) == 0
 
-
-def test_find_default_cal():
-    cals = find_calibrations_for_sensor("3d73")
-
-    assert len(cals) > 0
-
-
-def test_find_default_cal_wrong():
-    with pytest.raises(ValueError):
-        find_calibrations_for_sensor("FFFF")
+# TODO: Add tests back in, once IMU cal and NilsPod Ref Cal are open source
+# def test_find_default_cal():
+#     cals = find_calibrations_for_sensor("3d73")
+#
+#     assert len(cals) > 0
+#
+#
+# def test_find_default_cal_wrong():
+#     with pytest.raises(ValueError):
+#         find_calibrations_for_sensor("FFFF")
