@@ -377,7 +377,7 @@ class SyncedSession(Session):
         warn_thres: Optional[int] = 30,
     ) -> T:
         """Align all datasets based on regions where they were synchronised to the master.
-        
+
         At the end all datasets are cut to the same length, so that the maximum overlap between all datasets is
         preserved.
 
@@ -465,7 +465,7 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def cut_to_syncregion(
+    def cut_to_syncregion(  # noqa: arguments-differ
         self: Type[T],
         end: bool = False,
         only_to_master: bool = False,
@@ -526,7 +526,7 @@ class SyncedSession(Session):
         s = self.align_to_syncregion(cut_start=True, cut_end=end, warn_thres=warn_thres, inplace=inplace)
         return s
 
-    def data_as_df(
+    def data_as_df(  # noqa: arguments-differ
         self,
         datastreams: Optional[Sequence[str]] = None,
         index: Optional[str] = None,
@@ -534,7 +534,6 @@ class SyncedSession(Session):
         concat_df: Optional[bool] = False,
     ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
-
 
         Parameters
         ----------
@@ -588,11 +587,11 @@ class SyncedSession(Session):
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
 
-    def imu_data_as_df(
+    def imu_data_as_df(  # noqa: arguments-differ
         self, index: Optional[str] = None, include_units: Optional[bool] = False, concat_df: Optional[bool] = False
     ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
-        
+
         See Also
         --------
         nilspodlib.session.SyncedSession.data_as_df
@@ -635,4 +634,6 @@ class SyncedSession(Session):
             If any other than the allowed `index` values are used.
 
         """
-        return self.data_as_df(datastreams=["acc", "gyro"], index=index, include_units=include_units)
+        return self.data_as_df(
+            datastreams=["acc", "gyro"], index=index, include_units=include_units, concat_df=concat_df
+        )

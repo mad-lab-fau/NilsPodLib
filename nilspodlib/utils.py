@@ -4,18 +4,18 @@ import copy
 import struct
 import warnings
 from distutils.version import StrictVersion
-from typing import TypeVar, Tuple
+from pathlib import Path
+from typing import TypeVar, Tuple, Any
 
 import numpy as np
-from pathlib import Path
 
 from nilspodlib.exceptions import CorruptedPackageWarning
 
-path_t = TypeVar("path_t", str, Path)
+path_t = TypeVar("path_t", str, Path)  # noqa: invalid-name
 T = TypeVar("T")
 
 
-def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
+def convert_little_endian(byte_list: np.ndarray, dtype: Any = int) -> np.ndarray:
     """Convert a little endian bytestring into a readable format.
 
     Parameters
@@ -129,15 +129,15 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
 
 def remove_docstring_indent(doc_str: str) -> str:
     """Remove the additional indent of a multiline docstring.
-    
+
     This can be helpful, if docstrings are combined programmatically.
     """
     lines = doc_str.split("\n")
     if len(lines) <= 1:
         return doc_str
-    first_non_summary_line = next(l for l in lines[1:] if l)
+    first_non_summary_line = next(line for line in lines[1:] if line)
     indent = len(first_non_summary_line) - len(first_non_summary_line.lstrip())
     cut_lines = [lines[0]]
-    for l in lines:
-        cut_lines.append(l[indent:])
+    for line in lines:
+        cut_lines.append(line[indent:])
     return "\n".join(cut_lines)

@@ -1,11 +1,9 @@
-"""Exceptions and warnings used in the library. """
+"""Exceptions and warnings used in the library."""
 import warnings
 
 
 class InvalidInputFileError(Exception):
     """Indicate an invalid binary file, which can not be loaded."""
-
-    pass
 
 
 class RepeatedCalibrationError(Exception):
@@ -22,37 +20,25 @@ class RepeatedCalibrationError(Exception):
 class SynchronisationError(Exception):
     """Error that is raised for sync related issues."""
 
-    pass
-
 
 class SynchronisationWarning(Warning):
     """Indicate potential issues with sync."""
-
-    pass
 
 
 class LegacyWarning(Warning):
     """Indicate potential issues due to older firmware versions."""
 
-    pass
-
 
 class CorruptedPackageWarning(Warning):
     """Indicate potential issues with a recorded file."""
-
-    pass
 
 
 class CalibrationWarning(Warning):
     """Indicate potential issues with a calibration."""
 
-    pass
-
 
 class VersionError(Exception):
     """Error related to Firmware Version issues."""
-
-    pass
 
 
 def datastream_does_not_exist_warning(sensor_type, operation):

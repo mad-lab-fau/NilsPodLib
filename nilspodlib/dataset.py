@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class Dataset:
+class Dataset:  # noqa: too-many-public-methods
     """Class representing a logged session of a single NilsPod.
 
     .. warning:: Some operations on the dataset should not be performed after each other, as they can lead to unexpected

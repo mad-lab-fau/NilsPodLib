@@ -5,7 +5,7 @@ from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequ
 
 import numpy as np
 
-from nilspodlib import Dataset
+from nilspodlib.dataset import Dataset
 from nilspodlib.utils import path_t, inplace_or_copy, remove_docstring_indent
 
 T = TypeVar("T")
@@ -18,17 +18,22 @@ if TYPE_CHECKING:
 class CascadingDatasetField:
     """A simple descriptor object to forward attribute access to all datasets of a session."""
 
+    name: str
+    __doc__: str
+
     def __set_name__(self, owner, name):
+        """Set the name of the field and update the docstring, by pulling from the Dataset class."""
         self.name = name
         self.__doc__ = getattr(Dataset, self.name, None).__doc__
 
     def __get__(self, instance, owner):
+        """Get the attribute from all nested objects."""
         return tuple(getattr(d, self.name) for d in instance.datasets)
 
 
 def call_dataset(autogen_doc=True):  # noqa: D202
     """Forward all method calls to all datasets of a session.
-    
+
     This function respects the inplace feature and will create a copy of the session object if required.
 
     Parameters
@@ -69,11 +74,11 @@ def call_dataset(autogen_doc=True):  # noqa: D202
 
 class _MultiDataset:
     """Wrapper that holds all attributes and methods that can be simply called on multiple datasets.
-    
+
     Notes
     -----
     This class should not be used as public interface and is only relevant as base for the session class
-    
+
     This class uses a decorator for methods and a descriptor for attributes to automatically forward all calls to
     multiple datasets.
     See the implementation of `CascadingDatasetField` and `call_dataset` for details.
@@ -100,27 +105,29 @@ class _MultiDataset:
     datasets: Tuple[Dataset]
 
     @call_dataset()
-    def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:
+    def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
         pass
 
     @call_dataset()
-    def factory_calibrate_gyro(self: Type[T], inplace: bool = False) -> T:
+    def factory_calibrate_gyro(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
         pass
 
     @call_dataset()
-    def factory_calibrate_baro(self: Type[T], inplace: bool = False) -> T:
+    def factory_calibrate_baro(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
         pass
 
     @call_dataset()
-    def factory_calibrate_temperature(self: Type[T], inplace: bool = False) -> T:
+    def factory_calibrate_temperature(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
         pass
 
     @call_dataset()
-    def cut_to_syncregion(self: Type[T], end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False) -> T:
+    def cut_to_syncregion(  # noqa: D105
+        self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+    ) -> T:
         pass
 
     @call_dataset()
-    def cut(
+    def cut(  # noqa: D105
         self: Type[T],
         start: Optional[int] = None,
         stop: Optional[int] = None,
@@ -130,7 +137,7 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def cut_counter_val(
+    def cut_counter_val(  # noqa: D105
         self: Type[T],
         start: Optional[int] = None,
         stop: Optional[int] = None,
@@ -140,11 +147,11 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def downsample(self: Type[T], factor: int, inplace: bool = False) -> T:
+    def downsample(self: Type[T], factor: int, inplace: bool = False) -> T:  # noqa: D105
         pass
 
     @call_dataset()
-    def data_as_df(
+    def data_as_df(  # noqa: D105
         self,
         datastreams: Optional[Sequence[str]] = None,
         index: Optional[str] = None,
@@ -153,11 +160,11 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple["pd.DataFrame"]:
+    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple["pd.DataFrame"]:  # noqa: D105
         pass
 
     @call_dataset()
-    def find_closest_calibration(
+    def find_closest_calibration(  # noqa: D105
         self,
         folder: Optional[path_t] = None,
         recursive: bool = False,
@@ -168,7 +175,7 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def find_calibrations(
+    def find_calibrations(  # noqa: D105
         self,
         folder: Optional[path_t] = None,
         recursive: bool = True,

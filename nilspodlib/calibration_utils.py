@@ -2,10 +2,11 @@
 
 import datetime
 import json
+import re
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Union
-import re
+
 import numpy as np
 
 from nilspodlib.exceptions import CalibrationWarning
@@ -19,14 +20,14 @@ def save_calibration(
     calibration: "CalibrationInfo", sensor_id: str, cal_time: datetime.datetime, folder: path_t
 ) -> Path:
     """Save a calibration info object in the correct format and file name for NilsPods.
-    
+
     The files will be saved in the format: `folder / {sensor_id}_%Y-%m-%d_%H-%M.json`
-    
+
     The naming schema and format is of course just a suggestion, and any structure can be used as long as it can be
     converted back into a CalibrationInfo object.
     However, following the naming convention will allow to use other calibration utils to search for suitable
     calibration files.
-    
+
     .. note:: If the folder does not exist it will be created.
 
     Parameters
@@ -68,7 +69,7 @@ def find_calibrations_for_sensor(
     ignore_file_not_found: Optional[bool] = False,
 ) -> List[Path]:
     """Find possible calibration files based on the filename.
-    
+
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
 
     Parameters
@@ -97,7 +98,7 @@ def find_calibrations_for_sensor(
     """
     if not folder:
         try:
-            from NilsPodRefCal import CAL_PATH
+            from NilsPodRefCal import CAL_PATH  # noqa: import-outside-toplevel
         except ImportError:
             raise ImportError(
                 "The module NilsPodRefCal is not installed. If you want support for default calibrations,"
@@ -133,7 +134,7 @@ def find_closest_calibration_to_date(
     ignore_file_not_found: Optional[bool] = False,
 ) -> Optional[Path]:
     """Find the calibration file for a sensor_type, that is closes to a given date.
-    
+
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
 
     Parameters
@@ -158,15 +159,6 @@ def find_closest_calibration_to_date(
         measurement.
     warn_thres :
         If the distance to the closest calibration is larger than this threshold, a warning is emitted
-    ignore_file_not_found :
-        If True this function will not raise an error, but rather return `None`, if no
-        calibration files were found for the specific sensor_type.
-        Notes:
-    ignore_file_not_found :
-        If True this function will not raise an error, but rather return `None`, if no
-        calibration files were found for the specific sensor_type.
-        Notes:
-        If there are multiple calibrations that have the same date/hour/minute distance form the measurement,
     ignore_file_not_found :
         If True this function will not raise an error, but rather return `None`, if no
         calibration files were found for the specific sensor_type.
@@ -232,7 +224,7 @@ def find_closest_calibration_to_date(
 
 def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "CalibrationInfo":
     """Load a calibration from path or check if the provided object is already a valid calibration."""
-    from imucal import CalibrationInfo  # noqa: F811
+    from imucal import CalibrationInfo  # noqa: import-outside-toplevel
 
     if isinstance(calibration, (Path, str)):
         calibration = CalibrationInfo.from_json_file(calibration)
