@@ -1,10 +1,7 @@
-"""Basic constants/names used throughout the lib.
-
-@author: Arne Küderle
-"""
+"""Basic constants/names used throughout the lib."""
 import numpy as np
 
-#: Byte information of each sensor in one sample.
+#: Byte information of each sensor_type in one sample.
 #:
 #: Format: Overall number of bytes, number of channels, datatype
 SENSOR_SAMPLE_LENGTH = {
@@ -33,5 +30,5 @@ SENSOR_LEGENDS = {
 #: Default units for all sensors
 SENSOR_UNITS = {"acc": "g", "gyro": "dps", "baro": "mbar", "temperature": "C"}
 
-#: Available sensor positions
+#: Available sensor_type positions
 SENSOR_POS = {0: "undefined", 1: "left foot", 2: "right foot", 3: "hip", 4: "left wrist", 5: "right wrist", 6: "chest"}

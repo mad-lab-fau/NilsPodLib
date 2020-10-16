@@ -11,6 +11,6 @@ Classes
 
 .. autosummary::
    :toctree: generated/header
-   :template: class_with_private.rst
+   :template: class.rst
 
     Header

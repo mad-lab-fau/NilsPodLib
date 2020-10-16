@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Header class(es), which are used to read and access basic information from a recorded session.
-
-@author: Nils Roth, Arne Küderle
-"""
+"""Header class(es), which are used to read and access basic information from a recorded session."""
 
 import datetime
 import json
@@ -19,67 +16,39 @@ from nilspodlib.consts import SENSOR_POS
 from nilspodlib.utils import convert_little_endian
 
 
-class HeaderFields:
-    """Base class listing all the attributes of a session header."""
+class _HeaderFields:
+    """Base class listing all the attributes of a session header.
 
-    #: tuple of sensors that were enabled during the recording. Uses typical shorthands
+    For documentation see the `Header` object.
+    """
     enabled_sensors: Tuple[str]
 
-    #: If the motion interrupt of the sensor was enabled
     motion_interrupt_enabled: bool
-    #: If the sensor was used in dock/home monitoring mode (charging starts/stops sessions)
     dock_mode_enabled: bool
-    #: If a sensor position was specified. Can be a position from a list or custom bytes
     sensor_position: str
-    #: The reason, why the session was stopped. Can be used to diagnose potential issues
     session_termination: str
-    #: The size of a single sample in bytes. This depends on the enabled sensors
     sample_size: int
 
-    #: Sampling rate of the recording
     sampling_rate_hz: float
-    #: Range of the accelerometer in g
     acc_range_g: float
-    #: Range of the gyroscope in deg per s
     gyro_range_dps: float
 
-    #: Can be "master", "slave" or disabled
     sync_role: str
-    #: How far apart the sync packages are set to be
-    #: (this is only a lower limit and does not represent the actual timing)
     sync_distance_ms: float
-    #: Shared address used by all sensors of the sync group.
     sync_address: int
-    #: Shared radio channel used by all sensors of the sync group.
     sync_channel: int
-    #: Index (position in counter) were the first sync package was received (0 if sync_role=="master")
     sync_index_start: int
-    #: Index (position in counter) were the last sync package was received (0 if sync_role=="master")
     sync_index_stop: int
 
-    #: Unix time stamp of the start of the recording.
-    #: Note: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
-    #: However, this can not be guaranteed
     utc_start: int
-    #: Unix time stamp of the end of the recording.
-    #: Note: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
-    #: However, this can not be guaranteed
     utc_stop: int
 
-    #: Version number of the firmware
     version_firmware: str
-    #: Hardware revision of the sensor. Another revision usually indicates, that data should be handled differently.
     version_hardware: str
-    #: BLE Mac address of the sensor
     mac_address: str
 
-    #: Custom meta data (3 bytes) which was saved on the sensor
     custom_meta_data: Tuple[float]
 
-    #: Number of samples recorded during the measurement
-    #: Note: the number of samples might not be equal to the actual number of samples in the file, because the sensor
-    #:     only transmits full flash pages. This means a couple of samples (max. 2048/sample_size) at the end might be
-    #:     cut. This issue should be resolved in 0.14.0 or higher.
     n_samples: int
 
     # Note this must correspond to the order they appear in the datapackage when activated
@@ -110,13 +79,14 @@ class HeaderFields:
     @property
     def _header_fields(self) -> List[str]:
         """List all header fields.
-
+        
         This is a little hacky and relies on that the header fields are the only attributes that are type annotated.
         """
-        return list(HeaderFields.__annotations__.keys())
+        return list(_HeaderFields.__annotations__.keys())
 
     @property
     def _all_header_fields(self) -> List[str]:
+        """ """
         additional_fields = [
             "duration_s",
             "utc_datetime_start",
@@ -147,22 +117,12 @@ class HeaderFields:
 
     @property
     def utc_datetime_start_day_midnight(self) -> datetime.datetime:
-        """UTC timestamp marking midnight of the recording date.
-
-        This is useful, as the sensor internal counter gets reset at midnight.
-        I.e. utc_datetime_start_day_midnight + counter[0] * sampling_rate should be utc_datetime_start
-        """
+        """UTC timestamp marking midnight of the recording date."""
         return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=datetime.timezone.utc)
 
     @property
     def is_synchronised(self) -> bool:
-        """If a recording was synchronised or not.
-
-        Note:
-            This does only indicate, that the session was recorded with the sync feature enabled, not that the data is
-            actually synchronised.
-
-        """
+        """If a recording was synchronised or not."""
         return not self.sync_role == "disabled"
 
     @property
@@ -185,16 +145,101 @@ class HeaderFields:
         return pprint.pformat(full_header)
 
 
-class Header(HeaderFields):
+class Header(_HeaderFields):
     """Additional Infos of recording.
 
-    Note:
-        Usually their is no need to use this class on its own, but it is just used as a convenient wrapper to access
-        all information via a dataset instance.
+    Usually their is no need to use this class on its own, but it is just used as a convenient wrapper to access all
+    information via a dataset instance.
 
-    Note:
-        - utc timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor without
-            any local conversions
+    .. warning :: UTC timestamps and datetime, might not be in UTC. We just provide the values recorded by the sensor
+                  without any local conversions.
+                  Depending on the recording device, a localized timestamp might have been set for the internal sensor
+                  clock
+
+    Attributes
+    ----------
+    sensor_id
+        Get the unique sensor identifier.
+    enabled_sensors
+        Tuple of sensors that were enabled during the recording.
+        Uses typical shorthands.
+    motion_interrupt_enabled
+        If the motion interrupt of the sensor was enable.
+    dock_mode_enabled
+        If the sensor was used in dock/home monitoring mode (charging starts/stops sessions)
+    sensor_position
+        If a sensor position was specified.
+        Can be a position from a list or custom bytes.
+    has_position_info
+        If any information about the sensor position is provided.
+    session_termination
+        The reason, why the session was stopped.
+        Can be used to diagnose potential issues.
+    sample_size
+        The size of a single sample in bytes.
+        This depends on the enabled sensors.
+    sampling_rate_hz
+        Sampling rate of the recording.
+    acc_range_g
+        Range of the accelerometer in g.
+    gyro_range_dps
+        Range of the gyroscope in deg per s.
+    sync_role
+        Can be "master", "slave" or disabled.
+    is_synchronised
+        If a recording was synchronised or not.
+
+        .. note:: This does only indicate, that the session was recorded with the sync feature enabled, not that the
+                  data is actually synchronised.
+    sync_distance_ms
+        How far apart the sync packages were set to be.
+        This is only a lower limit and does not represent the actual timing.
+    sync_address
+        Shared address used by all sensors of the sync group.
+    sync_channel
+        Shared radio channel used by all sensors of the sync group.
+    sync_index_start
+        Index (position in counter) were the first sync package was received (0 if sync_role=="master")
+    sync_index_stop
+        Index (position in counter) were the last sync package was received (0 if sync_role=="master")
+    utc_start
+        Unix time stamp of the start of the recording.
+
+        .. note:: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
+                  However, this can not be guaranteed.
+    utc_datetime_start
+        Start time as utc datetime.
+    utc_datetime_stop
+        Stop time as utc datetime.
+    utc_stop
+        Unix time stamp of the end of the recording.
+
+        .. note:: No timezone is assumed and client software is instructed to set the internal sensor clock to utc time.
+                  However, this can not be guaranteed.
+    utc_datetime_start_day_midnight
+        UTC timestamp marking midnight of the recording date.
+        This is useful, as the sensor internal counter gets reset at midnight.
+        I.e. utc_datetime_start_day_midnight + counter[0] * sampling_rate should be utc_datetime_start
+    duration
+        Length of the measurement in seconds.
+    version_firmware
+        Version number of the firmware
+    strict_version_firmware
+        The firmware as a StrictVersion object.
+    version_hardware
+        Hardware revision of the sensor.
+        Another revision usually indicates, that data should be handled differently.
+    mac_address
+        BLE Mac address of the sensor.
+    custom_meta_data
+        Custom meta data (3 bytes) which was saved on the sensor.
+    n_samples
+        Number of samples recorded during the measurement
+
+        .. note:: The number of samples might not be equal to the actual number of samples in the file, because the
+                  sensor only transmits full flash pages.
+                  This means a couple of samples (max. 2048/sample_size) at the end might be cut.
+                  This issue should be resolved in firmware versions 0.14.0 or higher.
 
     """
 
@@ -213,14 +258,15 @@ class Header(HeaderFields):
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray) -> "Header":
-        """Create a new Header instance from an array of bytes."""
+        """Create a new Header instance from an array of bytes.
+        """
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict)
 
     @classmethod
     def from_json(cls, json_string: str) -> "Header":
         """Create a new Header from a json export of the header.
-
+        
         This is only tested with the direct output of the `to_json` method and should only be used to reimport a Header
         exported with this method.
         """
@@ -233,7 +279,7 @@ class Header(HeaderFields):
 
     def to_json(self) -> str:
         """Export a header as json.
-
+        
         It can be imported again using the `from_json` method without information loss.
         """
         header_dict = {k: v for k, v in self.__dict__.items() if k in self._header_fields}
@@ -302,12 +348,12 @@ class Header(HeaderFields):
         return header_dict
 
 
-class _ProxyHeader(HeaderFields):
+class _ProxyHeader(_HeaderFields):
     """A proxy header used by session objects to get direct access to multiple headers.
-
+    
     This allows to access attributes of multiple header instances without reimplementing all of its attributes.
     This is achieved by basically intercepting all getattribute calls and redirecting them to all header instances.
-
+    
     This concept only allows read only access. However, usually their is no need to modify a header after creation.
     """
 
@@ -339,6 +385,7 @@ class _ProxyHeader(HeaderFields):
         return chain(super().__dir__(), self._headers[0].__dir__())
 
     def _ipython_display_(self):
+        """ """
         import pandas as pd
         from IPython import display
 

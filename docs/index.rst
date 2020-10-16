@@ -10,4 +10,4 @@ NilsPodLib Docu Overview
    Calibration.md
    Warnings.md
    modules/index.rst
-   examples/index.rst
+   auto_examples/index.rst

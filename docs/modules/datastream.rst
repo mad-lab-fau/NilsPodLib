@@ -11,6 +11,6 @@ Classes
 
 .. autosummary::
    :toctree: generated/datastream
-   :template: class_with_private.rst
+   :template: class.rst
 
     Datastream

@@ -11,7 +11,7 @@ Classes
 
 .. autosummary::
    :toctree: generated/session
-   :template: class_with_private.rst
+   :template: class.rst
 
     Session
     SyncedSession

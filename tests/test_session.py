@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from nilspodlib.header import HeaderFields
+from nilspodlib.header import _HeaderFields
 from nilspodlib.session import Session
 
 
@@ -47,7 +47,7 @@ def test_init_from_folder_empty(dataset_synced):
 @pytest.mark.parametrize(
     "name",
     [
-        *HeaderFields()._header_fields,
+        *_HeaderFields()._header_fields,
         "duration_s",  # As example for a property
     ],
 )

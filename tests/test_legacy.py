@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from nilspodlib import Dataset
-from nilspodlib.exceptions import LegacyWarning
+from nilspodlib.exceptions import LegacyWarning, VersionError
 from nilspodlib.header import Header
 from nilspodlib.legacy import (
     _fix_little_endian_counter,
@@ -15,7 +15,6 @@ from nilspodlib.legacy import (
     _insert_missing_bytes_11_2,
     _split_sampling_rate_byte_11_2,
     convert_11_2,
-    VersionError,
     convert_12_0,
     find_conversion_function,
     MIN_NON_LEGACY_VERSION,

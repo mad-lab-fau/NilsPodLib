@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Set of helper functions used throughout the library.
-
-@author: Arne Küderle
-"""
+"""Set of helper functions used throughout the library."""
 
 import copy
 import struct
@@ -22,9 +18,12 @@ T = TypeVar("T")
 def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
     """Convert a little endian bytestring into a readable format.
 
-    Args:
-        byte_list: The array of bytes
-        dtype: The datatype, the final value should be converted to.
+    Parameters
+    ----------
+    byte_list :
+        The array of bytes
+    dtype :
+        The datatype, the final value should be converted to.
 
     """
     byte_list = np.array(byte_list).astype(np.uint32)
@@ -37,14 +36,20 @@ def convert_little_endian(byte_list: np.ndarray, dtype: T = int) -> np.ndarray:
 def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples: int) -> np.ndarray:
     """Read a continuous stream of uint8 values into its separate datapoints.
 
-    Args:
-        data_bytes: The raw stream of data bytes
-        packet_size: The size of each datapacket stored in the stream
-        expected_samples: The expected number of samples in the data stream. This is only used to check the integrity
-            of the datastream and raise a warning if, the number of samples in the dataset, does not match the expected
-            number.
+    Parameters
+    ----------
+    data_bytes :
+        The raw stream of data bytes
+    packet_size :
+        The size of each datapacket stored in the stream
+    expected_samples :
+        The expected number of samples in the data stream. This is only used to check the integrity
+        of the datastream and raise a warning if, the number of samples in the dataset, does not match the expected
+        number.
 
-    Returns:
+    Returns
+    -------
+    data
         Array with the shape (n_samples, packet_size)
 
     """
@@ -111,8 +116,10 @@ def inplace_or_copy(obj: T, inplace: bool) -> T:
 def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> bool:
     """Check that multiple intervals indicated by their start and stop values do all have an overlapping region.
 
-    Raises:
-        ValueError: If any of the intervals are invalid, because their end values is before their start value.
+    Raises
+    ------
+    ValueError
+        If any of the intervals are invalid, because their end values is before their start value.
 
     """
     if not all(i < j for i, j in zip(start_vals, end_vals)):
@@ -122,7 +129,7 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
 
 def remove_docstring_indent(doc_str: str) -> str:
     """Remove the additional indent of a multiline docstring.
-
+    
     This can be helpful, if docstrings are combined programmatically.
     """
     lines = doc_str.split("\n")
