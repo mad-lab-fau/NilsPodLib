@@ -81,6 +81,7 @@ class Datastream:
         self._unit = unit
 
     def __repr__(self):
+        """Provide a meaningful str-representation of a Datastream."""
         return "Datastream(sensor_type={}, sampling_rate_hz={}, is_calibrated={}, data={}".format(
             self.sensor_type, self.sampling_rate_hz, self.is_calibrated, self.data
         )
@@ -109,12 +110,13 @@ class Datastream:
         """
         if self._columns:
             return self._columns
-        elif self.sensor_type:
+        if self.sensor_type:
             if SENSOR_LEGENDS.get(self.sensor_type, None):
                 return list(SENSOR_LEGENDS[self.sensor_type])
         return list(range(self.data.shape[-1]))
 
     def __len__(self):
+        """Length of the datastream in samples."""
         return len(self.data)
 
     def norm(self) -> np.ndarray:

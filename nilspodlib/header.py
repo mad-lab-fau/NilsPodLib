@@ -5,9 +5,9 @@ import datetime
 import json
 import pprint
 import warnings
+from itertools import chain
 from collections import OrderedDict
 from distutils.version import StrictVersion
-from itertools import chain
 from typing import Tuple, Any, List, Dict, Union
 
 import numpy as np
@@ -21,6 +21,7 @@ class _HeaderFields:
 
     For documentation see the `Header` object.
     """
+
     enabled_sensors: Tuple[str]
 
     motion_interrupt_enabled: bool
@@ -79,7 +80,7 @@ class _HeaderFields:
     @property
     def _header_fields(self) -> List[str]:
         """List all header fields.
-        
+
         This is a little hacky and relies on that the header fields are the only attributes that are type annotated.
         """
         return list(_HeaderFields.__annotations__.keys())
@@ -258,15 +259,14 @@ class Header(_HeaderFields):
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray) -> "Header":
-        """Create a new Header instance from an array of bytes.
-        """
+        """Create a new Header instance from an array of bytes."""
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict)
 
     @classmethod
     def from_json(cls, json_string: str) -> "Header":
         """Create a new Header from a json export of the header.
-        
+
         This is only tested with the direct output of the `to_json` method and should only be used to reimport a Header
         exported with this method.
         """
@@ -279,7 +279,7 @@ class Header(_HeaderFields):
 
     def to_json(self) -> str:
         """Export a header as json.
-        
+
         It can be imported again using the `from_json` method without information loss.
         """
         header_dict = {k: v for k, v in self.__dict__.items() if k in self._header_fields}
@@ -350,10 +350,10 @@ class Header(_HeaderFields):
 
 class _ProxyHeader(_HeaderFields):
     """A proxy header used by session objects to get direct access to multiple headers.
-    
+
     This allows to access attributes of multiple header instances without reimplementing all of its attributes.
     This is achieved by basically intercepting all getattribute calls and redirecting them to all header instances.
-    
+
     This concept only allows read only access. However, usually their is no need to modify a header after creation.
     """
 
@@ -386,8 +386,8 @@ class _ProxyHeader(_HeaderFields):
 
     def _ipython_display_(self):
         """ """
-        import pandas as pd
-        from IPython import display
+        import pandas as pd   # noqa: import-outside-toplevel
+        from IPython import display   # noqa: import-outside-toplevel
 
         header = {k: getattr(self, k, None) for k in self._all_header_fields}
         display.display(pd.DataFrame(header, index=self.sensor_id).T)

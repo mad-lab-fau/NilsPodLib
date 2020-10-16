@@ -2,6 +2,7 @@
 import warnings
 from distutils.version import StrictVersion
 from typing import Tuple, Callable, Optional, Union
+
 import numpy as np
 
 from nilspodlib.exceptions import LegacyWarning, VersionError
@@ -41,10 +42,10 @@ def find_conversion_function(
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
-    
+
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
-    
+
     .. warning:: After the update the following features will not work:
                     - The sync group was removed and hence can not be read anymore
 
@@ -66,10 +67,10 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
 
 def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
-    
+
     This will update the firmware version to 0.13.255 to identify converted sessions.
     Potential version checks in the library will use <0.13.255 to check for compatibility.
-    
+
     .. warning:: After the update the following features will not work:
                     - The sync group was removed and hence can not be read anymore
 
@@ -85,7 +86,7 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     max_v = CONVERSION_DICT["12_0"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
-    if not (min_v <= version < max_v):
+    if not min_v <= version < max_v:
         raise VersionError(
             "This converter is meant for files recorded with Firmware version after {} and before {}"
             " not {}".format(min_v, max_v, version)
@@ -148,7 +149,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     max_v = CONVERSION_DICT["11_2"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
-    if not (min_v <= version < max_v):
+    if not min_v <= version < max_v:
         raise VersionError(
             "This converter is meant for files recorded with Firmware version after {} and before {}"
             " not {}".format(min_v, max_v, version)
