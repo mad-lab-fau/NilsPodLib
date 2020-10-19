@@ -20,6 +20,11 @@ pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/s
 pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal.git --upgrade
 ```
 
+## For users of NilsPodLib v1.0
+
+With v2.0.0 the name of the library was updated from `NilsPodLib` to `nilspodlib` to comply with the recommended naming
+style for Python packages.
+Therefore, you need to update your import path, when updating to the new version!
 
 ## For developer
 
