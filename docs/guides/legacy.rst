@@ -31,7 +31,6 @@ This will automatically pick a conversion function, apply it and then load you D
 Here is an example for a session using the legacy 0.11.2 format:
 
 >>> from nilspodlib import Dataset
->>>
 >>> file_path = '...'  # Path to original file
 >>> ds = Dataset.from_bin_file(file_path, legacy_support="resolve")
 >>> print(ds.info.version_firmware)
@@ -42,10 +41,8 @@ Here is an example for a session using the legacy 0.11.2 format.
 
 >>> from nilspodlib.legacy import convert_11_2
 >>> from nilspodlib import Dataset
->>>
 >>> file_path = '...'  # Path to original file
 >>> new_file_path = '...'  # new path to converted file
->>>
 >>> convert_11_2(file_path, new_file_path)
 >>> ds = Dataset.from_bin_file(new_file_path)
 >>> print(ds.info.version_firmware)
