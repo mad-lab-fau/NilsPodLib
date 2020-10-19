@@ -7,6 +7,17 @@ authors = [
     "Nils Roth <nils.roth@fau.de>",
     "Robert Richer <robert.richer@fau.de"
 ]
+readme = "README.md"
+homepage = "https://github.com/mad-lab-fau/NilsPodLib"
+repository = "https://github.com/mad-lab-fau/NilsPodLib"
+documentation = "https://nilspodlib.readthedocs.io/en/latest/"
+license = "MIT"
+keywords = ["sensors", "scientific", "IMU", "accelerometer"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics"
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
