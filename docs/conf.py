@@ -16,6 +16,7 @@ from datetime import datetime
 from importlib import import_module
 from inspect import getsourcelines, getsourcefile
 from pathlib import Path
+from shutil import copy
 
 import sys
 
@@ -24,6 +25,9 @@ sys.path.insert(0, os.path.abspath(".."))
 import nilspodlib
 
 URL = "https://github.com/mad-lab-fau/NilsPodLib"
+
+# -- Copy README file --------------------------------------------------------
+copy(Path("../README.md"), Path("./README.md"))
 
 # -- Project information -----------------------------------------------------
 
