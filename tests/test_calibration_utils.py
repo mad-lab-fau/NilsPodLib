@@ -3,17 +3,16 @@ import datetime
 import tempfile
 from pathlib import Path
 
-import pytest
 import numpy as np
+import pytest
 
-from nilspodlib.exceptions import CalibrationWarning
 from imucal import FerrarisCalibrationInfo
-
 from nilspodlib.calibration_utils import (
     save_calibration,
     find_calibrations_for_sensor,
     find_closest_calibration_to_date,
 )
+from nilspodlib.exceptions import CalibrationWarning
 
 
 @pytest.fixture()
@@ -206,13 +205,13 @@ def test_find_closest_warning(dummy_cal_folder):
 
     assert len(rec) == 0
 
-# TODO: Add tests back in, once IMU cal and NilsPod Ref Cal are open source
-# def test_find_default_cal():
-#     cals = find_calibrations_for_sensor("3d73")
-#
-#     assert len(cals) > 0
-#
-#
-# def test_find_default_cal_wrong():
-#     with pytest.raises(ValueError):
-#         find_calibrations_for_sensor("FFFF")
+
+def test_find_default_cal():
+    cals = find_calibrations_for_sensor("3d73")
+
+    assert len(cals) > 0
+
+
+def test_find_default_cal_wrong():
+    with pytest.raises(ValueError):
+        find_calibrations_for_sensor("FFFF")

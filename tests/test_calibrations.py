@@ -1,10 +1,9 @@
+import numpy as np
 import pytest
-from imucal import FerrarisCalibrationInfo
 
 from nilspodlib.dataset import Dataset
-from nilspodlib.header import Header
-import numpy as np
 from nilspodlib.exceptions import RepeatedCalibrationError
+from nilspodlib.header import Header
 
 factory_calibrate_sensors = [
     ("acc", 1.0 / 2048),

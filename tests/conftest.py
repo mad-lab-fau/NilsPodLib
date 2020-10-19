@@ -5,6 +5,9 @@ import pandas as pd
 import pytest
 from nilspodlib.dataset import Dataset
 
+# TODO: Add tests back in once imu cal is opensource
+collect_ignore = ["test_calibration_utils.py", "test_calibrations.py"]
+
 HERE = Path(__file__).parent
 TEST_LEGACY_DATA_11 = HERE / "test_data/11_2_legacy_sample"
 TEST_LEGACY_DATA_12 = HERE / "test_data/12_0_legacy_sample"
