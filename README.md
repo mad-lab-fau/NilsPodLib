@@ -1,52 +1,48 @@
 # NilsPodLib
 
-[![pipeline status](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/badges/master/pipeline.svg)](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/pipelines)
-[![coverage report](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/badges/master/coverage.svg?job=test)](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/commits/master)
+![Test and Lint](https://github.com/mad-lab-fau/NilsPodLib/workflows/Test%20and%20Lint/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/nilspodlib/badge/?version=latest)](https://nilspodlib.readthedocs.io/en/latest/?badge=latest)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A python package to parse logged NilsPod Binary files.
 
 ## Installation
 
 ```
-pip install "nilspodlib[cal] @ git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git" --upgrade
+pip install nilspodlib --upgrade
 ```
-
-With ssh access:
-
-```
-pip install "nilspodlib[cal] @ git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git" --upgrade
-```
-
-The same excluding the reference calibrations:
+**Note**: For some functionality (namely calibration) you still require some mad-lab internal packages.
+These packages will hopefully be open-sourced in the near future.
+If you have access to the mad-lab gitlab server, you can install them using:
 
 ```
-pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git --upgrade
+pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git --upgrade
+pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal.git --upgrade
 ```
 
-With ssh access:
+
+## For developer
 
 ```
-pip install git+ssh://git@mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git --upgrade
-```
-
-For development:
-
-```
-git clone https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib.git
+git clone https://github.com/mad-lab-fau/NilsPodLib.git
 cd nilspodpythonlib
-pip install -e . --upgrade
+poetry install
+```
+Install Python >3.7 and [poetry](https://python-poetry.org).
+Then run the commands below to get the latest source and install the dependencies:
+
+```bash
+git clone https://github.com/mad-lab-fau/NilsPodLib.git
+poetry install
 ```
 
-## Documentation
+To run any of the tools required for the development workflow, use the doit commands:
 
-The documentation is available as SphinxDoc, which can be downloaded from the [pipelines page](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/-/jobs/artifacts/master/download?job=docs) for each commit.
-The documentation is also available [online](http://madlab.mad-pages.informatik.uni-erlangen.de/portabilestools/nilspodpythonlib/README.html) (only from the FAU university network).
-
-Supplementary examples can be found in the [examples folder](https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodpythonlib/tree/master/examples) of the git project.
-
-## Legacy Support
-
-This library tries to support as many NilsPod firmware versions as possible.
-To learn more about this, and if your version is supported checkout the [legacy section](http://madlab.mad-pages.informatik.uni-erlangen.de/portabilestools/nilspodpythonlib/Legacy.html) of the documentation.
- 
+```bash
+$ poetry run doit list
+docs                 Build the html docs using Sphinx.
+format               Reformat all files using black.
+format_check         Check, but not change, formatting using black.
+lint                 Lint all files with Prospector.
+test                 Run Pytest with coverage.
+```

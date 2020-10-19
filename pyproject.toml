@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "NilsPodLib"
-version = "1.0.0"
+name = "nilspodlib"
+version = "2.0.0"
 description = "A Python library to load and convert sensor data recorded by a NilsPod by Portablies."
 authors = [
     "Arne Küderle <arne.kuederle@fau.de>",
