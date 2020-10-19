@@ -4,6 +4,9 @@
 User Guides
 ===========
 
-Calibration <calibration.md>
-Legacy Support <legacy.md>
-Custom Warnings <warnings.md>
+.. toctree::
+    :maxdepth: 1
+
+     Calibration <calibration.md>
+     Legacy Support <legacy.md>
+     Custom Warnings <warnings.md>
