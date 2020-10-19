@@ -6,8 +6,6 @@ NilsPodLib Docu Overview
    :maxdepth: 1
 
    README.md
-   Legacy.md
-   Calibration.md
-   Warnings.md
+   guides/index.rst
    modules/index.rst
    auto_examples/index.rst
