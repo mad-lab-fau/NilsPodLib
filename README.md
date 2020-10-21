@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/nilspodlib/badge/?version=latest)](https://nilspodlib.readthedocs.io/en/latest/?badge=latest)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A python package to parse logged NilsPod Binary files.
+A python package to parse logged NilsPod binary files.
 
 ## Installation
 
@@ -30,7 +30,7 @@ Therefore, you need to update your import path, when updating to the new version
 
 ```
 git clone https://github.com/mad-lab-fau/NilsPodLib.git
-cd nilspodpythonlib
+cd nilspodlib
 poetry install
 ```
 Install Python >3.7 and [poetry](https://python-poetry.org).
