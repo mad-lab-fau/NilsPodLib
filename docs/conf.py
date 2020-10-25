@@ -37,7 +37,7 @@ copyright = "2018 - {}, MaD-Lab FAU, Digital Health and Gait-Analysis Group".for
 author = "Arne Küderle <arne.kuederle@fau.de>, Nils Roth <nils.roth@fau.de>, Robert Richer <robert.richer@fau.de>"
 
 # The full version, including alpha/beta/rc tags
-release = "2.0.0"
+release = "2.0.1"
 
 
 # -- General configuration ---------------------------------------------------

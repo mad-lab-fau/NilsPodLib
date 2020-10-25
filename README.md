@@ -11,12 +11,12 @@ A python package to parse logged NilsPod binary files.
 ```
 pip install nilspodlib --upgrade
 ```
-**Note**: For some functionality (namely calibration) you still require some mad-lab internal packages.
-These packages will hopefully be open-sourced in the near future.
-If you have access to the mad-lab gitlab server, you can install them using:
+
+If you have access to the mad-lab gitlab server, you can further install the `nilspodrefcal` repository, which contains
+reference calibrations for a selected set of NilsPod sensors.
+You can install it using:
 
 ```
-pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration.git --upgrade
 pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal.git --upgrade
 ```
 
