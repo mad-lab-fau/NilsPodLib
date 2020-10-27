@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from imucal import FerrarisCalibrationInfo
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import RepeatedCalibrationError
 from nilspodlib.header import Header
