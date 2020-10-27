@@ -244,9 +244,9 @@ class Dataset:  # noqa: too-many-public-methods
             s.acc.data = acc
             s.gyro.data = gyro
             s.acc.is_calibrated = True
-            s.acc._unit = calibration.ACC_UNIT
+            s.acc._unit = calibration.acc_unit
             s.gyro.is_calibrated = True
-            s.gyro._unit = calibration.GYRO_UNIT
+            s.gyro._unit = calibration.gyro_unit
         return s
 
     def calibrate_acc(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
@@ -270,7 +270,7 @@ class Dataset:  # noqa: too-many-public-methods
             acc = calibration.calibrate_acc(s.acc.data)
             s.acc.data = acc
             s.acc.is_calibrated = True
-            s.acc._unit = calibration.ACC_UNIT
+            s.acc._unit = calibration.acc_unit
         return s
 
     def calibrate_gyro(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
@@ -294,7 +294,7 @@ class Dataset:  # noqa: too-many-public-methods
             gyro = calibration.calibrate_gyro(s.gyro.data)
             s.gyro.data = gyro
             s.gyro.is_calibrated = True
-            s.gyro._unit = calibration.GYRO_UNIT
+            s.gyro._unit = calibration.gyro_unit
         return s
 
     def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
