@@ -205,6 +205,7 @@ def test_find_closest_warning(dummy_cal_folder):
 
     assert len(rec) == 0
 
+
 # Comment in once ref cals are open source
 # def test_find_default_cal():
 #     cals = find_calibrations_for_sensor("3d73")
