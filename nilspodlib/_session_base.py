@@ -167,7 +167,7 @@ class _MultiDataset:
     def find_closest_calibration(  # noqa: D105
         self,
         folder: Optional[path_t] = None,
-        recursive: bool = False,
+        recursive: bool = True,
         filter_cal_type: Optional[str] = None,
         before_after: Optional[str] = None,
         ignore_file_not_found: Optional[bool] = False,
