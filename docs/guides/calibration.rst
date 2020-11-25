@@ -4,14 +4,13 @@ Calibration
 
 Calibration of IMUs is an important step to obtain accurate measurements.
 This library uses the
-`SensorCalibration <https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration>`__
-library to apply calibrations to a Dataset.
+`imucal <https://github.com/mad-lab-fau/imucal>`_ library to apply calibrations to a Dataset.
 
 Obtaining a Calibration
 =======================
 
 Factory Calibration
-------------------~
+-------------------
 
 If no accurate senor readings are required, applying the factory calibration obtained from the datasheet of the IMU
 sensor might be sufficient.
@@ -35,11 +34,11 @@ However, if the last available reference calibration was far before the actual m
 the measurement was performed under abnormal enviromental conditions, a new custom calibration should be obtained.
 
 Custom Calibrations
-------------------~
+-------------------
 
 First it is necessary to perform a calibration measurement.
 The exact measurement protocol will depend on the calibration method.
-See the `SensorCalibration <https://mad-srv.informatik.uni-erlangen.de/MadLab/GaitAnalysis/sensorcalibration>`__
+See the `imucal <https://github.com/mad-lab-fau/imucal>`__
 library for more information on how to perform the different calibration measurements.
 Using the same library a calibration measurement can be converted into a ``CalibrationInfo`` object:
 
