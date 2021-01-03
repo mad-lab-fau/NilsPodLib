@@ -1,7 +1,7 @@
+import numpy as np
 import pytest
 
 from nilspodlib.datastream import Datastream
-import numpy as np
 
 
 def test_basic_init():

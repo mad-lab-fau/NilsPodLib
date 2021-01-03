@@ -1,6 +1,7 @@
-from nilspodlib.utils import convert_little_endian, validate_existing_overlap
-import pytest
 import numpy as np
+import pytest
+
+from nilspodlib.utils import convert_little_endian, validate_existing_overlap
 
 
 @pytest.mark.parametrize(
