@@ -33,10 +33,6 @@ class CorruptedPackageWarning(Warning):
     """Indicate potential issues with a recorded file."""
 
 
-class CalibrationWarning(Warning):
-    """Indicate potential issues with a calibration."""
-
-
 class VersionError(Exception):
     """Error related to Firmware Version issues."""
 

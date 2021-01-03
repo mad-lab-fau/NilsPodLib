@@ -240,61 +240,14 @@ class Dataset:  # noqa: too-many-public-methods
         check = [self._check_calibration(s.acc, "acc"), self._check_calibration(s.gyro, "gyro")]
         if all(check):
             calibration = load_and_check_cal_info(calibration)
-            acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data)
+            # TODO: Change units here after changing factory cal
+            acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data, acc_unit=None, gyr_unit=None)
             s.acc.data = acc
             s.gyro.data = gyro
             s.acc.is_calibrated = True
             s.acc._unit = calibration.acc_unit
             s.gyro.is_calibrated = True
-            s.gyro._unit = calibration.gyro_unit
-        return s
-
-    def calibrate_acc(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
-        """Apply a calibration to the Acc datastream.
-
-        The final units of the datastream will depend on the used calibration values, but must likely they will be "g"
-        for Acc.
-
-        Parameters
-        ----------
-        calibration :
-            calibration object or path to .json file, that can be used to create one.
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
-
-        """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.acc, "acc") is True:
-            calibration = load_and_check_cal_info(calibration)
-            acc = calibration.calibrate_acc(s.acc.data)
-            s.acc.data = acc
-            s.acc.is_calibrated = True
-            s.acc._unit = calibration.acc_unit
-        return s
-
-    def calibrate_gyro(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
-        """Apply a calibration to the Gyro datastream.
-
-        The final units of the datastreams will depend on the used calibration values, but must likely they will be
-        "dps" (degrees per second) for the Gyro.
-
-        Parameters
-        ----------
-        calibration :
-            calibration object or path to .json file, that can be used to create one.
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
-
-        """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.gyro, "gyro") is True:
-            calibration = load_and_check_cal_info(calibration)
-            gyro = calibration.calibrate_gyro(s.gyro.data)
-            s.gyro.data = gyro
-            s.gyro.is_calibrated = True
-            s.gyro._unit = calibration.gyro_unit
+            s.gyro._unit = calibration.gyr_unit
         return s
 
     def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
