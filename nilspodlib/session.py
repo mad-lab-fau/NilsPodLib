@@ -150,50 +150,6 @@ class Session(_MultiDataset):
         s.datasets = [d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
         return s
 
-    def calibrate_acc(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
-        """Calibrate the accs of all datasets by providing a list of calibration infos.
-
-        If you do not want to calibrate a specific IMU, you can pass `None` for its position.
-
-        Parameters
-        ----------
-        calibrations :
-            List of calibration infos in the same order than `self.datasets`
-        inplace :
-            If True this methods modifies the current session object. If False, a copy of the sesion and all
-            dataset objects is created
-
-        See Also
-        --------
-        nilspodlib.dataset.Dataset.calibrate_acc
-
-        """
-        s = inplace_or_copy(self, inplace)
-        s.datasets = [d.calibrate_acc(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
-        return s
-
-    def calibrate_gyro(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
-        """Calibrate the gyros of all datasets by providing a list of calibration infos.
-
-        If you do not want to calibrate a specific IMU, you can pass `None` for its position.
-
-        Parameters
-        ----------
-        calibrations :
-            List of calibration infos in the same order than `self.datasets`
-        inplace :
-            If True this methods modifies the current session object. If False, a copy of the session and all
-            dataset objects is created
-
-        See Also
-        --------
-        nilspodlib.dataset.Dataset.calibrate_gyro
-
-        """
-        s = inplace_or_copy(self, inplace)
-        s.datasets = [d.calibrate_gyro(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
-        return s
-
 
 class SyncedSession(Session):
     """Object representing a collection of Datasets recorded with active synchronisation.
