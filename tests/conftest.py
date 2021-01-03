@@ -1,8 +1,9 @@
 import json
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 import pytest
+
 from nilspodlib.dataset import Dataset
 
 HERE = Path(__file__).parent

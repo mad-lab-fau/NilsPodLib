@@ -3,10 +3,10 @@ import json
 
 import pandas as pd
 import pytest
-from nilspodlib.exceptions import InvalidInputFileError
 
-from nilspodlib.dataset import parse_binary, split_into_sensor_data
+from nilspodlib.dataset import split_into_sensor_data
 from nilspodlib.datastream import Datastream
+from nilspodlib.exceptions import InvalidInputFileError
 from nilspodlib.header import Header
 from nilspodlib.utils import get_header_and_data_bytes, read_binary_uint8
 
