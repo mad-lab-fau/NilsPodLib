@@ -12,11 +12,17 @@ if TYPE_CHECKING:
 
 
 def save_calibration(
-    calibration: "CalibrationInfo", sensor_id: str, cal_time: datetime.datetime, folder: path_t
+    calibration: "CalibrationInfo",
+    sensor_id: str,
+    cal_time: datetime.datetime,
+    folder: path_t,
+    folder_structure: str = "",
 ) -> Path:
     """Save a calibration info object in the correct format and file name for NilsPods.
 
-    The files will be saved in the format: `folder / {sensor_id}_%Y-%m-%d_%H-%M.json`
+    The files will be saved in the format `folder/{sensor_id}_%Y-%m-%d_%H-%M.json` by default.
+    If you want to recreate the default folder structure of `imucal`, pass
+    `folder_structure="{sensor_id}/{cal_info.CAL_TYPE}"` to the function.
 
     The naming schema and format is of course just a suggestion, and any structure can be used as long as it can be
     converted back into a CalibrationInfo object.
@@ -37,6 +43,10 @@ def save_calibration(
         value in UTC timezone, as this is in line with the time handling in the rest of the library.
     folder :
         Basepath of the folder, where the file will be stored.
+    folder_structure :
+        A valid formatted Python string using the `{}` syntax.
+        `sensor_id`, calibration as the name `cal_info` and kwargs will be passed to the `str.format` as keyword
+        arguments and can be used in the string.
 
     Returns
     -------
@@ -50,8 +60,11 @@ def save_calibration(
                 sensor_id
             )
         )
-    from imucal.management import save_calibration_info
-    return save_calibration_info(cal_info=calibration, sensor_id=sensor_id, cal_time=cal_time, folder=folder)
+    from imucal.management import save_calibration_info  # noqa: F401
+
+    return save_calibration_info(
+        cal_info=calibration, sensor_id=sensor_id, cal_time=cal_time, folder=folder, folder_structure=folder_structure
+    )
 
 
 def find_calibrations_for_sensor(
@@ -96,7 +109,8 @@ def find_calibrations_for_sensor(
     if not folder:
         folder = _check_ref_cal_folder()
 
-    from imucal.management import find_calibration_info_for_sensor
+    from imucal.management import find_calibration_info_for_sensor  # noqa: F401
+
     return find_calibration_info_for_sensor(
         sensor_id=sensor_id,
         folder=folder,
@@ -169,7 +183,8 @@ def find_closest_calibration_to_date(
     if not folder:
         folder = _check_ref_cal_folder()
 
-    from imucal.management import find_closest_calibration_info_to_date
+    from imucal.management import find_closest_calibration_info_to_date  # noqa: F401
+
     return find_closest_calibration_info_to_date(
         sensor_id=sensor_id,
         cal_time=cal_time,
@@ -188,7 +203,8 @@ def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "C
     from imucal import CalibrationInfo  # noqa: import-outside-toplevel
 
     if isinstance(calibration, (Path, str)):
-        from imucal.management import load_calibration_info
+        from imucal.management import load_calibration_info  # noqa: F401
+
         calibration = load_calibration_info(calibration)
     if not isinstance(calibration, CalibrationInfo):
         raise ValueError("No valid CalibrationInfo object provided")
