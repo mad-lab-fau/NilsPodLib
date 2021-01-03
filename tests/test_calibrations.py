@@ -13,8 +13,6 @@ factory_calibrate_sensors = [
     ("temperature", 23 + 1 / (2 ** 9)),
 ]
 
-cal_methods = [(("acc",), "calibrate_acc"), (("gyro",), "calibrate_gyro"), (("acc", "gyro"), "calibrate_imu")]
-
 
 @pytest.fixture()
 def simple_calibration():
@@ -34,7 +32,7 @@ def simple_header():
     return Header(sampling_rate_hz=102.4, acc_range_g=16, gyro_range_dps=2000)
 
 
-@pytest.mark.parametrize("sensor,calval", factory_calibrate_sensors)
+@pytest.mark.parametrize("sensor, calval", factory_calibrate_sensors)
 def test_factory_cal(simple_header, sensor, calval):
     simple_header.enabled_sensors = (sensor,)
 
@@ -101,64 +99,51 @@ def test_imu_cal(simple_header, simple_calibration):
     assert cal_ds.acc.is_calibrated is True
 
 
-@pytest.mark.parametrize("sensor,calval", [("acc", 1.0 / 2), ("gyro", 1.0 / 3)])
-def test_acc_gyro_cal(simple_header, simple_calibration, sensor, calval):
-    simple_header.enabled_sensors = (sensor,)
-
-    dataset = Dataset({sensor: np.ones((100, 3))}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, "calibrate_" + sensor)(simple_calibration)
-    assert np.all(getattr(cal_ds, sensor).data == calval)
-    assert getattr(cal_ds, sensor).is_calibrated is True
-
-
-@pytest.mark.parametrize("sensors, method", cal_methods)
-def test_repeated_cal_error(simple_header, simple_calibration, sensors, method):
+def test_repeated_cal_error(simple_header, simple_calibration):
+    sensors = ("acc", "gyro")
     simple_header.enabled_sensors = sensors
 
     dataset = Dataset({k: np.ones((100, 3)) for k in sensors}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, method)(simple_calibration)
+    cal_ds = dataset.calibrate_imu(simple_calibration)
 
     with pytest.raises(RepeatedCalibrationError) as e:
-        getattr(cal_ds, method)(simple_calibration)
+        cal_ds.calibrate_imu(simple_calibration)
     assert sensors[0] in str(e.value)
 
 
-@pytest.mark.parametrize("sensors, method", cal_methods)
-def test_non_existent_warning(simple_header, simple_calibration, sensors, method):
+def test_non_existent_warning(simple_header, simple_calibration):
+    sensors = ("acc", "gyro")
     simple_header.enabled_sensors = sensors
 
     dataset = Dataset({}, np.arange(100), simple_header)
     with pytest.warns(UserWarning) as warn:
-        getattr(dataset, method)(simple_calibration)
+        dataset.calibrate_imu(simple_calibration)
 
-    if method == "calibrate_imu":
-        assert len(warn) == 2
-    else:
-        assert len(warn) == 1
+    assert len(warn) == 2
     for m in warn:
         assert any(s in str(m) for s in sensors)
         assert "calibration" in str(m)
 
 
-@pytest.mark.parametrize("sensors, method", cal_methods)
-def test_inplace(simple_header, simple_calibration, sensors, method):
+def test_inplace(simple_header, simple_calibration):
+    sensors = ("acc", "gyro")
     simple_header.enabled_sensors = sensors
 
     dataset = Dataset({k: np.ones((100, 3)) for k in sensors}, np.arange(100), simple_header)
     # default: inplace = False
-    cal_ds = getattr(dataset, method)(simple_calibration)
+    cal_ds = dataset.calibrate_imu(simple_calibration)
     assert id(cal_ds) != id(dataset)
     for sensor in sensors:
         assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
 
     dataset = Dataset({k: np.ones((100, 3)) for k in sensors}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, method)(simple_calibration, inplace=True)
+    cal_ds = dataset.calibrate_imu(simple_calibration, inplace=True)
     assert id(cal_ds) == id(dataset)
     for sensor in sensors:
         assert id(getattr(cal_ds, sensor)) == id(getattr(dataset, sensor))
 
     dataset = Dataset({k: np.ones((100, 3)) for k in sensors}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, method)(simple_calibration, inplace=False)
+    cal_ds = dataset.calibrate_imu(simple_calibration, inplace=False)
     assert id(cal_ds) != id(dataset)
     for sensor in sensors:
         assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))

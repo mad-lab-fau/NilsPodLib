@@ -1,22 +1,25 @@
 import copy
 import datetime
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from imucal import FerrarisCalibrationInfo
+from imucal import FerrarisCalibrationInfo, TurntableCalibrationInfo
+from imucal.management import CalibrationWarning, save_calibration_info
 from nilspodlib.calibration_utils import (
     save_calibration,
     find_calibrations_for_sensor,
     find_closest_calibration_to_date,
 )
-from nilspodlib.exceptions import CalibrationWarning
+
+# TODO: Try to remove tests that are already in imucal
 
 
 @pytest.fixture()
-def dummy_cal():
+def dummy_cal_dict():
     sample_data = {
         "K_a": np.identity(3),
         "R_a": np.identity(3),
@@ -26,7 +29,12 @@ def dummy_cal():
         "K_ga": np.identity(3),
         "b_g": np.zeros(3),
     }
-    return FerrarisCalibrationInfo(**sample_data)
+    return sample_data
+
+
+@pytest.fixture()
+def dummy_cal(dummy_cal_dict):
+    return FerrarisCalibrationInfo(**dummy_cal_dict)
 
 
 def test_save_calibration(dummy_cal):
@@ -43,26 +51,31 @@ def test_save_cal_id_validation(dummy_cal, sensor_id):
             save_calibration(dummy_cal, sensor_id, datetime.datetime(2000, 10, 3, 13, 22), f)
 
 
+@dataclass(eq=False)
+class CustomFerraris(FerrarisCalibrationInfo):
+    CAL_TYPE = "Custom Ferraris"
+    custom_field: str = "default_custom_value"
+
+
 @pytest.fixture()
 def dummy_cal_folder(dummy_cal):
     with tempfile.TemporaryDirectory() as f:
         for sid in ["tes1", "tes2", "tes3"]:
             for min in range(10, 30, 2):
                 date = datetime.datetime(2000, 10, 3, 13, min)
-                save_calibration(dummy_cal, sid, date, f)
+                save_calibration_info(dummy_cal, sid, date, f, folder_structure="")
         yield f
 
 
 @pytest.fixture()
-def dummy_cal_folder_recursive(dummy_cal):
+def dummy_cal_folder_recursive(dummy_cal_dict):
     with tempfile.TemporaryDirectory() as f:
-        for s in ["sub1", "sub2", "Sub3"]:
-            new_cal = copy.deepcopy(dummy_cal)
-            new_cal.CAL_TYPE = s
+        for s in [FerrarisCalibrationInfo, TurntableCalibrationInfo, CustomFerraris]:
             for sid in ["tes1", "tes2", "tes3"]:
+                new_cal = s(**dummy_cal_dict)
                 for min in range(10, 30, 2):
                     date = datetime.datetime(2000, 10, 3, 13, min)
-                    save_calibration(new_cal, sid, date, Path(f) / s)
+                    save_calibration_info(new_cal, sid, date, Path(f))
         yield f
 
 
@@ -93,41 +106,24 @@ def test_find_calibration_recursive(dummy_cal_folder_recursive):
 
 
 def test_find_calibration_type_filter(dummy_cal_folder_recursive):
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="sub1")
+    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="ferraris")
 
     assert len(cals) == 10
     assert all(["tes1" in str(x) for x in cals])
 
 
 def test_find_calibration_type_filter_case_sensitive(dummy_cal_folder_recursive):
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="Sub1")
+    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="ferraris")
 
     assert len(cals) == 10
     assert all(["tes1" in str(x) for x in cals])
 
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="Sub1")
+    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="Ferraris")
 
     assert len(cals) == 10
     assert all(["tes1" in str(x) for x in cals])
 
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="sub1")
-
-    assert len(cals) == 10
-    assert all(["tes1" in str(x) for x in cals])
-
-
-def test_find_calibration_type_filter_case_sensitive_2(dummy_cal_folder_recursive):
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="Sub3")
-
-    assert len(cals) == 10
-    assert all(["tes1" in str(x) for x in cals])
-
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="Sub3")
-
-    assert len(cals) == 10
-    assert all(["tes1" in str(x) for x in cals])
-
-    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="SUB3")
+    cals = find_calibrations_for_sensor("tes1", dummy_cal_folder_recursive, recursive=True, filter_cal_type="FERRARIS")
 
     assert len(cals) == 10
     assert all(["tes1" in str(x) for x in cals])
