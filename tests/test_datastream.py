@@ -78,23 +78,31 @@ def test_unit():
     ds = Datastream(np.zeros((100, 3)))
 
     assert ds.unit == "a.u."
-    ds.is_calibrated = True
+    ds.is_factory_calibrated = True
     assert ds.unit == "a.u."
 
     ds = Datastream(np.zeros((100, 3)), sensor_type="acc")
 
     assert ds.unit == "a.u."
+    ds.is_factory_calibrated = True
+    assert ds.unit == "m/s^2"
     ds.is_calibrated = True
-    assert ds.unit == "g"
+    with pytest.raises(ValueError):
+        assert ds.unit == "something"
+    ds.calibrated_unit = "m/s^2"
+    assert ds.unit == "m/s^2"
 
-    ds = Datastream(np.zeros((100, 3)), unit="test", sensor_type="acc")
+    ds = Datastream(np.zeros((100, 3)), calibrated_unit="test", sensor_type="acc")
 
     assert ds.unit == "a.u."
     ds.is_calibrated = True
+    assert ds.unit == "test"
+    ds.is_factory_calibrated = True
+    # Factory cal flag is ignored, as normal calibration is more important
     assert ds.unit == "test"
 
     ds = Datastream(np.zeros((100, 3)), sensor_type="not_sensor")
 
     assert ds.unit == "a.u."
-    ds.is_calibrated = True
+    ds.is_factory_calibrated = True
     assert ds.unit == "a.u."
