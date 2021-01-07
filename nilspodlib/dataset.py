@@ -360,6 +360,7 @@ class Dataset:  # noqa: too-many-public-methods
             If we want to check for factory calibration or not.
             If True, it will only be checked if the dataset is factory calibrated.
             If False, it will be checked if the dataset is normally calibrated.
+
         """
         if ds is not None:
             if factory is True:

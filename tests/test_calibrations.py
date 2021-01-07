@@ -15,6 +15,7 @@ factory_calibrate_sensors = [
 ]
 factory_calibrate_sensors_dict = dict(factory_calibrate_sensors)
 
+
 @pytest.fixture()
 def simple_calibration():
     expected = dict()
@@ -128,7 +129,9 @@ def test_inplace(simple_header, simple_calibration):
         assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
 
 
-def test_imu_factory_cal(simple_header,):
+def test_imu_factory_cal(
+    simple_header,
+):
     simple_header.enabled_sensors = ("acc", "gyro")
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
