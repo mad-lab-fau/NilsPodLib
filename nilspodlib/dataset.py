@@ -276,7 +276,7 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         assert gyro.sensor_type == "gyro"
-        if self._check_calibration(gyro, "gyro") is True:
+        if self._check_calibration(gyro, "gyro", factory=True) is True:
             gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
             gyro.is_factory_calibrated = True
         return gyro
@@ -297,8 +297,8 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         assert acc.sensor_type == "acc"
-        if self._check_calibration(acc, "acc") is True:
-            acc.data /= 2 ** 16 / self.info.acc_range_g / 2 * GRAV
+        if self._check_calibration(acc, "acc", factory=True) is True:
+            acc.data /= 2 ** 16 / self.info.acc_range_g / 2 / GRAV
             acc.is_factory_calibrated = True
         return acc
 
@@ -318,7 +318,7 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         assert baro.sensor_type == "baro"
-        if self._check_calibration(baro, "baro") is True:
+        if self._check_calibration(baro, "baro", factory=True) is True:
             baro.data = (baro.data + 101325) / 100.0
             baro.is_factory_calibrated = True
         return baro
@@ -338,7 +338,7 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         assert temperature.sensor_type == "temperature"
-        if self._check_calibration(temperature, "temperature") is True:
+        if self._check_calibration(temperature, "temperature", factory=True) is True:
             temperature.data = temperature.data * (2 ** -9) + 23
             temperature.is_factory_calibrated = True
         return temperature
