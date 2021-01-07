@@ -33,5 +33,8 @@ GRAV = 9.81
 #: Default units for all sensors
 SENSOR_UNITS = {"acc": "m/s^2", "gyro": "deg/s", "baro": "mbar", "temperature": "C"}
 
+#: simple unit names
+SIMPLE_UNITS = {"m/s^2": "ms2", "deg/s": "dps"}
+
 #: Available sensor_type positions
 SENSOR_POS = {0: "undefined", 1: "left foot", 2: "right foot", 3: "hip", 4: "left wrist", 5: "right wrist", 6: "chest"}
