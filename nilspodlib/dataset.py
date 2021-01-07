@@ -15,7 +15,7 @@ from nilspodlib.calibration_utils import (
     find_calibrations_for_sensor,
     load_and_check_cal_info,
 )
-from nilspodlib.consts import SENSOR_SAMPLE_LENGTH
+from nilspodlib.consts import SENSOR_SAMPLE_LENGTH, GRAV
 from nilspodlib.datastream import Datastream
 from nilspodlib.exceptions import (
     InvalidInputFileError,
@@ -161,9 +161,20 @@ class Dataset:  # noqa: too-many-public-methods
         """
         self.counter = counter
         self.info = info
+
+        calibration_dict = {
+            "acc": self._factory_calibrate_acc,
+            "gyro": self._factory_calibrate_gyro,
+            "baro": self._factory_calibrate_baro,
+            "temperature": self._factory_calibrate_temperature,
+        }
+
         for k, v in sensor_data.items():
-            v = Datastream(v, self.info.sampling_rate_hz, sensor_type=k)
-            setattr(self, k, v)
+            ds = Datastream(v, self.info.sampling_rate_hz, sensor_type=k)
+            # Apply factory calibration:
+            if k in calibration_dict:
+                ds = calibration_dict[k](ds)
+            setattr(self, k, ds)
 
     @classmethod
     def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error") -> T:
@@ -250,74 +261,49 @@ class Dataset:  # noqa: too-many-public-methods
             s.gyro._unit = calibration.gyr_unit
         return s
 
-    def factory_calibrate_imu(self: T, inplace: bool = False) -> T:
-        """Apply a calibration to the Acc and Gyro datastreams.
-
-        The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
-        For any tasks requiring precise sensor_type outputs, `calibrate_imu` should be used with measured calibration
-        values.
-
-        The final units of the output will be "g" for the Acc and "dps" (degrees per second) for the Gyro.
-
-        Parameters
-        ----------
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
-            Notes:
-            This just combines `factory_calibrate_acc` and `factory_calibrate_gyro`.
-
-        """
-        s = self.factory_calibrate_acc(inplace=inplace)
-        s = s.factory_calibrate_gyro(inplace=True)
-
-        return s
-
-    def factory_calibrate_gyro(self: T, inplace: bool = False) -> T:
+    def _factory_calibrate_gyro(self, gyro: Datastream) -> Datastream:
         """Apply a factory calibration to the Gyro datastream.
 
         The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
         For any tasks requiring precise sensor_type outputs, `calibrate_gyro` should be used with measured calibration
         values.
 
-        The final units of the output will be "dps" (degrees per second) for the Gyro.
+        The final units of the output will be "deg/s" (degrees per second) for the Gyro.
 
         Parameters
         ----------
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
+        gyro :
+            The uncalibrated gyro Datastream
 
         """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.gyro, "gyro") is True:
-            s.gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
-            s.gyro.is_calibrated = True
-        return s
+        assert gyro.sensor_type == "gyro"
+        if self._check_calibration(gyro, "gyro") is True:
+            gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
+            gyro.is_factory_calibrated = True
+        return gyro
 
-    def factory_calibrate_acc(self: T, inplace: bool = False) -> T:
+    def _factory_calibrate_acc(self, acc: Datastream) -> Datastream:
         """Apply a factory calibration to the Acc datastream.
 
         The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
         For any tasks requiring precise sensor_type outputs, `calibrate_acc` should be used with measured calibration
         values.
 
-        The final units of the output will be "g" for the Acc.
+        The final units of the output will be "m/s^2" for the Acc.
 
         Parameters
         ----------
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
+        acc :
+            The uncalibrated acc Datastream
 
         """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.acc, "acc") is True:
-            s.acc.data /= 2 ** 16 / self.info.acc_range_g / 2
-            s.acc.is_calibrated = True
-        return s
+        assert acc.sensor_type == "acc"
+        if self._check_calibration(acc, "acc") is True:
+            acc.data /= 2 ** 16 / self.info.acc_range_g / 2 * GRAV
+            acc.is_factory_calibrated = True
+        return acc
 
-    def factory_calibrate_baro(self: T, inplace: bool = False) -> T:
+    def _factory_calibrate_baro(self, baro: Datastream) -> Datastream:
         """Apply a calibration to the Baro datastream.
 
         The values used for that are taken from the datasheet of the sensor_type and are likely not to be accurate.
@@ -328,18 +314,17 @@ class Dataset:  # noqa: too-many-public-methods
 
         Parameters
         ----------
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
+        baro :
+            The uncalibrated baro Datastream
 
         """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.baro, "baro") is True:
-            s.baro.data = (s.baro.data + 101325) / 100.0
-            s.baro.is_calibrated = True
-        return s
+        assert baro.sensor_type == "baro"
+        if self._check_calibration(baro, "baro") is True:
+            baro.data = (baro.data + 101325) / 100.0
+            baro.is_factory_calibrated = True
+        return baro
 
-    def factory_calibrate_temperature(self: Type[T], inplace: bool = False):
+    def _factory_calibrate_temperature(self, temperature: Datastream) -> Datastream:
         """Apply a factory calibration to the temperature datastream.
 
         The values used for that are taken from the datasheet of the sensor_type
@@ -348,19 +333,19 @@ class Dataset:  # noqa: too-many-public-methods
 
         Parameters
         ----------
-        inplace :
-            If True this methods modifies the current dataset object. If False, a copy of the dataset and all
-            datastream objects is created
+        temperature :
+            The uncalibrated baro temperature
+
 
         """
-        s = inplace_or_copy(self, inplace)
-        if self._check_calibration(s.temperature, "temperature") is True:
-            s.temperature.data = s.temperature.data * (2 ** -9) + 23
-            s.temperature.is_calibrated = True
-        return s
+        assert temperature.sensor_type == "temperature"
+        if self._check_calibration(temperature, "temperature") is True:
+            temperature.data = temperature.data * (2 ** -9) + 23
+            temperature.is_factory_calibrated = True
+        return temperature
 
     @staticmethod
-    def _check_calibration(ds: Optional[Datastream], name: str):
+    def _check_calibration(ds: Optional[Datastream], name: str, factory: bool = False):
         """Check if a specific datastream is already marked as calibrated, or if the datastream does not exist.
 
         In case the datastream is already calibrated a `RepeatedCalibrationError` is raised.
@@ -376,8 +361,12 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         if ds is not None:
-            if ds.is_calibrated is True:
-                raise RepeatedCalibrationError(name)
+            if factory is True:
+                check_val = ds.is_factory_calibrated
+            else:
+                check_val = ds.is_calibrated
+            if check_val is True:
+                raise RepeatedCalibrationError(name, factory)
             return True
         datastream_does_not_exist_warning(name, "calibration")
         return False
