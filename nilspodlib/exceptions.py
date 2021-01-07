@@ -9,7 +9,7 @@ class InvalidInputFileError(Exception):
 class RepeatedCalibrationError(Exception):
     """Indicate that a datastream was already calibrated."""
 
-    MESSAGE = 'The sensor "{}" is already {1}calibrated. Repeated {1}calibration will lead to wrong values.'
+    MESSAGE = 'The sensor "{0}" is already {1}calibrated. Repeated {1}calibration will lead to wrong values.'
 
     def __init__(self, sensor_name, factory):
         """Get a new Exception instance."""
