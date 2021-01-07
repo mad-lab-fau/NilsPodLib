@@ -7,7 +7,7 @@ from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
 import numpy as np
 from scipy.signal import resample
 
-from nilspodlib.consts import SENSOR_LEGENDS, SENSOR_UNITS
+from nilspodlib.consts import SENSOR_LEGENDS, SENSOR_UNITS, SIMPLE_UNITS
 from nilspodlib.utils import inplace_or_copy
 
 T = TypeVar("T")
@@ -186,7 +186,7 @@ class Datastream:
         index_as_time :
             If True the index will be divided by the sampling rate to represent time since start of the measurement
         include_units :
-            If True the column names will have the unit of the datastream concatenated with an (Default value = False)
+            If True the column names will have the unit of the datastream concatenated with an
 
         Returns
         -------
@@ -197,7 +197,7 @@ class Datastream:
 
         columns = self.columns
         if include_units is True:
-            columns = ["{}_{}".format(c, self.unit) for c in columns]
+            columns = ["{}_{}".format(c, SIMPLE_UNITS.get(self.unit, self.unit)) for c in columns]
         df = pd.DataFrame(self.data, columns=columns)
         if index_as_time:
             df.index /= self.sampling_rate_hz
