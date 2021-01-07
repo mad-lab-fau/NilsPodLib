@@ -13,10 +13,14 @@ TEST_SESSION_DATA = HERE / "test_data/14_1_sample"
 TEST_SYNCED_DATA = HERE / "test_data/synced_sample_session"
 
 
-@pytest.fixture()
-def dataset_master_simple():
+def _dataset_master_simple():
     path = TEST_SESSION_DATA / "NilsPodX-4BFA_20190611_1348.bin"
     return Dataset.from_bin_file(path=path), path
+
+
+@pytest.fixture()
+def dataset_master_simple():
+    return _dataset_master_simple()
 
 
 @pytest.fixture()
@@ -43,7 +47,7 @@ def dataset_synced():
 
 
 # # Uncomment to update regression files
-# dataset, path = dataset_master_simple()
-# with open(path.parent / (str(path.stem) + '_header.json'), 'w+') as f:
+# dataset, path = _dataset_master_simple()
+# with open(path.parent / (str(path.stem) + "_header.json"), "w+") as f:
 #     f.write(dataset.info.to_json())
-# dataset.data_as_df(index='time').to_csv(path.parent / (str(path.stem) + '_data.csv'))
+# dataset.data_as_df(index="time").to_csv(path.parent / (str(path.stem) + "_data.csv"))
