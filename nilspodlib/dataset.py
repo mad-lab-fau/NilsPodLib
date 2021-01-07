@@ -251,14 +251,13 @@ class Dataset:  # noqa: too-many-public-methods
         check = [self._check_calibration(s.acc, "acc"), self._check_calibration(s.gyro, "gyro")]
         if all(check):
             calibration = load_and_check_cal_info(calibration)
-            # TODO: Change units here after changing factory cal
-            acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data, acc_unit=None, gyr_unit=None)
+            acc, gyro = calibration.calibrate(s.acc.data, s.gyro.data, acc_unit=s.acc.unit, gyr_unit=s.gyro.unit)
             s.acc.data = acc
             s.gyro.data = gyro
             s.acc.is_calibrated = True
-            s.acc._unit = calibration.acc_unit
+            s.acc.calibrated_unit = calibration.acc_unit
             s.gyro.is_calibrated = True
-            s.gyro._unit = calibration.gyr_unit
+            s.gyro.calibrated_unit = calibration.gyr_unit
         return s
 
     def _factory_calibrate_gyro(self, gyro: Datastream) -> Datastream:
@@ -357,8 +356,10 @@ class Dataset:  # noqa: too-many-public-methods
             datastream object or None
         name :
             name of the datastream object. Used to provide additional info in error messages.
-        ds: Optional[Datastream] :
-
+        factory :
+            If we want to check for factory calibration or not.
+            If True, it will only be checked if the dataset is factory calibrated.
+            If False, it will be checked if the dataset is normally calibrated.
         """
         if ds is not None:
             if factory is True:
