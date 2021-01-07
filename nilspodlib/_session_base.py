@@ -105,22 +105,6 @@ class _MultiDataset:
     datasets: Tuple[Dataset]
 
     @call_dataset()
-    def factory_calibrate_imu(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
-        pass
-
-    @call_dataset()
-    def factory_calibrate_gyro(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
-        pass
-
-    @call_dataset()
-    def factory_calibrate_baro(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
-        pass
-
-    @call_dataset()
-    def factory_calibrate_temperature(self: Type[T], inplace: bool = False) -> T:  # noqa: D105
-        pass
-
-    @call_dataset()
     def cut_to_syncregion(  # noqa: D105
         self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
     ) -> T:

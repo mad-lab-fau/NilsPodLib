@@ -27,8 +27,11 @@ SENSOR_LEGENDS = {
     "temperature": tuple(["temp"]),
 }
 
+#: The value of gravity
+GRAV = 9.81
+
 #: Default units for all sensors
-SENSOR_UNITS = {"acc": "g", "gyro": "dps", "baro": "mbar", "temperature": "C"}
+SENSOR_UNITS = {"acc": "m/s^2", "gyro": "deg/s", "baro": "mbar", "temperature": "C"}
 
 #: Available sensor_type positions
 SENSOR_POS = {0: "undefined", 1: "left foot", 2: "right foot", 3: "hip", 4: "left wrist", 5: "right wrist", 6: "chest"}

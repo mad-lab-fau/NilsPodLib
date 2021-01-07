@@ -31,6 +31,10 @@ class Datastream:
         The name of the sensor_type
     is_calibrated
         If the sensor_type is in a raw format or the expected final output units
+    is_factory_calibrated
+        If the datastream was factory calibrated and hence, provided in physical meaningful units.
+        This should be True if the datastream was loaded using the methods to load datasets and sessions provided in
+        this library.
     sampling_rate_hz
         The sampling rate of the datastream
 
@@ -38,6 +42,7 @@ class Datastream:
 
     data: np.ndarray
     is_calibrated: bool = False
+    is_factory_calibrated: bool = False
     sampling_rate_hz: float
     sensor_type: Optional[str]
     _unit: str
