@@ -5,12 +5,12 @@ import datetime
 import json
 import pprint
 import warnings
-from itertools import chain
 from collections import OrderedDict
 from distutils.version import StrictVersion
 from typing import Tuple, Any, List, Dict, Union
 
 import numpy as np
+from itertools import chain
 
 from nilspodlib.consts import SENSOR_POS
 from nilspodlib.utils import convert_little_endian
