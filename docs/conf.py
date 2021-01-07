@@ -19,6 +19,7 @@ from pathlib import Path
 from shutil import copy
 
 import sys
+import toml
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -31,13 +32,15 @@ copy(Path("../README.md"), Path("./README.md"))
 
 # -- Project information -----------------------------------------------------
 
+# Info from poetry config:
+info = toml.load("../pyproject.toml")["tool"]["poetry"]
 
-project = "nilspodlib"
+project = info["name"]
+author = ", ".join(info["authors"])
+release = info["version"]
+
 copyright = "2018 - {}, MaD-Lab FAU, Digital Health and Gait-Analysis Group".format(datetime.now().year)
-author = "Arne Küderle <arne.kuederle@fau.de>, Nils Roth <nils.roth@fau.de>, Robert Richer <robert.richer@fau.de>"
 
-# The full version, including alpha/beta/rc tags
-release = "2.0.2"
 
 
 # -- General configuration ---------------------------------------------------
