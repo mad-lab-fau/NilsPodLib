@@ -98,12 +98,12 @@ class Datastream:
         :py:data:`nilspodlib.consts.SENSOR_UNITS` if the sensor is factory-calibrated, of the value of
         `self.calibrated_unit` if the sensor is marked as calibrated.
         """
-        if self.is_factory_calibrated and self.sensor_type and SENSOR_UNITS.get(self.sensor_type, None):
-            return SENSOR_UNITS[self.sensor_type]
         if self.is_calibrated is True:
             if not self.calibrated_unit:
                 raise ValueError("The sensor is marked as calibrated, but no calibration unit is provided!")
             return self.calibrated_unit
+        if self.is_factory_calibrated and self.sensor_type and SENSOR_UNITS.get(self.sensor_type, None):
+            return SENSOR_UNITS[self.sensor_type]
         return "a.u."
 
     def _get_default_columns(self):
