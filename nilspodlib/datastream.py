@@ -27,7 +27,7 @@ class Datastream:
     data
         The actual data of the sensor_type as `np.array`.
         Can have multiple dimensions depending on the sensor_type.
-    sensor
+    sensor_type
         The name of the sensor_type
     is_calibrated
         If the sensor_type is in a raw format or the expected final output units
@@ -45,15 +45,15 @@ class Datastream:
     is_factory_calibrated: bool = False
     sampling_rate_hz: float
     sensor_type: Optional[str]
-    _unit: str
-    _columns: Optional[List]
+    calibrated_unit: Optional[str]
+    columns: List[str]
 
     def __init__(
         self,
         data: np.ndarray,
         sampling_rate: float = 1.0,
         columns: Optional[Iterable] = None,
-        unit: Optional[str] = None,
+        calibrated_unit: Optional[str] = None,
         sensor_type: Optional[str] = None,
     ):
         """Get new datastream instance.
@@ -71,9 +71,8 @@ class Datastream:
         columns :
             Optional list of names for the data vector entries.
             Only used to make it easier to understand the content of a datastream.
-        unit :
-            The unit of the data stored in the datastream.
-            This is only used, if `self.is_calibrated` is set to `True`.
+        calibrated_unit :
+            The expected unit of the datastream after calibration.
         sensor_type :
             Type of sensor_type the data is produced from.
             This allows to automatically get default values for columns and units from :py:mod:`nilspodlib.consts`.
@@ -82,8 +81,8 @@ class Datastream:
         self.data = data
         self.sampling_rate_hz = float(sampling_rate)
         self.sensor_type = sensor_type
-        self._columns = list(columns) if columns else columns
-        self._unit = unit
+        self.columns = list(columns) if columns else self._get_default_columns()
+        self.calibrated_unit = calibrated_unit
 
     def __repr__(self):
         """Provide a meaningful str-representation of a Datastream."""
@@ -95,26 +94,20 @@ class Datastream:
     def unit(self):
         """Get the unit of the data contained in the datastream.
 
-        This will return either `a.u.` if the datastream is not yet calibrated, the value of `self._unit` if set or
-        the default unit from :py:data:`nilspodlib.consts.SENSOR_UNITS`
+        This will return either `a.u.` if the datastream is not yet factory-calibrated or no default unit is known,
+        :py:data:`nilspodlib.consts.SENSOR_UNITS` if the sensor is factory-calibrated, of the value of
+        `self.calibrated_unit` if the sensor is marked as calibrated.
         """
+        if self.is_factory_calibrated and self.sensor_type and SENSOR_UNITS.get(self.sensor_type, None):
+            return SENSOR_UNITS[self.sensor_type]
         if self.is_calibrated is True:
-            if self._unit:
-                return self._unit
-            if self.sensor_type and SENSOR_UNITS.get(self.sensor_type, None):
-                return SENSOR_UNITS[self.sensor_type]
+            if not self.calibrated_unit:
+                raise ValueError("The sensor is marked as calibrated, but no calibration unit is provided!")
+            return self.calibrated_unit
         return "a.u."
 
-    @property
-    def columns(self):
-        """Get the column headers for the data contained in the datastream.
-
-        This will return `self._columns` if set on init or will try to get the default columns from
-        :py:data:`nilspodlib.consts.SENSOR_LEGENDS`.
-        If none of the above is applicable the columns wil be numbered starting with 0.
-        """
-        if self._columns:
-            return self._columns
+    def _get_default_columns(self):
+        """Get the default column headers for the data contained in the datastream."""
         if self.sensor_type:
             if SENSOR_LEGENDS.get(self.sensor_type, None):
                 return list(SENSOR_LEGENDS[self.sensor_type])
