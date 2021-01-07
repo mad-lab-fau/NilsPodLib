@@ -2,12 +2,13 @@ import numpy as np
 import pytest
 
 from imucal import FerrarisCalibrationInfo
+from nilspodlib.consts import GRAV
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import RepeatedCalibrationError
 from nilspodlib.header import Header
 
 factory_calibrate_sensors = [
-    ("acc", 1.0 / 2048),
+    ("acc", 1.0 / 2048 * GRAV),
     ("gyro", 1.0 / 16.384),
     ("baro", 1013.26),
     ("temperature", 23 + 1 / (2 ** 9)),
@@ -34,58 +35,29 @@ def simple_header():
 
 @pytest.mark.parametrize("sensor, calval", factory_calibrate_sensors)
 def test_factory_cal(simple_header, sensor, calval):
+    """Test that all sensors are factory calibrated by default on init."""
     simple_header.enabled_sensors = (sensor,)
 
     dataset = Dataset({sensor: np.ones(100)}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, "factory_calibrate_" + sensor)()
-    assert np.all(getattr(cal_ds, sensor).data == calval)
-    assert getattr(cal_ds, sensor).is_calibrated is True
+    assert np.all(getattr(dataset, sensor).data == calval)
+    assert getattr(dataset, sensor).is_factory_calibrated is True
+    assert getattr(dataset, sensor).is_calibrated is False
 
 
 @pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors))[0])
 def test_repeated_cal_error_factory_cal(simple_header, sensor):
+    """Test that we can not apply factory calibration twice.
+
+    Note: This should never happen, as factory cal methods are private.
+    """
     simple_header.enabled_sensors = (sensor,)
 
     dataset = Dataset({sensor: np.ones(100)}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, "factory_calibrate_" + sensor)()
 
     with pytest.raises(RepeatedCalibrationError) as e:
-        getattr(cal_ds, "factory_calibrate_" + sensor)()
+        getattr(dataset, "_factory_calibrate_" + sensor)(getattr(dataset, sensor))
     assert sensor in str(e.value)
-
-
-@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors))[0])
-def test_non_existent_warning_factory_cal(simple_header, sensor):
-    simple_header.enabled_sensors = (sensor,)
-
-    dataset = Dataset({}, np.arange(100), simple_header)
-    with pytest.warns(UserWarning) as warn:
-        getattr(dataset, "factory_calibrate_" + sensor)()
-
-    assert len(warn) == 1
-    assert sensor in warn[0].message.args[0]
-    assert "calibration" in warn[0].message.args[0]
-
-
-@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors))[0])
-def test_inplace_factor_cal(simple_header, sensor):
-    simple_header.enabled_sensors = (sensor,)
-
-    dataset = Dataset({sensor: np.ones(100)}, np.arange(100), simple_header)
-    # default: inplace = False
-    cal_ds = getattr(dataset, "factory_calibrate_" + sensor)()
-    assert id(cal_ds) != id(dataset)
-    assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
-
-    dataset = Dataset({sensor: np.ones(100)}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, "factory_calibrate_" + sensor)(inplace=True)
-    assert id(cal_ds) == id(dataset)
-    assert id(getattr(cal_ds, sensor)) == id(getattr(dataset, sensor))
-
-    dataset = Dataset({sensor: np.ones(100)}, np.arange(100), simple_header)
-    cal_ds = getattr(dataset, "factory_calibrate_" + sensor)(inplace=False)
-    assert id(cal_ds) != id(dataset)
-    assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
+    assert "factory-calibrate" in str(e.value)
 
 
 def test_imu_cal(simple_header, simple_calibration):
@@ -154,7 +126,7 @@ def test_imu_factory_cal(simple_header):
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
 
-    cal_ds = dataset.factory_calibrate_imu()
+    cal_ds = dataset._factory_calibrate_imu()
 
     assert np.all(cal_ds.acc.data == 1.0 / 2048)
     assert np.all(cal_ds.gyro.data == 2.0 / 16.384)
@@ -167,19 +139,19 @@ def test_inplace_imu_factory_cal(simple_header):
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
     # default: inplace = False
-    cal_ds = dataset.factory_calibrate_imu()
+    cal_ds = dataset._factory_calibrate_imu()
     assert id(cal_ds) != id(dataset)
     assert id(getattr(cal_ds, "acc")) != id(getattr(dataset, "acc"))
     assert id(getattr(cal_ds, "gyro")) != id(getattr(dataset, "gyro"))
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
-    cal_ds = dataset.factory_calibrate_imu(inplace=True)
+    cal_ds = dataset._factory_calibrate_imu(inplace=True)
     assert id(cal_ds) == id(dataset)
     assert id(getattr(cal_ds, "acc")) == id(getattr(dataset, "acc"))
     assert id(getattr(cal_ds, "gyro")) == id(getattr(dataset, "gyro"))
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
-    cal_ds = dataset.factory_calibrate_imu(inplace=False)
+    cal_ds = dataset._factory_calibrate_imu(inplace=False)
     assert id(cal_ds) != id(dataset)
     assert id(getattr(cal_ds, "acc")) != id(getattr(dataset, "acc"))
     assert id(getattr(cal_ds, "gyro")) != id(getattr(dataset, "gyro"))
