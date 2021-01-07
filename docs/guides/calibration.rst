@@ -17,6 +17,16 @@ sensor might be sufficient.
 These calibrations can be directly applied on a dataset without any further work:
 
 >>> ds = ... # Dataset Object
+>>> cal_df = ds._factory_calibrate_imu()
+sensor might be sufficient.
+These calibrations can be directly applied on a dataset without any further work:
+
+>>> ds = ... # Dataset Object
+>>> cal_df = ds._factory_calibrate_imu()
+sensor might be sufficient.
+These calibrations can be directly applied on a dataset without any further work:
+
+>>> ds = ... # Dataset Object
 >>> cal_df = ds.factory_calibrate_imu()
 
 Reference Calibrations

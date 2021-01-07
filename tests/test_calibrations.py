@@ -13,7 +13,7 @@ factory_calibrate_sensors = [
     ("baro", 1013.26),
     ("temperature", 23 + 1 / (2 ** 9)),
 ]
-
+factory_calibrate_sensors_dict = dict(factory_calibrate_sensors)
 
 @pytest.fixture()
 def simple_calibration():
@@ -25,7 +25,12 @@ def simple_calibration():
     expected["R_g"] = np.identity(3)
     expected["b_g"] = np.zeros(3)
     expected["K_ga"] = np.zeros((3, 3))
+    expected["from_acc_unit"] = "m/s^2"
+    expected["from_gyr_unit"] = "deg/s"
     return FerrarisCalibrationInfo(**expected)
+
+
+# TODO: Test errors if wrong calibrations are used.
 
 
 @pytest.fixture()
@@ -65,8 +70,10 @@ def test_imu_cal(simple_header, simple_calibration):
 
     dataset = Dataset({"acc": np.ones((100, 3)), "gyro": np.ones((100, 3))}, np.arange(100), simple_header)
     cal_ds = dataset.calibrate_imu(simple_calibration)
-    assert np.all(cal_ds.gyro.data == 1.0 / 3)
-    assert np.all(cal_ds.acc.data == 1.0 / 2)
+    assert np.all(cal_ds.gyro.data == factory_calibrate_sensors_dict["gyro"] / 3)
+    assert np.all(cal_ds.acc.data == factory_calibrate_sensors_dict["acc"] / 2)
+    assert cal_ds.gyro.is_factory_calibrated is True
+    assert cal_ds.acc.is_factory_calibrated is True
     assert cal_ds.gyro.is_calibrated is True
     assert cal_ds.acc.is_calibrated is True
 
@@ -121,37 +128,14 @@ def test_inplace(simple_header, simple_calibration):
         assert id(getattr(cal_ds, sensor)) != id(getattr(dataset, sensor))
 
 
-def test_imu_factory_cal(simple_header):
+def test_imu_factory_cal(simple_header,):
     simple_header.enabled_sensors = ("acc", "gyro")
 
     dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
 
-    cal_ds = dataset._factory_calibrate_imu()
-
-    assert np.all(cal_ds.acc.data == 1.0 / 2048)
-    assert np.all(cal_ds.gyro.data == 2.0 / 16.384)
-    assert cal_ds.acc.is_calibrated is True
-    assert cal_ds.acc.is_calibrated is True
-
-
-def test_inplace_imu_factory_cal(simple_header):
-    simple_header.enabled_sensors = ("acc", "gyro")
-
-    dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
-    # default: inplace = False
-    cal_ds = dataset._factory_calibrate_imu()
-    assert id(cal_ds) != id(dataset)
-    assert id(getattr(cal_ds, "acc")) != id(getattr(dataset, "acc"))
-    assert id(getattr(cal_ds, "gyro")) != id(getattr(dataset, "gyro"))
-
-    dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
-    cal_ds = dataset._factory_calibrate_imu(inplace=True)
-    assert id(cal_ds) == id(dataset)
-    assert id(getattr(cal_ds, "acc")) == id(getattr(dataset, "acc"))
-    assert id(getattr(cal_ds, "gyro")) == id(getattr(dataset, "gyro"))
-
-    dataset = Dataset({"acc": np.ones(100), "gyro": np.ones(100) * 2}, np.arange(100), simple_header)
-    cal_ds = dataset._factory_calibrate_imu(inplace=False)
-    assert id(cal_ds) != id(dataset)
-    assert id(getattr(cal_ds, "acc")) != id(getattr(dataset, "acc"))
-    assert id(getattr(cal_ds, "gyro")) != id(getattr(dataset, "gyro"))
+    assert np.all(dataset.acc.data == factory_calibrate_sensors_dict["acc"])
+    assert np.all(dataset.gyro.data == factory_calibrate_sensors_dict["gyro"] * 2)
+    assert dataset.acc.is_calibrated is False
+    assert dataset.acc.is_calibrated is False
+    assert dataset.acc.is_factory_calibrated is True
+    assert dataset.acc.is_factory_calibrated is True
