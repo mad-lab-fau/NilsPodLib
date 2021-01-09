@@ -9,12 +9,13 @@ from nilspodlib.dataset import Dataset
 HERE = Path(__file__).parent
 TEST_LEGACY_DATA_11 = HERE / "test_data/11_2_legacy_sample"
 TEST_LEGACY_DATA_12 = HERE / "test_data/12_0_legacy_sample"
-TEST_SESSION_DATA = HERE / "test_data/14_1_sample"
+TEST_SESSION_DATA_14_1 = HERE / "test_data/14_1_legacy_sample"
+TEST_SESSION_DATA = HERE / "test_data/18_0_sample"
 TEST_SYNCED_DATA = HERE / "test_data/synced_sample_session"
 
 
 def _dataset_master_simple():
-    path = TEST_SESSION_DATA / "NilsPodX-4BFA_20190611_1348.bin"
+    path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_152726.bin"
     return Dataset.from_bin_file(path=path), path
 
 
@@ -40,7 +41,7 @@ def dataset_synced():
     slave1 = TEST_SYNCED_DATA / "NilsPodX-922A_20190430_0933.bin"
     slave2 = TEST_SYNCED_DATA / "NilsPodX-323C_20190430_0933.bin"
     return {
-        "master": (Dataset.from_bin_file(master), master),
+        "master": (Dataset.from_bin_file(master, ), master),
         "slave1": (Dataset.from_bin_file(slave1), slave1),
         "slave2": (Dataset.from_bin_file(slave2), slave2),
     }
