@@ -174,7 +174,9 @@ def test_legacy_error(session, converter, request):
         (StrictVersion("0.11.1"), None),
         (StrictVersion("0.11.2"), "11_2"),
         (StrictVersion("0.11.3"), "11_2"),
-        (StrictVersion("0.15.0"), "supported"),
+        (StrictVersion("0.14.1"), "18_0"),
+        (StrictVersion("0.16.2"), "18_0"),
+        (StrictVersion("0.18.0"), "supported"),
         (MIN_NON_LEGACY_VERSION, "supported"),
     ],
 )
