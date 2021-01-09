@@ -421,67 +421,6 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def cut_to_syncregion(  # noqa: arguments-differ
-        self: Type[T],
-        end: bool = False,
-        only_to_master: bool = False,
-        warn_thres: Optional[int] = 30,
-        inplace: bool = False,
-    ) -> T:
-        """Cut all datasets to the regions where they were synchronised to the master.
-
-        .. deprecated:: 1.0.0
-            `cut_to_syncregion` is deprecated and will be replaced by `align_to_syncregion`.
-            Use `align_to_syncregion(cut_start=True, ...)` to replicate the functionality of `cut_to_syncregion`.
-            `align_to_syncregion` does not support `only_to_master`.
-
-        Parameters
-        ----------
-        only_to_master :
-            If True each slave will be cut to the region, where it was synchronised with the master.
-            Master will not be changed. If False, all sensors will be cut to the region, where ALL sensors where
-            in sync. Only in the latter case all datasets will have the same length and are guarantied to have the
-            same counter.
-        end :
-            Whether the dataset should be cut at the `info.last_sync_index`. Usually it can be assumed that the
-            data will be synchronous for multiple seconds after the last sync package. Therefore, it might be
-            acceptable to just ignore the last syncpackage and just cut the start of the dataset.
-        warn_thres :
-            Threshold in seconds from the end of a dataset. If the last syncpackage occurred more than
-            warn_thres before the end of the dataset, a warning is emitted. Use warn_thres = None to silence.
-            This is not relevant if the end of the dataset is cut (e.g. `end=True`)
-        inplace :
-            If operation should be performed on the current Session object, or on a copy
-            Info:
-        inplace :
-            If operation should be performed on the current Session object, or on a copy
-            Info:
-            `cut_to_syncregion` is deprecated and will be replaced by `align_to_syncregion`.
-        inplace :
-            If operation should be performed on the current Session object, or on a copy
-            Info:
-            `cut_to_syncregion` is deprecated and will be replaced by `align_to_syncregion`.
-            Use `align_to_syncregion(cut_start=True, ...)` to replicate the functionality of `cut_to_syncregion`.
-        inplace :
-            If operation should be performed on the current Session object, or on a copy
-
-
-        """
-        warnings.warn(
-            '"cut_to_syncregion" is deprecated and will be replaced by "align_to_syncregion". '
-            "Use align_to_syncregion(cut_start=True, ...) to replicate the functionality of "
-            "cut_to_syncregion.",
-            DeprecationWarning,
-        )
-
-        if only_to_master is True:
-            s = inplace_or_copy(self, inplace)
-            s = super(SyncedSession, s).cut_to_syncregion(end=end, inplace=True, warn_thres=None)
-            return s
-
-        s = self.align_to_syncregion(cut_start=True, cut_end=end, warn_thres=warn_thres, inplace=inplace)
-        return s
-
     def data_as_df(  # noqa: arguments-differ
         self,
         datastreams: Optional[Sequence[str]] = None,
