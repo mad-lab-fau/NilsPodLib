@@ -393,7 +393,7 @@ class Dataset:  # noqa: too-many-public-methods
             datastream objects is created
 
         """
-        from scipy.signal import resample
+        from scipy.signal import resample  # noqa: import-outside-toplevel
 
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
