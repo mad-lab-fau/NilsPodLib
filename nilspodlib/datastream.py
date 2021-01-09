@@ -5,7 +5,6 @@ import copy
 from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
 
 import numpy as np
-from scipy.signal import resample
 
 from nilspodlib.consts import SENSOR_LEGENDS, SENSOR_UNITS, SIMPLE_UNITS
 from nilspodlib.utils import inplace_or_copy
@@ -173,6 +172,8 @@ class Datastream:
             If True this methods modifies the current datastream object. If False, a copy of the datastream is returned.
 
         """
+        from scipy.signal import resample
+
         s = inplace_or_copy(self, inplace)
         s.data = resample(s.data, len(s.data) // factor, axis=0)
         s.sampling_rate_hz /= factor

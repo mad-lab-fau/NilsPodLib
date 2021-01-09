@@ -8,7 +8,6 @@ from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequen
 
 import numpy as np
 import pandas as pd
-from scipy.signal import resample
 
 from nilspodlib.calibration_utils import (
     find_closest_calibration_to_date,
@@ -394,6 +393,8 @@ class Dataset:  # noqa: too-many-public-methods
             datastream objects is created
 
         """
+        from scipy.signal import resample
+
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
             setattr(s, key, val.downsample(factor))
