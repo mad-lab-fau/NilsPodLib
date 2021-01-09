@@ -20,10 +20,10 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     assert dataset.acc.is_calibrated is False
     assert isinstance(dataset.gyro, Datastream)
     assert dataset.gyro.is_calibrated is False
-    assert dataset.baro is None
-    assert dataset.mag is None
-    assert dataset.temperature is None
-    assert dataset.analog is None
+    assert isinstance(dataset.baro, Datastream)
+    assert isinstance(dataset.mag, Datastream)
+    assert isinstance(dataset.temperature, Datastream)
+    assert isinstance(dataset.analog, Datastream)
     assert dataset.ppg is None
     assert dataset.ecg is None
 
@@ -33,11 +33,11 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     # Check all direct values
     info = dataset.info
     assert dataset_master_simple_json_header == json.loads(info.to_json())
-    assert info.utc_datetime_start == datetime.datetime(2019, 6, 11, 11, 48, 3)
-    assert info.utc_datetime_stop == datetime.datetime(2019, 6, 11, 11, 48, 10)
+    assert info.utc_datetime_start == datetime.datetime(2021, 1, 9, 15, 28, 24)
+    assert info.utc_datetime_stop == datetime.datetime(2021, 1, 9, 15, 28, 31)
     assert info.is_synchronised is True
     assert info.has_position_info is False
-    assert info.sensor_id == "4bfa"
+    assert info.sensor_id == "6f13"
 
     assert info.sync_index_start == 0
     assert info.sync_index_stop == 0
