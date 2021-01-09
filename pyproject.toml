@@ -24,7 +24,7 @@ python = "^3.7"
 numpy = "^1.19.2"
 pandas = "^1.1.3"
 scipy = "^1.5.2"
-imucal = {git = "https://github.com/mad-lab-fau/imucal", rev = "master"}
+imucal = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 doit = "^0.33.1"

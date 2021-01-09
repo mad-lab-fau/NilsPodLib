@@ -4,12 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [3.0] - 
+# [3.0] - 09.01.2021
 
 3.0 is the first version that supports imucal 2.0. and has many further changes to calibrations.
 Most notatbly, factory calibrations are now applied automatically and regular calibrations are expected to be applied to
 the already factory calibrated imu data.
 **This means all your old calibrations files are invalid and need to be recreated**.
+The NilspodRefCal repo is also updated accordingly.
+This means, you need to update it as well.
 
 ### Added
 
