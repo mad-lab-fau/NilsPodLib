@@ -2,6 +2,7 @@
 """Header class(es), which are used to read and access basic information from a recorded session."""
 
 import datetime
+import itertools
 import json
 import pprint
 import warnings
@@ -10,7 +11,6 @@ from distutils.version import StrictVersion
 from typing import Tuple, Any, List, Dict, Union
 
 import numpy as np
-from itertools import chain
 
 from nilspodlib.consts import SENSOR_POS
 from nilspodlib.utils import convert_little_endian
@@ -382,7 +382,7 @@ class _ProxyHeader(_HeaderFields):
         raise NotImplementedError("_ProxyHeader only allows readonly access to the info objects of a dataset")
 
     def __dir__(self):
-        return chain(super().__dir__(), self._headers[0].__dir__())
+        return itertools.chain(super().__dir__(), self._headers[0].__dir__())
 
     def _ipython_display_(self):
         """ """
