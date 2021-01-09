@@ -338,7 +338,7 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
     """
     if version < StrictVersion("0.11.2"):
         msg = "You are using a version ({}) previous to 0.11.2. This version is not supported!".format(version)
-    elif version >= StrictVersion("0.13.255"):
+    elif version >= StrictVersion("0.17.255"):
         return
     else:
         try:
