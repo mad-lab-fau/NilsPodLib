@@ -45,11 +45,7 @@ def test_init_from_folder_empty(dataset_synced):
 
 
 @pytest.mark.parametrize(
-    "name",
-    [
-        *_HeaderFields()._header_fields,
-        "duration_s",  # As example for a property
-    ],
+    "name", [*_HeaderFields()._header_fields, "duration_s",],  # As example for a property
 )
 def test_info_access(name, basic_session):
     session = basic_session
