@@ -9,7 +9,8 @@ from nilspodlib.dataset import Dataset
 HERE = Path(__file__).parent
 TEST_LEGACY_DATA_11 = HERE / "test_data/11_2_legacy_sample"
 TEST_LEGACY_DATA_12 = HERE / "test_data/12_0_legacy_sample"
-TEST_SESSION_DATA_14_1 = HERE / "test_data/14_1_legacy_sample"
+TEST_LEGACY_DATA_14_1 = HERE / "test_data/14_1_legacy_sample"
+TEST_LEGACY_DATA_16_2 = HERE / "test_data/16_2_legacy_sample"
 TEST_SESSION_DATA = HERE / "test_data/18_0_sample"
 TEST_SYNCED_DATA = HERE / "test_data/synced_sample_session"
 
@@ -26,12 +27,12 @@ def dataset_master_simple():
 
 @pytest.fixture()
 def dataset_master_simple_json_header():
-    return json.load((TEST_SESSION_DATA / "NilsPodX-4BFA_20190611_1348_header.json").open("r"))
+    return json.load((TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824_header.json").open("r"))
 
 
 @pytest.fixture()
 def dataset_master_data_csv():
-    df = pd.read_csv(TEST_SESSION_DATA / "NilsPodX-4BFA_20190611_1348_data.csv")
+    df = pd.read_csv(TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824_data.csv")
     return df.set_index("t")
 
 
