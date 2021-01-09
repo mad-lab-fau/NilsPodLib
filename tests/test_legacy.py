@@ -14,6 +14,7 @@ from nilspodlib.legacy import (
     _convert_sensor_enabled_flag_11_2,
     _insert_missing_bytes_11_2,
     _split_sampling_rate_byte_11_2,
+    _convert_analog_uint8_to_uint16_18_0,
     convert_11_2,
     convert_12_0,
     convert_18_0,
@@ -76,6 +77,12 @@ def simple_session_16_2_json_header():
 def simple_session_16_2_csv():
     df = pd.read_csv(TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625_data.csv")
     return df.set_index("t")
+
+
+def test_convert_analog_channels_to_uint16(simple_session_16_2):
+    _, header, data = simple_session_16_2
+    data_converted = _convert_analog_uint8_to_uint16_18_0(data, header)
+    assert (len(data_converted) % (get_sample_size_from_header_bytes(header) + 3)) == 0
 
 
 def test_endian_conversion(simple_session_11_2):
