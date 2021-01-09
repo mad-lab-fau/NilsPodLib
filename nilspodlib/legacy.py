@@ -103,8 +103,8 @@ def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
 
-    This will update the firmware version to 0.13.255 to identify converted sessions.
-    Potential version checks in the library will use <0.13.255 to check for compatibility.
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
 
     .. warning:: After the update the following features will not work:
                     - The sync group was removed and hence can not be read anymore
@@ -114,7 +114,7 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
     in_path :
         path to 0.12.x / 0.13.x file
     out_path :
-        path to converted 0.13.255 file
+        path to converted 0.17.255 file
 
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
@@ -128,8 +128,8 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
 def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
 
-    This will update the firmware version to 0.13.255 to identify converted sessions.
-    Potential version checks in the library will use <0.13.255 to check for compatibility.
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
 
     .. warning:: After the update the following features will not work:
                     - The sync group was removed and hence can not be read anymore
@@ -167,8 +167,8 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
 
-    This will update the firmware version to 0.13.255 to identify converted sessions.
-    Potential version checks in the library will use <0.13.255 to check for compatibility.
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
 
     .. warning:: After the update the following features will not work:
                     - The battery sensor_type does not exist anymore and hence, is not supported in the converted files
@@ -179,7 +179,7 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
     in_path :
         path to 0.11.2 file
     out_path :
-        path to converted 0.13.255 file
+        path to converted 0.17.255 file
 
     """
     header, data_bytes = get_header_and_data_bytes(in_path)
@@ -193,8 +193,8 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
 def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
 
-    This will update the firmware version to 0.13.255 to identify converted sessions.
-    Potential version checks in the library will use <0.13.255 to check for compatibility.
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
 
     .. warning:: After the update the following features will not work:
                     - The battery sensor_type does not exist anymore and hence, is not supported in the converted files
@@ -228,9 +228,6 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
     # adapt to new header size:
     header[0] = len(header)
-
-    # Update firmware version
-    header[-1] = 255
 
     # stack conversion functionss
     header, data_bytes = load_12_0(header, data_bytes)
