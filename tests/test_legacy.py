@@ -16,11 +16,12 @@ from nilspodlib.legacy import (
     _split_sampling_rate_byte_11_2,
     convert_11_2,
     convert_12_0,
+    convert_18_0,
     find_conversion_function,
     MIN_NON_LEGACY_VERSION,
 )
 from nilspodlib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
-from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12
+from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12, TEST_LEGACY_DATA_16_2
 
 
 @pytest.fixture()
@@ -56,6 +57,24 @@ def simple_session_12_0_json_header():
 @pytest.fixture()
 def simple_session_12_0_csv():
     df = pd.read_csv(TEST_LEGACY_DATA_12 / "NilsPodX-7FAD_20190430_0933_data.csv")
+    return df.set_index("t")
+
+
+@pytest.fixture()
+def simple_session_16_2():
+    path = TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625.bin"
+    header, data_bytes = get_header_and_data_bytes(path)
+    return path, header, data_bytes
+
+
+@pytest.fixture()
+def simple_session_16_2_json_header():
+    return json.load((TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625_header.json").open("r"))
+
+
+@pytest.fixture()
+def simple_session_16_2_csv():
+    df = pd.read_csv(TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625_data.csv")
     return df.set_index("t")
 
 
@@ -116,7 +135,12 @@ def test_full_conversion(session, converter, request):
 
 
 @pytest.mark.parametrize(
-    "session, converter", [("simple_session_11_2", convert_11_2), ("simple_session_12_0", convert_12_0),],
+    "session, converter",
+    [
+        ("simple_session_11_2", convert_11_2),
+        ("simple_session_12_0", convert_12_0),
+        ("simple_session_16_2", convert_18_0),
+    ],
 )
 def test_auto_resolve(session, converter, request):
     path = request.getfixturevalue(session)[0]
@@ -139,7 +163,12 @@ def test_auto_resolve(session, converter, request):
 
 
 @pytest.mark.parametrize(
-    "session, converter", [("simple_session_11_2", convert_11_2), ("simple_session_12_0", convert_12_0),],
+    "session, converter",
+    [
+        ("simple_session_11_2", convert_11_2),
+        ("simple_session_12_0", convert_12_0),
+        ("simple_session_16_2", convert_18_0),
+    ],
 )
 def test_legacy_error(session, converter, request):
     session = request.getfixturevalue(session)
