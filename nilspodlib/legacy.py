@@ -154,10 +154,6 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
     header = _shift_bytes_12_0(header)
 
-    # Update firmware version
-    header[-2] = 13
-    header[-1] = 255
-
     # stack conversion functions
     header, data_bytes = load_18_0(header, data_bytes)
 
