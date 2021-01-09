@@ -28,7 +28,8 @@ the already factory calibrated imu data.
 - Removed all factory calibration methods, as the factory calibration is now applied automatically.
 - The ability to calibrate just the acc or just the gryo.
   Instead, you can only apply calibrations to the entire IMU.
-  This is due to the removal of the respective functions in `imucal`
+  This is due to the removal of the respective functions in `imucal`.
+- Removed `cut_to_syncregion` that was deprecated for a while now.  
 
 ### Fixed
 

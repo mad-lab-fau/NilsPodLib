@@ -108,46 +108,6 @@ def test_slaves(basic_synced_session, dataset_synced):
     assert dataset_synced["slave2"][0].info.sensor_id in slave_ids
 
 
-def test_cut_to_sync_only_master_with_end(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=True, inplace=False)
-
-    assert s.master.counter[0] == basic_synced_session.master.counter[0]
-    assert (
-        s.slaves[0].counter[0]
-        == basic_synced_session.slaves[0].counter[basic_synced_session.slaves[0].info.sync_index_start]
-    )
-    assert (
-        s.slaves[1].counter[0]
-        == basic_synced_session.slaves[1].counter[basic_synced_session.slaves[1].info.sync_index_start]
-    )
-    assert s.master.counter[-1] == basic_synced_session.master.counter[-1]
-    assert (
-        s.slaves[0].counter[-1]
-        == basic_synced_session.slaves[0].counter[basic_synced_session.slaves[0].info.sync_index_stop - 1]
-    )
-    assert (
-        s.slaves[1].counter[-1]
-        == basic_synced_session.slaves[1].counter[basic_synced_session.slaves[1].info.sync_index_stop - 1]
-    )
-
-
-def test_cut_to_sync_only_master_without_end(basic_synced_session):
-    s = basic_synced_session.cut_to_syncregion(only_to_master=True, end=False, inplace=False)
-
-    assert s.master.counter[0] == basic_synced_session.master.counter[0]
-    assert (
-        s.slaves[0].counter[0]
-        == basic_synced_session.slaves[0].counter[basic_synced_session.slaves[0].info.sync_index_start]
-    )
-    assert (
-        s.slaves[1].counter[0]
-        == basic_synced_session.slaves[1].counter[basic_synced_session.slaves[1].info.sync_index_start]
-    )
-    assert s.master.counter[-1] == basic_synced_session.master.counter[-1]
-    assert s.slaves[0].counter[-1] == basic_synced_session.slaves[0].counter[-1]
-    assert s.slaves[1].counter[-1] == basic_synced_session.slaves[1].counter[-1]
-
-
 def test_align_to_sync_with_end(basic_synced_session):
     s = basic_synced_session.align_to_syncregion(cut_start=True, cut_end=True, inplace=False)
 
