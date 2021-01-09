@@ -5,7 +5,8 @@ from typing import Tuple, Callable, Optional, Union
 
 import numpy as np
 
-from nilspodlib.exceptions import LegacyWarning, VersionError
+from nilspodlib.exceptions import LegacyWarning, VersionError, CorruptedPackageWarning
+from nilspodlib.consts import SENSOR_SAMPLE_LENGTH
 from nilspodlib.utils import (
     path_t,
     get_header_and_data_bytes,
@@ -14,11 +15,12 @@ from nilspodlib.utils import (
 )
 
 CONVERSION_DICT = {
+    "18_0": {"min": StrictVersion("0.13.255"), "max": StrictVersion("0.17.255")},
     "12_0": {"min": StrictVersion("0.11.255"), "max": StrictVersion("0.13.255")},
     "11_2": {"min": StrictVersion("0.11.2"), "max": StrictVersion("0.11.255")},
 }
 
-MIN_NON_LEGACY_VERSION = StrictVersion("0.14.0")
+MIN_NON_LEGACY_VERSION = StrictVersion("0.18.0")
 
 
 def find_conversion_function(
@@ -38,6 +40,64 @@ def find_conversion_function(
                 return n + k
             return globals()[n + k]
     raise VersionError("No suitable conversion function found for {}".format(version))
+
+def convert_18_0(in_path: path_t, out_path: path_t) -> None:
+    """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
+
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
+
+    Parameters
+    ----------
+    in_path :
+        path to 0.14.x - 0.17.x file
+    out_path :
+        path to converted 0.17.255 file
+
+    """
+    header, data_bytes = get_header_and_data_bytes(in_path)
+    header, data_bytes = load_18_0(header, data_bytes)
+
+    with open(out_path, "wb+") as f:
+        f.write(bytearray(header))
+        f.write(bytearray(data_bytes))
+
+def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
+
+    This will update the firmware version to 0.17.255 to identify converted sessions.
+    Potential version checks in the library will use <0.17.255 to check for compatibility.
+
+    Parameters
+    ----------
+    header :
+        bytes containing all the legacy header information
+    data_bytes :
+        raw bytes representing the data
+
+    """
+    min_v = CONVERSION_DICT["18_0"]["min"]
+    max_v = CONVERSION_DICT["18_0"]["max"]
+    version = get_strict_version_from_header_bytes(header)
+
+    if not min_v <= version < max_v:
+        raise VersionError(
+            "This converter is meant for files recorded with Firmware version after {} and before {}"
+            " not {}".format(min_v, max_v, version)
+        )
+
+    analog_enabled = header[2] & 0x10
+    if analog_enabled:
+        # convert analog channels from uint8 to uint16
+        data_bytes = _convert_analog_uint8_to_uint16_18_0(data_bytes, header)
+        # Update sample size
+        header[1] = header[1] + 3
+
+    # Update firmware version
+    header[-2] = 17
+    header[-1] = 255
+
+    return header, data_bytes
 
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
@@ -97,6 +157,9 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     # Update firmware version
     header[-2] = 13
     header[-1] = 255
+
+    # stack conversion functions
+    header, data_bytes = load_18_0(header, data_bytes)
 
     return header, data_bytes
 
@@ -169,8 +232,44 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     # Update firmware version
     header[-1] = 255
 
+    # stack conversion functionss
     header, data_bytes = load_12_0(header, data_bytes)
+    header, data_bytes = load_18_0(header, data_bytes)
+
     return header, data_bytes
+
+
+def _convert_analog_uint8_to_uint16_18_0(data_bytes, header_bytes):
+    """Convert the data format of analog channels of uint8 to uint16."""
+    old_sample_size = header_bytes[1]
+    temp_enabled = header_bytes[2] & 0x80
+
+    if(len(data_bytes) % old_sample_size):
+        data_bytes = data_bytes[:(len(data_bytes) // old_sample_size)*old_sample_size]
+        warnings.warn("Number of bytes in binary data does not match sample size indicated by header. "
+                      "This can be caused by a bug affecting all synchronised sessions recorded with firmware versions "
+                      "before 0.14.0. ", CorruptedPackageWarning)
+
+    data_bytes = data_bytes.reshape(len(data_bytes) // old_sample_size, old_sample_size)
+
+    # build new array to hold new data format
+    data_bytes_converted = np.zeros((data_bytes.shape[0], old_sample_size + 3))
+
+    offset = SENSOR_SAMPLE_LENGTH['counter'][0]
+
+    if temp_enabled:
+        offset = SENSOR_SAMPLE_LENGTH['counter'][0] + SENSOR_SAMPLE_LENGTH['temperature'][0]
+
+    data_bytes_converted[:, -offset:] = data_bytes[:, -offset:]
+    data_bytes_converted[:, -offset - 2] = data_bytes[:, -offset - 1]
+    data_bytes_converted[:, -offset - 4] = data_bytes[:, -offset - 2]
+    data_bytes_converted[:, -offset - 6] = data_bytes[:, -offset - 3]
+
+    remaining_bytes = old_sample_size - 3 - offset
+
+    data_bytes_converted[:, :remaining_bytes] = data_bytes[:, :remaining_bytes]
+
+    return data_bytes_converted.flatten()
 
 
 def _fix_little_endian_counter(data_bytes, packet_size):

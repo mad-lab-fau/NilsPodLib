@@ -9,7 +9,7 @@ SENSOR_SAMPLE_LENGTH = {
     "gyro": (6, 3, np.int16),
     "mag": (6, 3, np.int16),
     "baro": (2, 1, np.int16),
-    "analog": (3, 3, np.uint8),
+    "analog": (6, 3, np.uint16),
     "ecg": (4, 1, np.int32),
     "ppg": (4, 1, np.int32),
     "temperature": (2, 1, np.int16),
