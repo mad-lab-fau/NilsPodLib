@@ -27,7 +27,7 @@ def test_data_as_df(dataset_master_simple):
     ds = dataset_master_simple[0]
 
     df = ds.data_as_df()
-    assert len(df.columns) == 6
+    assert len(df.columns) == 14
     assert np.array_equal(df.index.values, np.arange(len(ds.counter)))
 
     df = ds.data_as_df(datastreams=("gyro",))

@@ -99,7 +99,7 @@ def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     header[-2] = 17
     header[-1] = 255
 
-    return header, data_bytes
+    return header, data_bytes.astype(np.uint8)
 
 
 def convert_12_0(in_path: path_t, out_path: path_t) -> None:
