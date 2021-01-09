@@ -2,6 +2,11 @@
 Calibration
 ===========
 
+.. warning::
+    The handling of calibrations has changed in version 3.0..
+    If you are using an earlier version, this information does not apply.
+    On information on how to update, see the migration guide in the changelog.
+
 Calibration of IMUs is an important step to obtain accurate measurements.
 This library uses the
 `imucal <https://github.com/mad-lab-fau/imucal>`_ library to apply calibrations to a Dataset.
@@ -12,22 +17,12 @@ Obtaining a Calibration
 Factory Calibration
 -------------------
 
-If no accurate senor readings are required, applying the factory calibration obtained from the datasheet of the IMU
-sensor might be sufficient.
-These calibrations can be directly applied on a dataset without any further work:
-
->>> ds = ... # Dataset Object
->>> cal_df = ds._factory_calibrate_imu()
-sensor might be sufficient.
-These calibrations can be directly applied on a dataset without any further work:
-
->>> ds = ... # Dataset Object
->>> cal_df = ds._factory_calibrate_imu()
-sensor might be sufficient.
-These calibrations can be directly applied on a dataset without any further work:
-
->>> ds = ... # Dataset Object
->>> cal_df = ds.factory_calibrate_imu()
+All value provided by the nilspodlib are automatically factory calibrated after loading the binary file.
+This means that all values have the expected physical units: Accelerometer (m/s^2), Gyroscope (deg/s), Barometer (mbar),
+Temperature (C).
+For many applications, this is already sufficient.
+However, in particular for the IMU it is preferable to apply a proper calibration to the data to refine the results.
+For more information on this you can check the following sections.
 
 Reference Calibrations
 ----------------------
@@ -39,47 +34,64 @@ All reference calibrations are stored in the
 python package.
 To gain access to these calibrations install the package following the instructions provided in its README.
 
-**NOTE**: Usually, it is always a good idea to use the reference calibrations.
-However, if the last available reference calibration was far before the actual measurements (multiple month/years) or
-the measurement was performed under abnormal enviromental conditions, a new custom calibration should be obtained.
+.. warning::
+    `NilsPodRefCal` is a package internal to the FAU MaD-Lab. If you are not a member of the Lab, you can not obtain
+    calibration files this way.
+    Please contact Portabiles (or whomever provided you NilsPods) for further information and to get potential reference
+    calibrations.
+
+.. note::
+    Usually, it is always a good idea to use the reference calibrations.
+    However, if the last available reference calibration was far before the actual measurements (multiple month/years)
+    or the measurement was performed under abnormal environmental conditions, a new custom calibration should be
+    obtained.
 
 Custom Calibrations
 -------------------
 
 First it is necessary to perform a calibration measurement.
 The exact measurement protocol will depend on the calibration method.
-See the `imucal <https://github.com/mad-lab-fau/imucal>`__
-library for more information on how to perform the different calibration measurements.
-Using the same library a calibration measurement can be converted into a ``CalibrationInfo`` object:
+See the `imucal <https://github.com/mad-lab-fau/imucal>`__ library for more information on how to perform the different
+calibration measurements.
 
->>> from nilspodlib.dataset import Dataset
->>> from imucal import FerrarisCalibration  # This example shows a ferraris calibration, but any other method will work similar
->>> path = ... # Path to the .bin file of the calibration measurement
->>> ds = Dataset.from_bin_file(path)
->>> data = ds.imu_data_as_df()
->>> cal, _ = FerrarisCalibration.from_interactive_plot(data, ds.info.sampling_rate_hz)
->>> cal_info = cal.compute_calibration_matrix()
+The `imucal` library does not specifically support the nilspodlib, but you can easily use it to create new calibration
+files for your sensors.
+We recommend (if you do not own professional calibration equipment), to perform a *Ferraris Calibration*.
+Follow the instructions provided in `imucal` and record all calibration motions in a single session.
+You can then simply load the session and throw the data into `imucal`.
+Make sure to specify the correct units when creating the final calibration.
 
-This Python object can either be used directly to apply a calibration in the context of this library or can be stored in
-``.json`` file (which can also be directly used with this library).
-Note, that *NilsPodLib* assumes a certain naming scheme to make it easier to search through a list of ``.json`` files.
-Therefore, it is suggested to use the ``save_calibration`` function of this library instead of the simple ``.to_json``
-method provided by the *SensorCalibration* library:
+Check this :ref`example <create_calibration>`  for detailed code instructions.
+
+The final `CalibrationInfo` object can either be used directly to apply a calibration in the context of this library or
+can be stored in a `.json` file.
+For this we recommend to use the tools provided in this library, as they have some nilspod specific tweaks.
 
 >>> from nilspodlib.calibration_utils import save_calibration
 >>> save_calibration(cal_info, ds.info.sensor_id, ds.info.utc_datetime_start, '/my/custom/cal/folder')  # This will save a json with the correct nameing scheme in the custom cal folder.
 
+For further information about managing calibration files, check this
+`guide <https://imucal.readthedocs.io/en/latest/guides/cal_store.html>`__.
+
 Apply a Calibration
 ===================
+
+.. warning::
+    If you have calibrations created before updating to nilspodlib version 3.0., you will receive an error, when you try
+    to load them.
+    You need to **recreate** all of these calibration files if you want ot use them with nilspodlib.
+    Simply converting them into the new json format will not suffice, as newer version of the nilspodlib expect
+    different input units.
+    For more information check the Changelog.
 
 Finding a suitable Calibration
 ------------------------------
 
 The first step is to locate a suitable calibration for the sensor.
-The library provides a couple of tools for this, which can be found in ``NilsPodLib.calibration_utils``.
+The library provides a couple of tools for this, which can be found in `NilsPodLib.calibration_utils`.
 
 The most common once are shown briefly.
-Note, that all the functions shown below support an optional ``folder`` argument.
+Note, that all the functions shown below support an optional `folder` argument.
 If provided only the specified folder will be searched.
 If not, the **reference calibrations will be used automatically**.
 
@@ -109,6 +121,8 @@ For a full list of possible calibration types see the *SensorCalibration* librar
 >>> print(cals)  # Will print a list of all turntable calibrations available for the sensor
 >>> cal = cals[0] # Select the first session. Note the list is not ordered in any way. This means some custom logic for selecting the calibration is required
 
+You can also filter for other information within the exported json file using the `custom_validator` parameter.
+
 Search a set of custom calibrations:
 
 This is available for all search functions.
@@ -121,7 +135,7 @@ This is available for all search functions.
 
 Using the OOP interface:
 
-Instead of using the functions provided by the ``calibration_utils`` module, the same functions can be invoked as
+Instead of using the functions provided by the `calibration_utils` module, the same functions can be invoked as
 methods on the dataset.
 
 >>> ds = ...  # Dataset object
@@ -141,7 +155,7 @@ On a session object:
 Performing the Calibration
 --------------------------
 
-To apply the calibration the ``calibrate_imu`` method of the session or the dataset object can be used:
+To apply the calibration the `calibrate_imu` method of the session or the dataset object can be used:
 
 >>> ds = ...  # Dataset object
 >>> calibrated_ds = ds.calibrate_imu(cal)
