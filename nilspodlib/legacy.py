@@ -41,6 +41,7 @@ def find_conversion_function(
             return globals()[n + k]
     raise VersionError("No suitable conversion function found for {}".format(version))
 
+
 def convert_18_0(in_path: path_t, out_path: path_t) -> None:
     """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
 
@@ -61,6 +62,7 @@ def convert_18_0(in_path: path_t, out_path: path_t) -> None:
     with open(out_path, "wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
+
 
 def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
@@ -237,21 +239,24 @@ def _convert_analog_uint8_to_uint16_18_0(data_bytes, header_bytes):
     old_sample_size = header_bytes[1]
     temp_enabled = header_bytes[2] & 0x80
 
-    if(len(data_bytes) % old_sample_size):
-        data_bytes = data_bytes[:(len(data_bytes) // old_sample_size)*old_sample_size]
-        warnings.warn("Number of bytes in binary data does not match sample size indicated by header. "
-                      "This can be caused by a bug affecting all synchronised sessions recorded with firmware versions "
-                      "before 0.14.0. ", CorruptedPackageWarning)
+    if len(data_bytes) % old_sample_size:
+        data_bytes = data_bytes[: (len(data_bytes) // old_sample_size) * old_sample_size]
+        warnings.warn(
+            "Number of bytes in binary data does not match sample size indicated by header. "
+            "This can be caused by a bug affecting all synchronised sessions recorded with firmware versions "
+            "before 0.14.0. ",
+            CorruptedPackageWarning,
+        )
 
     data_bytes = data_bytes.reshape(len(data_bytes) // old_sample_size, old_sample_size)
 
     # build new array to hold new data format
     data_bytes_converted = np.zeros((data_bytes.shape[0], old_sample_size + 3))
 
-    offset = SENSOR_SAMPLE_LENGTH['counter'][0]
+    offset = SENSOR_SAMPLE_LENGTH["counter"][0]
 
     if temp_enabled:
-        offset = SENSOR_SAMPLE_LENGTH['counter'][0] + SENSOR_SAMPLE_LENGTH['temperature'][0]
+        offset = SENSOR_SAMPLE_LENGTH["counter"][0] + SENSOR_SAMPLE_LENGTH["temperature"][0]
 
     data_bytes_converted[:, -offset:] = data_bytes[:, -offset:]
     data_bytes_converted[:, -offset - 2] = data_bytes[:, -offset - 1]

@@ -91,11 +91,7 @@ def test_split_sampling_rate(in_byte, out):
 
 
 @pytest.mark.parametrize(
-    "session, converter",
-    [
-        ("simple_session_11_2", convert_11_2),
-        ("simple_session_12_0", convert_12_0),
-    ],
+    "session, converter", [("simple_session_11_2", convert_11_2), ("simple_session_12_0", convert_12_0),],
 )
 def test_full_conversion(session, converter, request):
     path = request.getfixturevalue(session)[0]
@@ -120,11 +116,7 @@ def test_full_conversion(session, converter, request):
 
 
 @pytest.mark.parametrize(
-    "session, converter",
-    [
-        ("simple_session_11_2", convert_11_2),
-        ("simple_session_12_0", convert_12_0),
-    ],
+    "session, converter", [("simple_session_11_2", convert_11_2), ("simple_session_12_0", convert_12_0),],
 )
 def test_auto_resolve(session, converter, request):
     path = request.getfixturevalue(session)[0]
@@ -147,11 +139,7 @@ def test_auto_resolve(session, converter, request):
 
 
 @pytest.mark.parametrize(
-    "session, converter",
-    [
-        ("simple_session_11_2", convert_11_2),
-        ("simple_session_12_0", convert_12_0),
-    ],
+    "session, converter", [("simple_session_11_2", convert_11_2), ("simple_session_12_0", convert_12_0),],
 )
 def test_legacy_error(session, converter, request):
     session = request.getfixturevalue(session)

@@ -5,19 +5,7 @@ from nilspodlib.utils import convert_little_endian, validate_existing_overlap
 
 
 @pytest.mark.parametrize(
-    "byte_vals, ints",
-    [
-        (
-            [
-                0,
-            ],
-            0,
-        ),
-        ([0, 0, 0, 0], 0),
-        ([1, 0], 1),
-        ([0, 1], 256),
-        ([1, 1], 257),
-    ],
+    "byte_vals, ints", [([0,], 0,), ([0, 0, 0, 0], 0), ([1, 0], 1), ([0, 1], 256), ([1, 1], 257),],
 )
 def test_little_endian_simple(byte_vals, ints):
     assert convert_little_endian(byte_vals) == ints
@@ -43,11 +31,7 @@ def test_validate_overlap(starts, stops, result):
 
 
 @pytest.mark.parametrize(
-    "starts, stops",
-    [
-        ([1, 1], [0, 0]),
-        ([0, 0], [-1, 1]),
-    ],
+    "starts, stops", [([1, 1], [0, 0]), ([0, 0], [-1, 1]),],
 )
 def test_validate_overlap_error(starts, stops):
     with pytest.raises(ValueError):
