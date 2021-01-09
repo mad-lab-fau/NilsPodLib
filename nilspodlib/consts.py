@@ -20,6 +20,7 @@ SENSOR_SAMPLE_LENGTH = {
 SENSOR_LEGENDS = {
     "acc": tuple("acc_" + x for x in "xyz"),
     "gyro": tuple("gyr_" + x for x in "xyz"),
+    "mag": tuple("mag_" + x for x in "xyz"),
     "baro": tuple(["baro"]),
     "analog": tuple("analog_" + str(x) for x in range(3)),
     "ecg": tuple(["ecg"]),
