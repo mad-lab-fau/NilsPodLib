@@ -55,20 +55,12 @@ print("Gyro has now a length of", len(downsampled_dataset.gyro.data))
 downsampled_dataset = dataset.downsample(factor=2, inplace=True)
 print("The old and the new are identical:", id(dataset) == id(downsampled_dataset))
 
-# Usually, before using any data it needs to be calibrated. The dataset object offers factory_calibrations for all
-# important sensors. These convert the datastreams into physical units
-
-dataset_cal = dataset._factory_calibrate_baro()
-# For acc and gyro a convenience method is provided.
-dataset_cal = dataset_cal._factory_calibrate_imu()
-
-# However, for more precise measurements an actual IMU Calibration using the `calibrate_{acc,gyro,imu}` methods should
-# be performed.
+# At this point you would usually apply a calibration to the IMU data (see other examples)
 
 # After calibration and initial operations on all datastreams, the easiest way to interface with further processing
 # pipelines is a conversion into a pandas DataFrame
 
-df = dataset_cal.data_as_df()
+df = dataset.data_as_df()
 
 print(df.head())
 

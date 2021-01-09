@@ -90,12 +90,13 @@ def find_calibrations_for_sensor(
         If the folder should be searched recursive or not.
     filter_cal_type :
         Whether only files obtain with a certain calibration type should be found.
-        This will look for the `CalType` inside the json file and hence cause performance problems.
+        This will look for the `CalType` inside the json file and could cause performance issues with many calibration
+        files.
         If None, all found files will be returned.
         For possible values, see the `imucal` library.
     custom_validator :
         A custom function that will be called with the CalibrationInfo object of each potential match.
-        This needs load the json file of each match and could cause performance issues with many calibration files.
+        This needs to load the json file of each match and could cause performance issues with many calibration files.
     ignore_file_not_found :
         If True this function will not raise an error, but rather return an empty list, if no
         calibration files were found for the specific sensor_type.
@@ -149,12 +150,13 @@ def find_closest_calibration_to_date(
         If the folder should be searched recursive or not.
     filter_cal_type :
         Whether only files obtain with a certain calibration type should be found.
-        This will look for the `CalType` inside the json file and hence cause performance problems.
+        This will look for the `CalType` inside the json file and could cause performance issues with many calibration
+        files.
         If None, all found files will be returned.
         For possible values, see the `imucal` library.
     custom_validator :
         A custom function that will be called with the CalibrationInfo object of each potential match.
-        This needs load the json file of each match and could cause performance issues with many calibration files.
+        This needs to load the json file of each match and could cause performance issues with many calibration files.
     before_after :
         Can either be 'before' or 'after', if the search should be limited to calibrations that were
         either before or after the specified date. If None the closest value ignoring if it was before or after the
