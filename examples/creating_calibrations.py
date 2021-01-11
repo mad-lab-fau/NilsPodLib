@@ -21,7 +21,9 @@ from pathlib import Path
 from example_data import EXAMPLE_PATH
 from nilspodlib import Dataset
 
-cal_dataset = Dataset.from_bin_file(EXAMPLE_PATH / "example_calibration_recording/example_calibration.bin")
+cal_dataset = Dataset.from_bin_file(
+    EXAMPLE_PATH / "example_calibration_recording/example_calibration.bin", legacy_support="resolve"
+)
 data = cal_dataset.imu_data_as_df()
 
 # %%
