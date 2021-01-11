@@ -16,7 +16,7 @@ TEST_SYNCED_DATA = HERE / "test_data/synced_sample_session"
 
 
 def _dataset_master_simple():
-    path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_152726.bin"
+    path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824.bin"
     return Dataset.from_bin_file(path=path), path
 
 
@@ -42,7 +42,7 @@ def dataset_synced():
     slave1 = TEST_SYNCED_DATA / "NilsPodX-922A_20190430_0933.bin"
     slave2 = TEST_SYNCED_DATA / "NilsPodX-323C_20190430_0933.bin"
     return {
-        "master": (Dataset.from_bin_file(master,), master),
+        "master": (Dataset.from_bin_file(master), master),
         "slave1": (Dataset.from_bin_file(slave1), slave1),
         "slave2": (Dataset.from_bin_file(slave2), slave2),
     }
