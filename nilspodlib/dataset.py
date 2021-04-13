@@ -136,7 +136,7 @@ class Dataset:  # noqa: too-many-public-methods
         return pd.Series((self.utc_counter * 1e6).astype("datetime64[us]")).dt.tz_localize("UTC")
 
     @property
-    def local_datetime_counter(self) -> np.ndarray:
+    def local_datetime_counter(self) -> pd.Series:
         """Counter as pandas datetime series in the specified timezone."""
         raise_timezone_error(self.info.timezone)
         return self.utc_datetime_counter.dt.tz_convert(self.info.timezone)
