@@ -146,6 +146,7 @@ def remove_docstring_indent(doc_str: str) -> str:
 
 
 def raise_timezone_error(timezone):
+    """Raise a ValueError, if timezone is None."""
     if not timezone:
         raise ValueError(
             "Local datetime information is only available, if a timezone is specified for the recording. "
@@ -154,5 +155,6 @@ def raise_timezone_error(timezone):
 
 
 def convert_to_local_time(utc_datetime: datetime.datetime, timezone: Optional[str]) -> datetime.datetime:
+    """Convert a utc datetime object to a different timezone."""
     raise_timezone_error(timezone)
     return utc_datetime.astimezone(pytz.timezone(timezone))

@@ -31,7 +31,8 @@ from nilspodlib.utils import (
     convert_little_endian,
     inplace_or_copy,
     get_header_and_data_bytes,
-    get_strict_version_from_header_bytes, raise_timezone_error,
+    get_strict_version_from_header_bytes,
+    raise_timezone_error,
 )
 
 if TYPE_CHECKING:

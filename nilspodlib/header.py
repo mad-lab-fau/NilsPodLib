@@ -128,10 +128,12 @@ class _HeaderFields:
 
     @property
     def local_datetime_start(self) -> datetime.datetime:
+        """Start time in specified timezone."""
         return convert_to_local_time(self.utc_datetime_start, self.timezone)
 
     @property
     def local_datetime_stop(self) -> datetime.datetime:
+        """Stop time in specified timezone."""
         return convert_to_local_time(self.utc_datetime_stop, self.timezone)
 
     @property
