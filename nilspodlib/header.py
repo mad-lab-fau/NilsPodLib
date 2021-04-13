@@ -114,17 +114,17 @@ class _HeaderFields:
     @property
     def utc_datetime_start(self) -> datetime.datetime:
         """Start time as utc datetime."""
-        return datetime.datetime.utcfromtimestamp(self.utc_start)
+        return datetime.datetime.utcfromtimestamp(self.utc_start).replace(tzinfo=pytz.utc)
 
     @property
     def utc_datetime_stop(self) -> datetime.datetime:
         """Stop time as utc datetime."""
-        return datetime.datetime.utcfromtimestamp(self.utc_stop)
+        return datetime.datetime.utcfromtimestamp(self.utc_stop).replace(tzinfo=pytz.utc)
 
     @property
     def utc_datetime_start_day_midnight(self) -> datetime.datetime:
         """UTC timestamp marking midnight of the recording date."""
-        return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=datetime.timezone.utc)
+        return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=pytz.utc)
 
     @property
     def local_datetime_start(self) -> datetime.datetime:

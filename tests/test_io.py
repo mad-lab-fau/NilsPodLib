@@ -3,6 +3,7 @@ import json
 
 import pandas as pd
 import pytest
+import pytz
 
 from nilspodlib.dataset import split_into_sensor_data
 from nilspodlib.datastream import Datastream
@@ -33,8 +34,8 @@ def test_load_simple(dataset_master_simple, dataset_master_simple_json_header, d
     # Check all direct values
     info = dataset.info
     assert dataset_master_simple_json_header == json.loads(info.to_json())
-    assert info.utc_datetime_start == datetime.datetime(2021, 1, 9, 15, 28, 24)
-    assert info.utc_datetime_stop == datetime.datetime(2021, 1, 9, 15, 28, 31)
+    assert info.utc_datetime_start == datetime.datetime(2021, 1, 9, 15, 28, 24, tzinfo=pytz.utc)
+    assert info.utc_datetime_stop == datetime.datetime(2021, 1, 9, 15, 28, 31, tzinfo=pytz.utc)
     assert info.is_synchronised is True
     assert info.has_position_info is False
     assert info.sensor_id == "6f13"
