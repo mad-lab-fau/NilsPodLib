@@ -67,3 +67,14 @@ def test_timezone_conversion(dataset_master_simple):
 
     assert berlin_start_time.hour - london_start_time.hour == 1
     assert berlin_stop_time.hour - london_stop_time.hour == 1
+
+
+@pytest.mark.parametrize("attr", ("local_datetime_start", "local_datetime_stop"))
+def test_timezone_error(dataset_master_simple, attr):
+    header = dataset_master_simple[0].info
+
+    header.timezone = None
+    with pytest.raises(ValueError) as e:
+        getattr(header, attr)
+
+    assert "timezone" in str(e)
