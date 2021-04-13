@@ -193,11 +193,23 @@ def test_utc_datetime_counter(dataset_master_simple):
 
     assert counter[0] == np.datetime64(ds.info.utc_datetime_start)
     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert np.abs(
-        counter[-1]
-        - np.datetime64(ds.info.utc_datetime_stop).astype("datetime64[s]")
-    ) <= np.timedelta64(2, "s")
+    assert np.abs(counter[-1] - np.datetime64(ds.info.utc_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
+        2, "s"
+    )
     assert len(ds.utc_datetime_counter) == len(ds.counter)
+
+
+def test_local_datetime_counter(dataset_master_simple):
+    ds = dataset_master_simple[0]
+
+    counter = ds.local_datetime_counter.to_numpy().astype("datetime64[s]")
+
+    assert counter[0] == np.datetime64(ds.info.local_datetime_start)
+    # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
+    assert np.abs(counter[-1] - np.datetime64(ds.info.local_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
+        2, "s"
+    )
+    assert len(ds.local_datetime_counter) == len(ds.counter)
 
 
 @pytest.mark.parametrize("factor", [2, 4, 5])

@@ -42,7 +42,8 @@ def dataset_synced():
     slave1 = TEST_SYNCED_DATA / "NilsPodX-922A_20190430_0933.bin"
     slave2 = TEST_SYNCED_DATA / "NilsPodX-323C_20190430_0933.bin"
     return {
-        "master": (Dataset.from_bin_file(master), master),
+        # We only need a timezone on the master. The other timezones are ignored anyway
+        "master": (Dataset.from_bin_file(master, tz="Europe/Berlin"), master),
         "slave1": (Dataset.from_bin_file(slave1), slave1),
         "slave2": (Dataset.from_bin_file(slave2), slave2),
     }
