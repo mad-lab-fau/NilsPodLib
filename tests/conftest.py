@@ -17,7 +17,7 @@ TEST_SYNCED_DATA = HERE / "test_data/synced_sample_session"
 
 def _dataset_master_simple():
     path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824.bin"
-    return Dataset.from_bin_file(path=path), path
+    return Dataset.from_bin_file(path=path, tz="Europe/Berlin"), path
 
 
 @pytest.fixture()

@@ -11,7 +11,7 @@ from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
-from nilspodlib.utils import validate_existing_overlap, inplace_or_copy, path_t
+from nilspodlib.utils import validate_existing_overlap, inplace_or_copy, path_t, convert_to_local_time
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -72,7 +72,9 @@ class Session(_MultiDataset):
         self.datasets = tuple(datasets)
 
     @classmethod
-    def from_file_paths(cls: Type[T], paths: Iterable[path_t], legacy_support: str = "error") -> T:
+    def from_file_paths(
+        cls: Type[T], paths: Iterable[path_t], legacy_support: str = "error", tz: Optional[str] = None
+    ) -> T:
         """Create a new session from a list of files pointing to valid .bin files.
 
         Parameters
@@ -86,14 +88,23 @@ class Session(_MultiDataset):
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        tz
+            Optional timezone str of the recording.
+            This can be used to localize the start and end time.
+            Note, this should not be the timezone of your current PC, but the timezone relevant for the specific
+            recording.
 
         """
-        ds = (Dataset.from_bin_file(p, legacy_support=legacy_support) for p in paths)
+        ds = (Dataset.from_bin_file(p, legacy_support=legacy_support, tz=tz) for p in paths)
         return cls(ds)
 
     @classmethod
     def from_folder_path(
-        cls: Type[T], base_path: path_t, filter_pattern: str = "*.bin", legacy_support: str = "error"
+        cls: Type[T],
+        base_path: path_t,
+        filter_pattern: str = "*.bin",
+        legacy_support: str = "error",
+        tz: Optional[str] = None,
     ) -> T:
         """Create a new session from a folder path containing valid .bin files.
 
@@ -110,12 +121,17 @@ class Session(_MultiDataset):
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        tz
+            Optional timezone str of the recording.
+            This can be used to localize the start and end time.
+            Note, this should not be the timezone of your current PC, but the timezone relevant for the specific
+            recording.
 
         """
         ds = list(Path(base_path).glob(filter_pattern))
         if not ds:
             raise ValueError('No files matching "{}" where found in {}'.format(filter_pattern, base_path))
-        return cls.from_file_paths(ds, legacy_support=legacy_support)
+        return cls.from_file_paths(ds, legacy_support=legacy_support, tz=tz)
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
         """Get a specific dataset by its sensor_type id.
@@ -194,6 +210,12 @@ class SyncedSession(Session):
     session_utc_datetime_stop
         Stop time of the session as utc datetime.
         You need to `cut_to_sync_region` before you can obtain this value.
+    session_local_datetime_start
+        The start time of the session in the timezone of the session.
+        You need to `cut_to_sync_region` before you can obtain this value.
+    session_local_datetime_stop
+        The stop time of the session in the timezone of the session.
+        You need to `cut_to_sync_region` before you can obtain this value.
     VALIDATE_ON_INIT
         If True all synced sessions will be checked on init.
         These checks include testing, if all datasets are really part of a single measurement.
@@ -254,6 +276,16 @@ class SyncedSession(Session):
         return self.master.info.utc_datetime_start_day_midnight + datetime.timedelta(
             seconds=self.master.counter[-1] / self.master.info.sampling_rate_hz
         )
+
+    @property
+    def session_local_datetime_start(self) -> datetime.datetime:
+        """Start time of the session in the specified timezone of the session."""
+        return convert_to_local_time(self.session_utc_datetime_start, self.master.info.timezone)
+
+    @property
+    def session_local_datetime_stop(self) -> datetime.datetime:
+        """Stop time of the session specified timezone of the session."""
+        return convert_to_local_time(self.session_utc_datetime_stop, self.master.info.timezone)
 
     def __init__(self, datasets: Iterable[Dataset]):
         """Create new synced session.
@@ -441,6 +473,7 @@ class SyncedSession(Session):
             "time": For the time in seconds since the first sample
             "utc": For the utc time stamp of each sample
             "utc_datetime": for a pandas DateTime index in UTC time
+            "local_datetime": for a pandas DateTime index in the timezone set for the session
             None: For a simple index (0...N)
         concat_df :
             If True the individual dfs from each dataset will be concatenated. This is only supported, if the
@@ -501,6 +534,7 @@ class SyncedSession(Session):
             "time": For the time in seconds since the first sample
             "utc": For the utc time stamp of each sample
             "utc_datetime": for a pandas DateTime index in UTC time
+            "local_datetime": for a pandas DateTime index in the timezone set for the session
             None: For a simple index (0...N)
         concat_df :
             If True the individual dfs from each dataset will be concatenated. This is only supported, if the
