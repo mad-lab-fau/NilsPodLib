@@ -1,13 +1,15 @@
 """Set of helper functions used throughout the library."""
 
 import copy
+import datetime
 import struct
 import warnings
 from distutils.version import StrictVersion
 from pathlib import Path
-from typing import TypeVar, Tuple, Any
+from typing import TypeVar, Tuple, Any, Optional
 
 import numpy as np
+import pytz
 
 from nilspodlib.exceptions import CorruptedPackageWarning
 
@@ -141,3 +143,18 @@ def remove_docstring_indent(doc_str: str) -> str:
     for line in lines:
         cut_lines.append(line[indent:])
     return "\n".join(cut_lines)
+
+
+def raise_timezone_error(timezone):
+    """Raise a ValueError, if timezone is None."""
+    if not timezone:
+        raise ValueError(
+            "Local datetime information is only available, if a timezone is specified for the recording. "
+            "This can be done via the `tz` parameter during initialization."
+        )
+
+
+def convert_to_local_time(utc_datetime: datetime.datetime, timezone: Optional[str]) -> datetime.datetime:
+    """Convert a utc datetime object to a different timezone."""
+    raise_timezone_error(timezone)
+    return utc_datetime.astimezone(pytz.timezone(timezone))

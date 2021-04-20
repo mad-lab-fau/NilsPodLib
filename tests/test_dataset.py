@@ -38,12 +38,19 @@ def test_data_as_df(dataset_master_simple):
 
     df = ds.data_as_df(index="time")
     assert np.array_equal(df.index.values, ds.time_counter)
+    assert df.index.name == "t"
 
     df = ds.data_as_df(index="utc")
     assert np.array_equal(df.index.values, ds.utc_counter)
+    assert df.index.name == "utc"
 
     df = ds.data_as_df(index="utc_datetime")
-    assert np.array_equal(df.index.values, ds.utc_datetime_counter)
+    assert np.array_equal(df.index.values, ds.utc_datetime_counter.values)
+    assert df.index.name == "date"
+
+    df = ds.data_as_df(index="local_datetime")
+    assert np.array_equal(df.index.values, ds.local_datetime_counter.values)
+    assert df.index.name == "date (Europe/Berlin)"
 
 
 def test_data_as_df_units_factory_calibrate(dataset_master_simple):
@@ -186,13 +193,27 @@ def test_utc_counter(dataset_master_simple):
 def test_utc_datetime_counter(dataset_master_simple):
     ds = dataset_master_simple[0]
 
-    assert ds.utc_datetime_counter[0].astype("datetime64[s]") == np.datetime64(ds.info.utc_datetime_start)
+    counter = ds.utc_datetime_counter.to_numpy().astype("datetime64[s]")
+
+    assert counter[0] == np.datetime64(ds.info.utc_datetime_start)
     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert np.abs(
-        ds.utc_datetime_counter[-1].astype("datetime64[s]")
-        - np.datetime64(ds.info.utc_datetime_stop).astype("datetime64[s]")
-    ) <= np.timedelta64(2, "s")
+    assert np.abs(counter[-1] - np.datetime64(ds.info.utc_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
+        2, "s"
+    )
     assert len(ds.utc_datetime_counter) == len(ds.counter)
+
+
+def test_local_datetime_counter(dataset_master_simple):
+    ds = dataset_master_simple[0]
+
+    counter = ds.local_datetime_counter.to_numpy().astype("datetime64[s]")
+
+    assert counter[0] == np.datetime64(ds.info.local_datetime_start)
+    # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
+    assert np.abs(counter[-1] - np.datetime64(ds.info.local_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
+        2, "s"
+    )
+    assert len(ds.local_datetime_counter) == len(ds.counter)
 
 
 @pytest.mark.parametrize("factor", [2, 4, 5])

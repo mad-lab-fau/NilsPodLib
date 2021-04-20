@@ -32,6 +32,7 @@ from nilspodlib.utils import (
     inplace_or_copy,
     get_header_and_data_bytes,
     get_strict_version_from_header_bytes,
+    raise_timezone_error,
 )
 
 if TYPE_CHECKING:
@@ -131,9 +132,15 @@ class Dataset:  # noqa: too-many-public-methods
         return self.info.utc_datetime_start_day_midnight.timestamp() + self.counter / self.info.sampling_rate_hz
 
     @property
-    def utc_datetime_counter(self) -> np.ndarray:
-        """Counter as np.datetime64 in UTC timezone."""
-        return (self.utc_counter * 1e6).astype("datetime64[us]")
+    def utc_datetime_counter(self) -> pd.Series:
+        """Counter as pandas datetime series in UTC timezone."""
+        return pd.Series((self.utc_counter * 1e6).astype("datetime64[us]")).dt.tz_localize("UTC")
+
+    @property
+    def local_datetime_counter(self) -> pd.Series:
+        """Counter as pandas datetime series in the specified timezone."""
+        raise_timezone_error(self.info.timezone)
+        return self.utc_datetime_counter.dt.tz_convert(self.info.timezone)
 
     @property
     def time_counter(self) -> np.ndarray:
@@ -176,7 +183,7 @@ class Dataset:  # noqa: too-many-public-methods
             setattr(self, k, ds)
 
     @classmethod
-    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error") -> T:
+    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error", tz: Optional[str] = None) -> T:
         """Create a new Dataset from a valid .bin file.
 
         Parameters
@@ -190,6 +197,11 @@ class Dataset:  # noqa: too-many-public-methods
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        tz
+            Optional timezone str of the recording.
+            This can be used to localize the start and end time.
+            Note, this should not be the timezone of your current PC, but the timezone relevant for the specific
+            recording.
 
         Raises
         ------
@@ -201,29 +213,11 @@ class Dataset:  # noqa: too-many-public-methods
         if path.suffix != ".bin":
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
-        sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support)
+        sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support, tz=tz)
         s = cls(sensor_data, counter, info)
 
         s.path = path
         return s
-
-    @classmethod
-    def from_csv_file(cls, path: path_t):
-        """Create a new Dataset from a valid .csv file.
-
-        Parameters
-        ----------
-        path :
-            Path to the file
-        path :
-            Path to the file
-
-        Notes
-        -----
-        This is planned but not yet supported
-
-        """
-        raise NotImplementedError("CSV importer coming soon")
 
     def calibrate_imu(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
         """Apply a calibration to the Acc and Gyro datastreams.
@@ -574,6 +568,7 @@ class Dataset:  # noqa: too-many-public-methods
             "time": For the time in seconds since the first sample
             "utc": For the utc time stamp of each sample
             "utc_datetime": for a pandas DateTime index in UTC time
+            "local_datetime": for a pandas DateTime index in the timezone set for the session
             None: For a simple index (0...N)
         include_units :
             If True the column names will have the unit of the datastream concatenated with an `_`
@@ -596,7 +591,14 @@ class Dataset:  # noqa: too-many-public-methods
             If any other than the allowed `index` values are used.
 
         """
-        index_names = {None: "n_samples", "counter": "n_samples", "time": "t", "utc": "utc", "utc_datetime": "date"}
+        index_names = {
+            None: "n_samples",
+            "counter": "n_samples",
+            "time": "t",
+            "utc": "utc",
+            "utc_datetime": "date",
+            "local_datetime": "date ({})".format(self.info.timezone),
+        }
         if index and index not in index_names.keys():
             raise ValueError(
                 "Supplied value for index ({}) is not allowed. Allowed values: {}".format(index, index_names.keys())
@@ -634,6 +636,7 @@ class Dataset:  # noqa: too-many-public-methods
             "time": For the time in seconds since the first sample
             "utc": For the utc time stamp of each sample
             "utc_datetime": for a pandas DateTime index in UTC time
+            "local_datetime": for a pandas DateTime index in the timezone set for the session
             None: For a simple index (0...N)
         include_units :
             If True the column names will have the unit of the datastream concatenated with an `_`
@@ -771,7 +774,9 @@ class Dataset:  # noqa: too-many-public-methods
         return True
 
 
-def parse_binary(path: path_t, legacy_support: str = "error") -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
+def parse_binary(
+    path: path_t, legacy_support: str = "error", tz: Optional[str] = None
+) -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
     Parameters
@@ -784,6 +789,11 @@ def parse_binary(path: path_t, legacy_support: str = "error") -> Tuple[Dict[str,
         If `warn`, A warning is raised, but the file is parsed without modification
         If `resolve`, A legacy conversion is performed to load old files. If no suitable conversion is found,
         an error is raised. See the `legacy` package and the README to learn more about available conversions.
+    tz
+        Optional timezone str of the recording.
+        This can be used to localize the start and end time.
+        Note, this should not be the timezone of your current PC, but the timezone relevant for the specific
+        recording.
 
     Returns
     -------
@@ -813,7 +823,7 @@ def parse_binary(path: path_t, legacy_support: str = "error") -> Tuple[Dict[str,
     else:
         raise ValueError("legacy_support must be one of 'resolve', 'error' or 'warn'")
 
-    session_header = Header.from_bin_array(header_bytes[1:])
+    session_header = Header.from_bin_array(header_bytes[1:], tz=tz)
 
     sample_size = session_header.sample_size
     n_samples = session_header.n_samples

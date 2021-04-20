@@ -8,12 +8,13 @@ import pprint
 import warnings
 from collections import OrderedDict
 from distutils.version import StrictVersion
-from typing import Tuple, Any, List, Dict, Union
+from typing import Tuple, Any, List, Dict, Union, Optional
 
 import numpy as np
+import pytz
 
 from nilspodlib.consts import SENSOR_POS
-from nilspodlib.utils import convert_little_endian
+from nilspodlib.utils import convert_little_endian, convert_to_local_time
 
 
 class _HeaderFields:
@@ -43,6 +44,8 @@ class _HeaderFields:
 
     utc_start: int
     utc_stop: int
+
+    timezone: Optional[str]
 
     version_firmware: str
     version_hardware: str
@@ -92,6 +95,8 @@ class _HeaderFields:
             "duration_s",
             "utc_datetime_start",
             "utc_datetime_stop",
+            "local_datetime_start",
+            "local_datetime_stop",
             "utc_datetime_start_day_midnight",
             "is_synchronised",
             "has_position_info",
@@ -109,17 +114,27 @@ class _HeaderFields:
     @property
     def utc_datetime_start(self) -> datetime.datetime:
         """Start time as utc datetime."""
-        return datetime.datetime.utcfromtimestamp(self.utc_start)
+        return datetime.datetime.utcfromtimestamp(self.utc_start).replace(tzinfo=pytz.utc)
 
     @property
     def utc_datetime_stop(self) -> datetime.datetime:
         """Stop time as utc datetime."""
-        return datetime.datetime.utcfromtimestamp(self.utc_stop)
+        return datetime.datetime.utcfromtimestamp(self.utc_stop).replace(tzinfo=pytz.utc)
 
     @property
     def utc_datetime_start_day_midnight(self) -> datetime.datetime:
         """UTC timestamp marking midnight of the recording date."""
-        return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=datetime.timezone.utc)
+        return datetime.datetime.combine(self.utc_datetime_start.date(), datetime.time(), tzinfo=pytz.utc)
+
+    @property
+    def local_datetime_start(self) -> datetime.datetime:
+        """Start time in specified timezone."""
+        return convert_to_local_time(self.utc_datetime_start, self.timezone)
+
+    @property
+    def local_datetime_stop(self) -> datetime.datetime:
+        """Stop time in specified timezone."""
+        return convert_to_local_time(self.utc_datetime_stop, self.timezone)
 
     @property
     def is_synchronised(self) -> bool:
@@ -221,6 +236,13 @@ class Header(_HeaderFields):
         UTC timestamp marking midnight of the recording date.
         This is useful, as the sensor internal counter gets reset at midnight.
         I.e. utc_datetime_start_day_midnight + counter[0] * sampling_rate should be utc_datetime_start
+    timezone
+        A str defining the timezone of the recording.
+        This information is not taken from the sensor, but provided by the user.
+    local_datetime_start
+        The start datetime in the timezone specified in `self.timezone`.
+    local_datetime_stop
+        The stop datetime in the timezone specified in `self.timezone`.
     duration
         Length of the measurement in seconds.
     version_firmware
@@ -258,10 +280,10 @@ class Header(_HeaderFields):
                 warnings.warn("Unexpected Argument {} for Header".format(k))
 
     @classmethod
-    def from_bin_array(cls, bin_array: np.ndarray) -> "Header":
+    def from_bin_array(cls, bin_array: np.ndarray, tz: Optional[str] = None) -> "Header":
         """Create a new Header instance from an array of bytes."""
         header_dict = cls.parse_header_package(bin_array)
-        return cls(**header_dict)
+        return cls(**header_dict, timezone=tz)
 
     @classmethod
     def from_json(cls, json_string: str) -> "Header":

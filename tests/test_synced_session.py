@@ -3,6 +3,7 @@ import datetime
 import pytest
 
 import numpy as np
+import pytz
 
 from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
 from nilspodlib.session import SyncedSession
@@ -257,11 +258,41 @@ def test_sync_info(dataset_synced):
         "session_duration",
         "session_utc_datetime_start",
         "session_utc_datetime_stop",
+        "session_local_datetime_start",
+        "session_local_datetime_stop",
     ],
 )
 def test_synced_time_info_error(basic_synced_session, method):
     with pytest.raises(SynchronisationError):
         getattr(basic_synced_session, method)
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "session_local_datetime_start",
+        "session_local_datetime_stop",
+    ],
+)
+def test_synced_timezone_error(basic_synced_session, method):
+    basic_synced_session = basic_synced_session.align_to_syncregion(cut_start=True)
+    basic_synced_session.master.info.timezone = None
+    with pytest.raises(ValueError):
+        getattr(basic_synced_session, method)
+
+
+@pytest.mark.parametrize("timezone", ("Europe/Berlin", "Europe/London"))
+def test_session_local_datetime(basic_synced_session, timezone):
+    basic_synced_session = basic_synced_session.align_to_syncregion(cut_start=True)
+    basic_synced_session.master.info.timezone = timezone
+
+    start = basic_synced_session.session_local_datetime_start
+    end = basic_synced_session.session_local_datetime_stop
+
+    assert start == datetime.datetime(2019, 4, 30, 7, 33, 12, 11719, tzinfo=pytz.utc).astimezone(
+        pytz.timezone(timezone)
+    )
+    assert end == datetime.datetime(2019, 4, 30, 7, 33, 58, 857422, tzinfo=pytz.utc).astimezone(pytz.timezone(timezone))
 
 
 def test_session_utc_datetime(basic_synced_session):
