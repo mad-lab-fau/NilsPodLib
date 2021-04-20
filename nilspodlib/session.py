@@ -284,7 +284,7 @@ class SyncedSession(Session):
 
     @property
     def session_local_datetime_stop(self) -> datetime.datetime:
-        """Stop time of the session specified timezone of the session."""
+        """Stop time of the session in the specified specified timezone of the session."""
         return convert_to_local_time(self.session_utc_datetime_stop, self.master.info.timezone)
 
     def __init__(self, datasets: Iterable[Dataset]):
