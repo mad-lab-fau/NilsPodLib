@@ -7,3 +7,4 @@ from .dataset import Dataset  # noqa: F401
 from .session import Session, SyncedSession  # noqa: F401
 
 __all__ = ["Dataset", "Session", "SyncedSession"]
+__version__ = "3.2.0"
