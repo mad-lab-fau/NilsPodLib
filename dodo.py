@@ -1,3 +1,4 @@
+import re
 import shutil
 from pathlib import Path
 import platform
@@ -41,3 +42,33 @@ def task_docs():
         return {"actions": [[HERE / "docs/make.bat", "html"]], "verbosity": 2}
     else:
         return {"actions": [["make", "-C", HERE / "docs", "html"]], "verbosity": 2}
+
+
+def update_version_strings(file_path, new_version):
+    # taken from:
+    # https://stackoverflow.com/questions/57108712/replace-updated-version-strings-in-files-via-python
+    version_regex = re.compile(r"(^_*?version_*?\s*=\s*['\"])(\d+\.\d+\.\d+)", re.M)
+    with open(file_path, "r+") as f:
+        content = f.read()
+        f.seek(0)
+        f.write(
+            re.sub(
+                version_regex,
+                lambda match: "{}{}".format(match.group(1), new_version),
+                content,
+            )
+        )
+        f.truncate()
+
+
+def update_version(version):
+    update_version_strings(HERE / "nilspodlib/__init__.py", version)
+    update_version_strings(HERE / "pyproject.toml", version)
+
+
+def task_update_version():
+    """Bump the version in pyproject.toml and nilspodlib.__init__ ."""
+    return {
+        "actions": [(update_version,)],
+        "params": [{"name": "version", "short": "v", "default": None}], 'verbosity': 2
+    }
