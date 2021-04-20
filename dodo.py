@@ -70,5 +70,6 @@ def task_update_version():
     """Bump the version in pyproject.toml and nilspodlib.__init__ ."""
     return {
         "actions": [(update_version,)],
-        "params": [{"name": "version", "short": "v", "default": None}], 'verbosity': 2
+        "params": [{"name": "version", "short": "v", "default": None}],
+        "verbosity": 2,
     }
