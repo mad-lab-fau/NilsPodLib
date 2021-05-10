@@ -258,7 +258,7 @@ def _convert_analog_uint8_to_uint16_18_0(data_bytes, header_bytes):
     data_bytes = data_bytes.reshape(len(data_bytes) // old_sample_size, old_sample_size)
 
     # build new array to hold new data format
-    data_bytes_converted = np.zeros((data_bytes.shape[0], old_sample_size + 3))
+    data_bytes_converted = np.zeros((data_bytes.shape[0], old_sample_size + 3), dtype=np.uint8)
 
     offset = SENSOR_SAMPLE_LENGTH["counter"][0]
 
