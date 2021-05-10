@@ -14,6 +14,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 - Converting and saving old legacy files into the new 0.18 format now works correctly.
+- The Ipython representation of the header now ignores fields that throw error.
+  This fixes an issue that the representation could not be displayed when no timezone was spezified.
 
 
 # [3.2] - 20.04.2021

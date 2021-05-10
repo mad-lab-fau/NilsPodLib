@@ -410,6 +410,10 @@ class _ProxyHeader(_HeaderFields):
         """ """
         import pandas as pd  # noqa: import-outside-toplevel
         from IPython import display  # noqa: import-outside-toplevel
-
-        header = {k: getattr(self, k, None) for k in self._all_header_fields}
+        header = {}
+        for k in self._all_header_fields:
+            try:
+                header[k] = getattr(self, k, None)
+            except ValueError:
+                continue
         display.display(pd.DataFrame(header, index=self.sensor_id).T)
