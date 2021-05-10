@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [3.3] - 
+# [3.3] - 20.05.2021
 
 ### Added
 
@@ -15,7 +15,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Converting and saving old legacy files into the new 0.18 format now works correctly.
 - The Ipython representation of the header now ignores fields that throw error.
-  This fixes an issue that the representation could not be displayed when no timezone was spezified.
+  This fixes an issue that the representation could not be displayed when no timezone was specified.
 
 
 # [3.2] - 20.04.2021
