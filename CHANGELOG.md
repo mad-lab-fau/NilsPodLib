@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [3.3] - 
+
+### Added
+
+- Added new option to force overwrite the version considered by the legacy resolver for testing purposes.
+  At the moment this is only supported for Datasets and not Sessions.
+
+### Fixed
+
+- Converting and saving old legacy files into the new 0.18 format now works correctly.
+
+
 # [3.2] - 20.04.2021
 
 ### Added

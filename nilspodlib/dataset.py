@@ -183,7 +183,14 @@ class Dataset:  # noqa: too-many-public-methods
             setattr(self, k, ds)
 
     @classmethod
-    def from_bin_file(cls: Type[T], path: path_t, legacy_support: str = "error", tz: Optional[str] = None) -> T:
+    def from_bin_file(
+        cls: Type[T],
+        path: path_t,
+        *,
+        legacy_support: str = "error",
+        force_version: Optional[StrictVersion] = None,
+        tz: Optional[str] = None,
+    ) -> T:
         """Create a new Dataset from a valid .bin file.
 
         Parameters
@@ -197,6 +204,12 @@ class Dataset:  # noqa: too-many-public-methods
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        force_version
+            Instead of relying on the version provided in the session header, the legacy support will be determined
+            based on the version provided here.
+            This is only used, if `legacy_support="resolve"`.
+            This option can be helpful, when testing with development firmware images that don't have official version
+            numbers.
         tz
             Optional timezone str of the recording.
             This can be used to localize the start and end time.
@@ -213,7 +226,9 @@ class Dataset:  # noqa: too-many-public-methods
         if path.suffix != ".bin":
             ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
 
-        sensor_data, counter, info = parse_binary(path, legacy_support=legacy_support, tz=tz)
+        sensor_data, counter, info = parse_binary(
+            path, legacy_support=legacy_support, force_version=force_version, tz=tz
+        )
         s = cls(sensor_data, counter, info)
 
         s.path = path
@@ -775,7 +790,7 @@ class Dataset:  # noqa: too-many-public-methods
 
 
 def parse_binary(
-    path: path_t, legacy_support: str = "error", tz: Optional[str] = None
+    path: path_t, legacy_support: str = "error", force_version: Optional[StrictVersion] = None, tz: Optional[str] = None
 ) -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
@@ -789,6 +804,12 @@ def parse_binary(
         If `warn`, A warning is raised, but the file is parsed without modification
         If `resolve`, A legacy conversion is performed to load old files. If no suitable conversion is found,
         an error is raised. See the `legacy` package and the README to learn more about available conversions.
+    force_version
+        Instead of relying on the version provided in the session header, the legacy support will be determined based on
+        the version provided here.
+        This is only used, if `legacy_support="resolve"`.
+        This option can be helpful, when testing with development firmware images that don't have official version
+        numbers.
     tz
         Optional timezone str of the recording.
         This can be used to localize the start and end time.
@@ -817,6 +838,7 @@ def parse_binary(
     version = get_strict_version_from_header_bytes(header_bytes)
 
     if legacy_support == "resolve":
+        version = force_version or version
         header_bytes, data_bytes = find_conversion_function(version, in_memory=True)(header_bytes, data_bytes)
     elif legacy_support in ["error", "warn"]:
         legacy_support_check(version, as_warning=(legacy_support == "warn"))

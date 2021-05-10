@@ -1,6 +1,7 @@
 import json
 import tempfile
 from distutils.version import StrictVersion
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -20,6 +21,7 @@ from nilspodlib.legacy import (
     convert_18_0,
     find_conversion_function,
     MIN_NON_LEGACY_VERSION,
+    load_18_0,
 )
 from nilspodlib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12, TEST_LEGACY_DATA_16_2
@@ -145,6 +147,12 @@ def test_full_conversion(session, converter, request):
     assert header == json.loads(info.to_json())
 
 
+def test_strict_version_overwrite(simple_session_16_2):
+    with patch("nilspodlib.dataset.find_conversion_function", return_value=load_18_0) as mock_func:
+        Dataset.from_bin_file(simple_session_16_2[0], legacy_support="resolve", force_version=StrictVersion("12.0.0"))
+    mock_func.assert_called_with(StrictVersion("12.0.0"), in_memory=True)
+
+
 @pytest.mark.parametrize(
     "session, converter",
     [
@@ -171,6 +179,8 @@ def test_auto_resolve(session, converter, request):
     # Check all direct values
     info = ds.info
     assert header == json.loads(info.to_json())
+    if ds.info.strict_version_firmware >= StrictVersion("12.0.0"):
+        assert len(ds.acc) == ds.info.n_samples
 
 
 @pytest.mark.parametrize(
