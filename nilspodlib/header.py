@@ -410,6 +410,7 @@ class _ProxyHeader(_HeaderFields):
         """ """
         import pandas as pd  # noqa: import-outside-toplevel
         from IPython import display  # noqa: import-outside-toplevel
+
         header = {}
         for k in self._all_header_fields:
             try:
