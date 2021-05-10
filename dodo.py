@@ -1,7 +1,6 @@
-import re
-import shutil
-from pathlib import Path
 import platform
+import re
+from pathlib import Path
 
 DOIT_CONFIG = {
     "default_tasks": ["format", "test", "lint"],
