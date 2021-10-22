@@ -28,7 +28,7 @@ jobs:
         poetry install
     - name: Testing
       run: |
-        poetry run doit test -p "--cov-report=xml"
+        poetry run doit test
     - name: Linting
       run: |
         poetry run doit -v 0 --continue format_check lint
