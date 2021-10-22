@@ -22,7 +22,7 @@ def task_format_check():
 
 def task_test():
     """Run Pytest with coverage."""
-    return {"actions": [["pytest", "--cov=nilspodlib"]], "verbosity": 2}
+    return {"actions": [["pytest", "--cov=nilspodlib", "--cov-report=xml"]], "verbosity": 2}
 
 
 def task_lint():
