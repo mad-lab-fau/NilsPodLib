@@ -216,10 +216,10 @@ def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "C
 def _check_ref_cal_folder() -> Path:
     try:
         from NilsPodRefCal import CAL_PATH  # noqa: import-outside-toplevel
-    except ImportError:
+    except ImportError as e:
         raise ImportError(
             "The module NilsPodRefCal is not installed. If you want support for default calibrations, "
             "please install it from "
             "https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestools/nilspodrefcal."
-        )
+        ) from e
     return CAL_PATH

@@ -866,7 +866,7 @@ def parse_binary(
 
 def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
     """Split/Parse the binary data into the different sensors and the counter."""
-    sensor_data = dict()
+    sensor_data = {}
 
     idx = 0
     for sensor in session_header.enabled_sensors:

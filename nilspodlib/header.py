@@ -313,12 +313,10 @@ class Header(_HeaderFields):
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation
         bin_array = bin_array.astype(np.uint32)
-        header_dict = dict()
-
-        header_dict["sample_size"] = int(bin_array[0])
+        header_dict = {"sample_size": int(bin_array[0])}
 
         sensors = bin_array[1:3]
-        enabled_sensors = list()
+        enabled_sensors = []
         for para, val in cls._SENSOR_FLAGS.items():
             if bool(sensors[0] & val[0]) or bool(sensors[1] & val[1]):
                 enabled_sensors.append(para)
@@ -396,7 +394,7 @@ class _ProxyHeader(_HeaderFields):
                 )
             )
 
-        return tuple([getattr(d, name) for d in self._headers])
+        return tuple(getattr(d, name) for d in self._headers)
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "_headers":
