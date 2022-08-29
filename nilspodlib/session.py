@@ -2,8 +2,18 @@
 """Session groups multiple Datasets from sensors recorded at the same time."""
 import datetime
 import warnings
+from distutils.version import StrictVersion
 from pathlib import Path
-from typing import Iterable, Tuple, TypeVar, Type, Optional, Union, TYPE_CHECKING, Sequence
+from typing import (
+    Iterable,
+    Tuple,
+    TypeVar,
+    Type,
+    Optional,
+    Union,
+    TYPE_CHECKING,
+    Sequence,
+)
 
 import numpy as np
 
@@ -11,7 +21,12 @@ from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
-from nilspodlib.utils import validate_existing_overlap, inplace_or_copy, path_t, convert_to_local_time
+from nilspodlib.utils import (
+    validate_existing_overlap,
+    inplace_or_copy,
+    path_t,
+    convert_to_local_time,
+)
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
@@ -73,7 +88,11 @@ class Session(_MultiDataset):
 
     @classmethod
     def from_file_paths(
-        cls: Type[T], paths: Iterable[path_t], legacy_support: str = "error", tz: Optional[str] = None
+        cls: Type[T],
+        paths: Iterable[path_t],
+        legacy_support: str = "error",
+        force_version: Optional[StrictVersion] = None,
+        tz: Optional[str] = None,
     ) -> T:
         """Create a new session from a list of files pointing to valid .bin files.
 
@@ -88,6 +107,12 @@ class Session(_MultiDataset):
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        force_version
+            Instead of relying on the version provided in the session header, the legacy support will be determined
+            based on the version provided here.
+            This is only used, if `legacy_support="resolve"`.
+            This option can be helpful, when testing with development firmware images that don't have official version
+            numbers.
         tz
             Optional timezone str of the recording.
             This can be used to localize the start and end time.
@@ -95,7 +120,9 @@ class Session(_MultiDataset):
             recording.
 
         """
-        ds = (Dataset.from_bin_file(p, legacy_support=legacy_support, tz=tz) for p in paths)
+        ds = (
+            Dataset.from_bin_file(p, legacy_support=legacy_support, force_version=force_version, tz=tz) for p in paths
+        )
         return cls(ds)
 
     @classmethod
@@ -104,6 +131,7 @@ class Session(_MultiDataset):
         base_path: path_t,
         filter_pattern: str = "*.bin",
         legacy_support: str = "error",
+        force_version: Optional[StrictVersion] = None,
         tz: Optional[str] = None,
     ) -> T:
         """Create a new session from a folder path containing valid .bin files.
@@ -121,6 +149,12 @@ class Session(_MultiDataset):
             If `resolve`: A legacy conversion is performed to load old files. If no suitable conversion is found,
             an error is raised. See the `legacy` package and the README to learn more about available
             conversions.
+        force_version
+            Instead of relying on the version provided in the session header, the legacy support will be determined
+            based on the version provided here.
+            This is only used, if `legacy_support="resolve"`.
+            This option can be helpful, when testing with development firmware images that don't have official version
+            numbers.
         tz
             Optional timezone str of the recording.
             This can be used to localize the start and end time.
@@ -131,7 +165,7 @@ class Session(_MultiDataset):
         ds = list(Path(base_path).glob(filter_pattern))
         if not ds:
             raise ValueError('No files matching "{}" where found in {}'.format(filter_pattern, base_path))
-        return cls.from_file_paths(ds, legacy_support=legacy_support, tz=tz)
+        return cls.from_file_paths(ds, legacy_support=legacy_support, force_version=force_version, tz=tz)
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
         """Get a specific dataset by its sensor_type id.
@@ -516,7 +550,10 @@ class SyncedSession(Session):
         return dfs
 
     def imu_data_as_df(  # noqa: arguments-differ
-        self, index: Optional[str] = None, include_units: Optional[bool] = False, concat_df: Optional[bool] = False
+        self,
+        index: Optional[str] = None,
+        include_units: Optional[bool] = False,
+        concat_df: Optional[bool] = False,
     ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
@@ -564,5 +601,8 @@ class SyncedSession(Session):
 
         """
         return self.data_as_df(
-            datastreams=["acc", "gyro"], index=index, include_units=include_units, concat_df=concat_df
+            datastreams=["acc", "gyro"],
+            index=index,
+            include_units=include_units,
+            concat_df=concat_df,
         )
