@@ -31,26 +31,29 @@ Therefore, you need to update your import path, when updating to the new version
 
 ## For developer
 
-```
-git clone https://github.com/mad-lab-fau/NilsPodLib.git
-cd nilspodlib
-poetry install
-```
-Install Python >3.7 and [poetry](https://python-poetry.org).
+Install Python >=3.8 and [poetry](https://python-poetry.org).
 Then run the commands below to get the latest source and install the dependencies:
 
 ```bash
 git clone https://github.com/mad-lab-fau/NilsPodLib.git
+cd nilspodlib
 poetry install
 ```
 
-To run any of the tools required for the development workflow, use the doit commands:
+To run any of the tools required for the development workflow, use the poe commands:
+
+```
+CONFIGURED TASKS
+  format         
+  lint           Lint all files with Prospector.
+  check          Check all potential format and linting issues.
+  test           Run Pytest with coverage.
+  docs           Build the html docs using Sphinx.
+  bump_version   
+```
+
+by calling
 
 ```bash
-$ poetry run doit list
-docs                 Build the html docs using Sphinx.
-format               Reformat all files using black.
-format_check         Check, but not change, formatting using black.
-lint                 Lint all files with Prospector.
-test                 Run Pytest with coverage.
-```
+poetry run poe <command name>
+````
