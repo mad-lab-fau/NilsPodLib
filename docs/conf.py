@@ -116,11 +116,11 @@ html_theme_options = {"show_prev_next": False}
 
 # intersphinx configuration
 intersphinx_module_mapping = {
-    "numpy": ("https://numpy.org/doc/stable/objects.inv", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
+    "matplotlib": (" https://matplotlib.org/stable/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 }
-
 intersphinx_mapping = {
     "python": ("https://docs.python.org/{.major}".format(sys.version_info), None),
     **intersphinx_module_mapping,
