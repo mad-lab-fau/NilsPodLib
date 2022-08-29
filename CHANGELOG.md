@@ -4,19 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [3.3.0] - 29.08.2022
+## [3.4.0] - 29.08.2022
+
+!!! Dropped Python 3.7 support !!!
+
+### Changed
+
+- All usages of `distuils.StrictVersion` are replaced with `packaging.version.Version`, as the former is deprecated.
+- `Self` type is used whenever a method returns itself (or a copy). A bunch of other typing issues were fixed while 
+  doing that
+
+### Packaging
+
+- Dropped Python 3.7 support
+- Now committing lock file
+- Switched to `poethepoet` from doit
+- Updated readthedocs config to not require a seperate requirements.txt
+
+## [3.3.0] - 29.08.2022
 
 ### Added
 
 - added `force_version` parameter to `Session` to force specific firmware versions for dev firmwares. 
 
-# [3.2.2] - 20.05.2021
+## [3.2.2] - 20.05.2021
 
 ### Changed
 
 - Version checks within the legacy converter now ignore dev builds. If you are using a dev build, you are on your own!
 
-# [3.2.1] - 20.05.2021
+## [3.2.1] - 20.05.2021
 
 ### Added
 
@@ -30,7 +47,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   This fixes an issue that the representation could not be displayed when no timezone was specified.
 
 
-# [3.2] - 20.04.2021
+## [3.2] - 20.04.2021
 
 ### Added
 - Nilspodlib is now timezone aware!
@@ -44,7 +61,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   of as naive datetime objects.
 - The `utc_datetime_counter` is now a pandas series. 
 
-# [3.1] - 11.01.2021
+## [3.1] - 11.01.2021
 
 ### Added
 
@@ -56,7 +73,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Because all version <0.18.0 are now legacy, you need to use legacy support manually or `legacy="resolve"`, when 
   loading files with the firmware versions 0.16 and 0.17
 
-# [3.0] - 09.01.2021
+## [3.0] - 09.01.2021
 
 3.0 is the first version that supports imucal 2.0. and has many further changes to calibrations.
 Most notatbly, factory calibrations are now applied automatically and regular calibrations are expected to be applied to
