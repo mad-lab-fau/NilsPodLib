@@ -1,5 +1,6 @@
 import json
 import tempfile
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import numpy as np
@@ -24,7 +25,12 @@ from nilspodlib.legacy import (
     load_18_0,
 )
 from nilspodlib.utils import convert_little_endian, get_header_and_data_bytes, get_sample_size_from_header_bytes
-from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12, TEST_LEGACY_DATA_16_2
+from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12, TEST_LEGACY_DATA_16_2, TEST_SESSION_DATA
+
+
+@contextmanager
+def does_not_raise():
+    yield
 
 
 @pytest.fixture()
@@ -81,6 +87,13 @@ def simple_session_16_2_csv():
     return df.set_index("t")
 
 
+@pytest.fixture()
+def simple_session_18_0():
+    path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824.bin"
+    header, data_bytes = get_header_and_data_bytes(path)
+    return path, header, data_bytes
+
+
 def test_convert_analog_channels_to_uint16(simple_session_16_2):
     _, header, data = simple_session_16_2
     data_converted = _convert_analog_uint8_to_uint16_18_0(data, header)
@@ -123,6 +136,7 @@ def test_split_sampling_rate(in_byte, out):
     [
         ("simple_session_11_2", convert_11_2),
         ("simple_session_12_0", convert_12_0),
+        ("simple_session_16_2", convert_18_0),
     ],
 )
 def test_full_conversion(session, converter, request):
@@ -145,6 +159,26 @@ def test_full_conversion(session, converter, request):
     # Check all direct values
     info = ds.info
     assert header == json.loads(info.to_json())
+
+
+@pytest.mark.parametrize(
+    "session, converter, expected",
+    [
+        ("simple_session_11_2", convert_11_2, does_not_raise()),
+        ("simple_session_12_0", convert_12_0, does_not_raise()),
+        ("simple_session_16_2", convert_18_0, does_not_raise()),
+        ("simple_session_16_2", convert_12_0, pytest.raises(VersionError)),
+        ("simple_session_16_2", convert_11_2, pytest.raises(VersionError)),
+        ("simple_session_18_0", convert_11_2, pytest.raises(VersionError)),
+        ("simple_session_18_0", convert_12_0, pytest.raises(VersionError)),
+        ("simple_session_18_0", convert_18_0, pytest.raises(VersionError)),
+    ],
+)
+def test_full_conversion_raises(session, converter, expected, request):
+    path = request.getfixturevalue(session)[0]
+    with tempfile.NamedTemporaryFile() as tmp:
+        with expected:
+            converter(path, tmp.name)
 
 
 def test_strict_version_overwrite(simple_session_16_2):
@@ -227,6 +261,7 @@ def test_legacy_error(session, converter, request):
         (Version("0.14.1"), "18_0"),
         (Version("0.16.2"), "18_0"),
         (Version("0.18.0"), "supported"),
+        (Version("255.17.255"), "supported"),
         (MIN_NON_LEGACY_VERSION, "supported"),
     ],
 )

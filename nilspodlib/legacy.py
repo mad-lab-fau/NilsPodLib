@@ -83,7 +83,7 @@ def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     version = get_strict_version_from_header_bytes(header)
 
     # 255.x.x indicates a dev version
-    if not min_v <= version < max_v and version.version[0] != 255:
+    if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
             "This converter is meant for files recorded with Firmware version after {} and before {}"
             " not {}".format(min_v, max_v, version)
@@ -149,7 +149,7 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     max_v = CONVERSION_DICT["12_0"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
-    if not min_v <= version < max_v and version.version[0] != 255:
+    if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
             "This converter is meant for files recorded with Firmware version after {} and before {}"
             " not {}".format(min_v, max_v, version)
@@ -215,7 +215,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     max_v = CONVERSION_DICT["11_2"]["max"]
     version = get_strict_version_from_header_bytes(header)
 
-    if not min_v <= version < max_v and version.version[0] != 255:
+    if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
             "This converter is meant for files recorded with Firmware version after {} and before {}"
             " not {}".format(min_v, max_v, version)
@@ -236,7 +236,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     header[-2] = 11
     header[-1] = 255
 
-    # stack conversion functionss
+    # stack conversion functions
     header, data_bytes = load_12_0(header, data_bytes)
 
     return header, data_bytes
