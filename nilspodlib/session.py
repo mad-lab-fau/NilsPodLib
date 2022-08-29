@@ -2,37 +2,22 @@
 """Session groups multiple Datasets from sensors recorded at the same time."""
 import datetime
 import warnings
-from distutils.version import StrictVersion
 from pathlib import Path
-from typing import (
-    Iterable,
-    Tuple,
-    TypeVar,
-    Type,
-    Optional,
-    Union,
-    TYPE_CHECKING,
-    Sequence,
-)
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple, Union
 
 import numpy as np
+from packaging.version import Version
+from typing_extensions import Self
 
 from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
-from nilspodlib.utils import (
-    validate_existing_overlap,
-    inplace_or_copy,
-    path_t,
-    convert_to_local_time,
-)
+from nilspodlib.utils import convert_to_local_time, inplace_or_copy, path_t, validate_existing_overlap
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo  # noqa: F401
     import pandas as pd  # noqa: F401
-
-T = TypeVar("T", bound="Session")
+    from imucal import CalibrationInfo  # noqa: F401
 
 
 class Session(_MultiDataset):
@@ -88,12 +73,12 @@ class Session(_MultiDataset):
 
     @classmethod
     def from_file_paths(
-        cls: Type[T],
+        cls,
         paths: Iterable[path_t],
         legacy_support: str = "error",
-        force_version: Optional[StrictVersion] = None,
+        force_version: Optional[Version] = None,
         tz: Optional[str] = None,
-    ) -> T:
+    ) -> Self:
         """Create a new session from a list of files pointing to valid .bin files.
 
         Parameters
@@ -127,13 +112,13 @@ class Session(_MultiDataset):
 
     @classmethod
     def from_folder_path(
-        cls: Type[T],
+        cls,
         base_path: path_t,
         filter_pattern: str = "*.bin",
         legacy_support: str = "error",
-        force_version: Optional[StrictVersion] = None,
+        force_version: Optional[Version] = None,
         tz: Optional[str] = None,
-    ) -> T:
+    ) -> Self:
         """Create a new session from a folder path containing valid .bin files.
 
         Parameters
@@ -178,7 +163,7 @@ class Session(_MultiDataset):
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
-    def calibrate_imu(self: T, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> T:
+    def calibrate_imu(self, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> Self:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -392,12 +377,12 @@ class SyncedSession(Session):
         return validate_existing_overlap(start_times, stop_times)
 
     def align_to_syncregion(
-        self: Type[T],
+        self,
         cut_start: bool = False,
         cut_end: bool = False,
         inplace: bool = False,
         warn_thres: Optional[int] = 30,
-    ) -> T:
+    ) -> Self:
         """Align all datasets based on regions where they were synchronised to the master.
 
         At the end all datasets are cut to the same length, so that the maximum overlap between all datasets is
@@ -443,16 +428,16 @@ class SyncedSession(Session):
             ]
             if any(sync_end_warn) and cut_end is not True:
                 warnings.warn(
-                    "For the sensors with the ids {} the last syncpackage occurred more than {} s before the "
-                    "end of the dataset. "
-                    "The last section of this data should not be trusted.".format(sync_end_warn, warn_thres),
+                    f"For the sensors with the ids {sync_end_warn} the last syncpackage occurred more than "
+                    f"{warn_thres} s before the end of the dataset. "
+                    "The last section of this data should not be trusted.",
                     SynchronisationWarning,
                 )
             if any(sync_start_warn) and cut_start is not True:
                 warnings.warn(
-                    "For the sensors with the ids {} the first syncpackage occurred more than {} s after the "
-                    "start of the dataset. "
-                    "The first section of this data should not be trusted.".format(sync_start_warn, warn_thres),
+                    f"For the sensors with the ids {sync_start_warn} the first syncpackage occurred more than "
+                    f"{warn_thres} s after the start of the dataset. "
+                    "The first section of this data should not be trusted.",
                     SynchronisationWarning,
                 )
 

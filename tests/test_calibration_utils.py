@@ -1,18 +1,18 @@
-import copy
 import datetime
 import tempfile
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pytest
-
 from imucal import FerrarisCalibrationInfo, TurntableCalibrationInfo
 from imucal.management import CalibrationWarning, save_calibration_info
+
 from nilspodlib.calibration_utils import (
-    save_calibration,
     find_calibrations_for_sensor,
     find_closest_calibration_to_date,
+    save_calibration,
 )
 
 # TODO: Try to remove tests that are already in imucal
@@ -188,18 +188,16 @@ def test_find_closest_warning(dummy_cal_folder):
 
     assert len(rec) == 1
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         find_closest_calibration_to_date(
             "tes1", datetime.datetime(2000, 10, 3, 13, 14), dummy_cal_folder, warn_thres=datetime.timedelta(seconds=30)
         )
 
-    assert len(rec) == 0
-
     # test default
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         find_closest_calibration_to_date("tes1", datetime.datetime(2000, 10, 3, 13, 15), dummy_cal_folder)
-
-    assert len(rec) == 0
 
 
 # Comment in once ref cals are open source

@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -129,10 +130,9 @@ def test_cut_to_sync_slave_without_end(dataset_synced):
 def test_cut_to_sync_warning(dataset_synced):
     ds = dataset_synced["slave1"][0]
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ds.cut_to_syncregion(end=False)
-
-    assert len(rec) == 0
 
     thres = 0
     with pytest.warns(SynchronisationWarning) as rec:
@@ -149,10 +149,9 @@ def test_cut_to_sync_warning(dataset_synced):
     assert len(rec) == 1
     assert str(thres) in str(rec[0])
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ds.cut_to_syncregion(end=False, warn_thres=None)
-
-    assert len(rec) == 0
 
 
 def test_cut_to_counter_value(dataset_master_simple):
@@ -193,26 +192,26 @@ def test_utc_counter(dataset_master_simple):
 def test_utc_datetime_counter(dataset_master_simple):
     ds = dataset_master_simple[0]
 
-    counter = ds.utc_datetime_counter.to_numpy().astype("datetime64[s]")
+    counter = ds.utc_datetime_counter.dt.tz_localize(None).to_numpy().astype("datetime64[s]")
 
-    assert counter[0] == np.datetime64(ds.info.utc_datetime_start)
+    assert counter[0] == np.datetime64(ds.info.utc_datetime_start.replace(tzinfo=None))
     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert np.abs(counter[-1] - np.datetime64(ds.info.utc_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
-        2, "s"
-    )
+    assert np.abs(
+        counter[-1] - np.datetime64(ds.info.utc_datetime_stop.replace(tzinfo=None)).astype("datetime64[s]")
+    ) <= np.timedelta64(2, "s")
     assert len(ds.utc_datetime_counter) == len(ds.counter)
 
 
 def test_local_datetime_counter(dataset_master_simple):
     ds = dataset_master_simple[0]
 
-    counter = ds.local_datetime_counter.to_numpy().astype("datetime64[s]")
+    counter = ds.local_datetime_counter.dt.tz_localize(None).to_numpy().astype("datetime64[s]")
 
-    assert counter[0] == np.datetime64(ds.info.local_datetime_start)
+    assert counter[0] == np.datetime64(ds.info.local_datetime_start.replace(tzinfo=None))
     # # As the last page is not transmitted, the values will not be exactly the same, but they should be close
-    assert np.abs(counter[-1] - np.datetime64(ds.info.local_datetime_stop).astype("datetime64[s]")) <= np.timedelta64(
-        2, "s"
-    )
+    assert np.abs(
+        counter[-1] - np.datetime64(ds.info.local_datetime_stop.replace(tzinfo=None)).astype("datetime64[s]")
+    ) <= np.timedelta64(2, "s")
     assert len(ds.local_datetime_counter) == len(ds.counter)
 
 

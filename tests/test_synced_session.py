@@ -1,8 +1,8 @@
 import datetime
-
-import pytest
+import warnings
 
 import numpy as np
+import pytest
 import pytz
 
 from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
@@ -177,10 +177,9 @@ def test_align_to_sync_slave_longer_than_master(basic_synced_session):
 def test_align_to_sync_warn_end(basic_synced_session):
     s = basic_synced_session
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         s.align_to_syncregion(cut_start=True, cut_end=False)
-
-    assert len(rec) == 0
 
     thres = 0
     with pytest.warns(SynchronisationWarning) as rec:
@@ -199,19 +198,17 @@ def test_align_to_sync_warn_end(basic_synced_session):
     assert str(thres) in str(rec[0])
     assert str([s.slaves[0].info.sensor_id]) in str(rec[0])
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         s.align_to_syncregion(cut_start=True, cut_end=False, warn_thres=None)
-
-    assert len(rec) == 0
 
 
 def test_align_to_sync_warn_start(basic_synced_session):
     s = basic_synced_session
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         s.align_to_syncregion(cut_end=True, cut_start=False)
-
-    assert len(rec) == 0
 
     thres = 0
     with pytest.warns(SynchronisationWarning) as rec:
@@ -230,10 +227,9 @@ def test_align_to_sync_warn_start(basic_synced_session):
     assert str(thres) in str(rec[0])
     assert str([s.slaves[0].info.sensor_id]) in str(rec[0])
 
-    with pytest.warns(None) as rec:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         s.align_to_syncregion(cut_end=True, cut_start=False, warn_thres=None)
-
-    assert len(rec) == 0
 
 
 def test_sync_info(dataset_synced):

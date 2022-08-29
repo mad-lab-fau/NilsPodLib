@@ -2,17 +2,14 @@
 """Fundamental Datastream class, which holds any type of sensor_type data and handles basic interactions with it."""
 
 import copy
-from typing import Optional, Iterable, List, TypeVar, TYPE_CHECKING
+from typing import Iterable, List, Optional
 
 import numpy as np
+import pandas as pd
+from typing_extensions import Self
 
 from nilspodlib.consts import SENSOR_LEGENDS, SENSOR_UNITS, SIMPLE_UNITS
 from nilspodlib.utils import inplace_or_copy
-
-T = TypeVar("T")
-
-if TYPE_CHECKING:
-    import pandas as pd  # noqa: F401
 
 
 class Datastream:
@@ -123,7 +120,7 @@ class Datastream:
         """
         return np.linalg.norm(self.data, axis=-1)
 
-    def normalize(self) -> "Datastream":
+    def normalize(self) -> Self:
         """Get the normalized data.
 
         Normalization is performed by dividing the data by its maximum absolute value.
@@ -134,12 +131,12 @@ class Datastream:
         return ds
 
     def cut(
-        self: T,
+        self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
         inplace: bool = False,
-    ) -> T:
+    ) -> Self:
         """Cut the datastream.
 
         This is equivalent to applying the following slicing to the data of the datastream: `array[start:stop:step]`
@@ -161,7 +158,7 @@ class Datastream:
         s.data = s.data[sl]
         return s
 
-    def downsample(self: T, factor: int, inplace: bool = False) -> T:
+    def downsample(self, factor: int, inplace: bool = False) -> Self:
         """Downsample the datastreams by a factor.
 
         Parameters
@@ -179,7 +176,7 @@ class Datastream:
         s.sampling_rate_hz /= factor
         return s
 
-    def data_as_df(self, index_as_time: bool = True, include_units=False) -> "pd.DataFrame":
+    def data_as_df(self, index_as_time: bool = True, include_units=False) -> pd.DataFrame:
         """Export the datastream as pandas DataFrame using `self.columns` as colummns.
 
         Parameters
@@ -198,7 +195,7 @@ class Datastream:
 
         columns = self.columns
         if include_units is True:
-            columns = ["{}_{}".format(c, SIMPLE_UNITS.get(self.unit, self.unit)) for c in columns]
+            columns = [f"{c}_{SIMPLE_UNITS.get(self.unit, self.unit)}" for c in columns]
         df = pd.DataFrame(self.data, columns=columns)
         if index_as_time:
             df.index /= self.sampling_rate_hz

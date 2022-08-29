@@ -1,29 +1,29 @@
 import json
 import tempfile
-from distutils.version import StrictVersion
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
 import pytest
+from packaging.version import Version
 
 from nilspodlib import Dataset
 from nilspodlib.exceptions import LegacyWarning, VersionError
 from nilspodlib.header import Header
 from nilspodlib.legacy import (
-    _fix_little_endian_counter,
+    MIN_NON_LEGACY_VERSION,
+    _convert_analog_uint8_to_uint16_18_0,
     _convert_sensor_enabled_flag_11_2,
+    _fix_little_endian_counter,
     _insert_missing_bytes_11_2,
     _split_sampling_rate_byte_11_2,
-    _convert_analog_uint8_to_uint16_18_0,
     convert_11_2,
     convert_12_0,
     convert_18_0,
     find_conversion_function,
-    MIN_NON_LEGACY_VERSION,
     load_18_0,
 )
-from nilspodlib.utils import get_sample_size_from_header_bytes, get_header_and_data_bytes, convert_little_endian
+from nilspodlib.utils import convert_little_endian, get_header_and_data_bytes, get_sample_size_from_header_bytes
 from tests.conftest import TEST_LEGACY_DATA_11, TEST_LEGACY_DATA_12, TEST_LEGACY_DATA_16_2
 
 
@@ -149,8 +149,8 @@ def test_full_conversion(session, converter, request):
 
 def test_strict_version_overwrite(simple_session_16_2):
     with patch("nilspodlib.dataset.find_conversion_function", return_value=load_18_0) as mock_func:
-        Dataset.from_bin_file(simple_session_16_2[0], legacy_support="resolve", force_version=StrictVersion("12.0.0"))
-    mock_func.assert_called_with(StrictVersion("12.0.0"), in_memory=True)
+        Dataset.from_bin_file(simple_session_16_2[0], legacy_support="resolve", force_version=Version("12.0.0"))
+    mock_func.assert_called_with(Version("12.0.0"), in_memory=True)
 
 
 @pytest.mark.parametrize(
@@ -179,7 +179,7 @@ def test_auto_resolve(session, converter, request):
     # Check all direct values
     info = ds.info
     assert header == json.loads(info.to_json())
-    if ds.info.strict_version_firmware >= StrictVersion("12.0.0"):
+    if ds.info.strict_version_firmware >= Version("12.0.0"):
         assert len(ds.acc) == ds.info.n_samples
 
 
@@ -218,15 +218,15 @@ def test_legacy_error(session, converter, request):
 @pytest.mark.parametrize(
     "version, correct_func",
     [
-        (StrictVersion("0.10.0"), None),
-        (StrictVersion("0.11.255"), "12_0"),
-        (StrictVersion("0.12.1"), "12_0"),
-        (StrictVersion("0.11.1"), None),
-        (StrictVersion("0.11.2"), "11_2"),
-        (StrictVersion("0.11.3"), "11_2"),
-        (StrictVersion("0.14.1"), "18_0"),
-        (StrictVersion("0.16.2"), "18_0"),
-        (StrictVersion("0.18.0"), "supported"),
+        (Version("0.10.0"), None),
+        (Version("0.11.255"), "12_0"),
+        (Version("0.12.1"), "12_0"),
+        (Version("0.11.1"), None),
+        (Version("0.11.2"), "11_2"),
+        (Version("0.11.3"), "11_2"),
+        (Version("0.14.1"), "18_0"),
+        (Version("0.16.2"), "18_0"),
+        (Version("0.18.0"), "supported"),
         (MIN_NON_LEGACY_VERSION, "supported"),
     ],
 )

@@ -1,7 +1,5 @@
-from datetime import timedelta
-from distutils.version import StrictVersion
-
 import pytest
+from packaging.version import Version
 
 from nilspodlib.header import Header
 
@@ -44,7 +42,7 @@ def test_strict_version():
     h = Header()
     h.version_firmware = "v1.0.5"
 
-    assert h.strict_version_firmware == StrictVersion("1.0.5")
+    assert h.strict_version_firmware == Version("1.0.5")
 
 
 def test_timezone_conversion(dataset_master_simple):

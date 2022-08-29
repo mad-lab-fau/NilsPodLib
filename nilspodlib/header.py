@@ -7,11 +7,11 @@ import json
 import pprint
 import warnings
 from collections import OrderedDict
-from distutils.version import StrictVersion
-from typing import Tuple, Any, List, Dict, Union, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytz
+from packaging.version import Version
 
 from nilspodlib.consts import SENSOR_POS
 from nilspodlib.utils import convert_little_endian, convert_to_local_time
@@ -152,9 +152,9 @@ class _HeaderFields:
         return "".join(self.mac_address[-5:].split(":"))
 
     @property
-    def strict_version_firmware(self) -> StrictVersion:
-        """Get the firmware as a StrictVersion object."""
-        return StrictVersion(self.version_firmware[1:])
+    def strict_version_firmware(self) -> Version:
+        """Get the firmware as a Version object."""
+        return Version(self.version_firmware[1:])
 
     def __str__(self) -> str:
         full_header = {k: getattr(self, k, None) for k in self._all_header_fields}
@@ -248,7 +248,7 @@ class Header(_HeaderFields):
     version_firmware
         Version number of the firmware
     strict_version_firmware
-        The firmware as a StrictVersion object.
+        The firmware as a Version object.
     version_hardware
         Hardware revision of the sensor.
         Another revision usually indicates, that data should be handled differently.

@@ -40,8 +40,6 @@ class VersionError(Exception):
 
 def datastream_does_not_exist_warning(sensor_type, operation):
     """Warn about not existing datastreams."""
-    message = 'The datastream "{}" does not exist for the current session.\
-     The performed operation "{}" will have not effect'.format(
-        sensor_type, operation
-    )
+    message = f'The datastream "{sensor_type}" does not exist for the current session. \
+     The performed operation "{operation}" will have not effect'
     return warnings.warn(message)

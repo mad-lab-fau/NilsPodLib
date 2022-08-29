@@ -1,18 +1,18 @@
 """Internal bases for sessions to make it easier to call dataset methods on the session object."""
 
 from functools import wraps
-from typing import Optional, Iterable, Tuple, TypeVar, TYPE_CHECKING, Type, Sequence
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple
 
 import numpy as np
+from typing_extensions import Self
 
 from nilspodlib.dataset import Dataset
-from nilspodlib.utils import path_t, inplace_or_copy, remove_docstring_indent
-
-T = TypeVar("T")
+from nilspodlib.utils import inplace_or_copy, path_t, remove_docstring_indent
 
 if TYPE_CHECKING:
-    from nilspodlib.datastream import Datastream  # noqa: F401
     import pandas as pd  # noqa: F401
+
+    from nilspodlib.datastream import Datastream  # noqa: F401
 
 
 class CascadingDatasetField:
@@ -106,32 +106,32 @@ class _MultiDataset:
 
     @call_dataset()
     def cut_to_syncregion(  # noqa: D105
-        self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
-    ) -> T:
+        self, start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+    ) -> Self:
         pass
 
     @call_dataset()
     def cut(  # noqa: D105
-        self: Type[T],
+        self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
         inplace: bool = False,
-    ) -> T:
+    ) -> Self:
         pass
 
     @call_dataset()
     def cut_counter_val(  # noqa: D105
-        self: Type[T],
+        self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
         inplace: bool = False,
-    ) -> T:
+    ) -> Self:
         pass
 
     @call_dataset()
-    def downsample(self: Type[T], factor: int, inplace: bool = False) -> T:  # noqa: D105
+    def downsample(self, factor: int, inplace: bool = False) -> Self:  # noqa: D105
         pass
 
     @call_dataset()

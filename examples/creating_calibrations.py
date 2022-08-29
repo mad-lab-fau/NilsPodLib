@@ -44,8 +44,8 @@ data = cal_dataset.imu_data_as_df()
 # data.
 # In general it is advisable to save the annotated sections, so that you can rerun the calibration in the future.
 
-from imucal import ferraris_regions_from_section_list
 import pandas as pd
+from imucal import ferraris_regions_from_section_list
 
 section_list = pd.read_json(EXAMPLE_PATH / "example_calibration_recording/example_ferraris_session_list.json").T
 
@@ -77,6 +77,8 @@ cal_info = cal.compute(
 
 print(cal_info.to_json())
 
+import tempfile
+
 # %%
 # The final `cal_info` now contains all information to calibrate future data recordings from the same sensor.
 # For now we will save it to disk and then see how to load it again.
@@ -86,7 +88,6 @@ print(cal_info.to_json())
 # Note, that we will use a temporary folder here.
 # In reality you would chose some folder where you can keep the calibration files save until eternity.
 from nilspodlib.calibration_utils import save_calibration
-import tempfile
 
 d = tempfile.TemporaryDirectory()
 

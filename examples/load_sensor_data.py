@@ -6,8 +6,9 @@ Single Dataset
 A simple example on how to work with a single Dataset.
 """
 
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 from nilspodlib import Dataset
 

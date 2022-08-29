@@ -25,9 +25,9 @@ numpy = "^1.19.2"
 pandas = "^1.1.3"
 scipy = "^1.5.2"
 imucal = "^2.0.0"
+typing-extensions = "^4.3.0"
 
 [tool.poetry.dev-dependencies]
-doit = "^0.33.1"
 coverage = "^6.4.4"
 recommonmark = "^0.6.0"
 memory_profiler = "^0.57.0"
@@ -41,6 +41,8 @@ Sphinx = "^5.1.1"
 numpydoc = "^1.4.0"
 sphinx-gallery = "^0.11.1"
 pydata-sphinx-theme = "^0.9.0"
+isort = "^5.10.1"
+poethepoet = "^0.16.0"
 
 [tool.black]
 line-length = 120
@@ -63,7 +65,25 @@ exclude = '''
 )
 '''
 
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 120
+skip_gitignore = true
+
+[tool.poe.tasks]
+_format_black = "black ."
+_format_isort = "isort ."
+format = ["_format_black", "_format_isort"]
+lint = { cmd = "prospector", help = "Lint all files with Prospector." }
+_check_black = "black . --check"
+_check_isort = "isort . --check"
+check = { sequence = ["_check_black", "_check_isort", "lint"], help = "Check all potential format and linting issues.", ignore_fail = false }
+test = { cmd = "pytest --cov=nilspodlib --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
+docs = { "script" = "_tasks:task_docs()",  help = "Build the html docs using Sphinx." }
+bump_version = { "script" = "_tasks:task_update_version()" }
+
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.masonry.api"
 

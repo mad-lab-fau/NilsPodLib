@@ -12,13 +12,13 @@
 #
 import os
 import re
+import sys
 from datetime import datetime
 from importlib import import_module
-from inspect import getsourcelines, getsourcefile
+from inspect import getsourcefile, getsourcelines
 from pathlib import Path
 from shutil import copy
 
-import sys
 import toml
 
 sys.path.insert(0, os.path.abspath(".."))

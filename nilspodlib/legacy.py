@@ -1,30 +1,30 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
-from distutils.version import StrictVersion
-from typing import Tuple, Callable, Optional, Union
+from typing import Callable, Optional, Tuple, Union
 
 import numpy as np
+from packaging.version import Version
 
-from nilspodlib.exceptions import LegacyWarning, VersionError, CorruptedPackageWarning
 from nilspodlib.consts import SENSOR_SAMPLE_LENGTH
+from nilspodlib.exceptions import CorruptedPackageWarning, LegacyWarning, VersionError
 from nilspodlib.utils import (
-    path_t,
     get_header_and_data_bytes,
-    get_strict_version_from_header_bytes,
     get_sample_size_from_header_bytes,
+    get_strict_version_from_header_bytes,
+    path_t,
 )
 
 CONVERSION_DICT = {
-    "18_0": {"min": StrictVersion("0.13.255"), "max": StrictVersion("0.17.255")},
-    "12_0": {"min": StrictVersion("0.11.255"), "max": StrictVersion("0.13.255")},
-    "11_2": {"min": StrictVersion("0.11.2"), "max": StrictVersion("0.11.255")},
+    "18_0": {"min": Version("0.13.255"), "max": Version("0.17.255")},
+    "12_0": {"min": Version("0.11.255"), "max": Version("0.13.255")},
+    "11_2": {"min": Version("0.11.2"), "max": Version("0.11.255")},
 }
 
-MIN_NON_LEGACY_VERSION = StrictVersion("0.18.0")
+MIN_NON_LEGACY_VERSION = Version("0.18.0")
 
 
 def find_conversion_function(
-    version: StrictVersion, in_memory: Optional[bool] = True, return_name: Optional[bool] = False
+    version: Version, in_memory: Optional[bool] = True, return_name: Optional[bool] = False
 ) -> Union[Callable, str]:
     """Find a method that is able to convert a recording from one version to the other.
 
@@ -326,7 +326,7 @@ def _split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
     return sampling_rate_byte & 0x0F, sampling_rate_byte & 0xF0
 
 
-def legacy_support_check(version: StrictVersion, as_warning: bool = False):
+def legacy_support_check(version: Version, as_warning: bool = False):
     """Check if a file recorded with a specific fileformat version can be converted using legacy support.
 
     Parameters
@@ -337,9 +337,9 @@ def legacy_support_check(version: StrictVersion, as_warning: bool = False):
         If True only a Warning instead of an error is raised, if legacy support is required for the dataset.
 
     """
-    if version < StrictVersion("0.11.2"):
+    if version < Version("0.11.2"):
         msg = "You are using a version ({}) previous to 0.11.2. This version is not supported!".format(version)
-    elif version >= StrictVersion("0.17.255"):
+    elif version >= Version("0.17.255"):
         return
     else:
         try:

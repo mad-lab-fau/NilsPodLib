@@ -2,43 +2,42 @@
 """Dataset represents a measurement session of a single sensor_type."""
 import datetime
 import warnings
-from distutils.version import StrictVersion
 from pathlib import Path
-from typing import Union, Iterable, Optional, Tuple, Dict, TypeVar, Type, Sequence, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from packaging.version import Version
+from typing_extensions import Self
 
 from nilspodlib.calibration_utils import (
-    find_closest_calibration_to_date,
     find_calibrations_for_sensor,
+    find_closest_calibration_to_date,
     load_and_check_cal_info,
 )
-from nilspodlib.consts import SENSOR_SAMPLE_LENGTH, GRAV
+from nilspodlib.consts import GRAV, SENSOR_SAMPLE_LENGTH
 from nilspodlib.datastream import Datastream
 from nilspodlib.exceptions import (
     InvalidInputFileError,
-    RepeatedCalibrationError,
-    datastream_does_not_exist_warning,
-    SynchronisationWarning,
     LegacyWarning,
+    RepeatedCalibrationError,
+    SynchronisationWarning,
+    datastream_does_not_exist_warning,
 )
 from nilspodlib.header import Header
-from nilspodlib.legacy import legacy_support_check, find_conversion_function
+from nilspodlib.legacy import find_conversion_function, legacy_support_check
 from nilspodlib.utils import (
-    path_t,
-    read_binary_uint8,
     convert_little_endian,
-    inplace_or_copy,
     get_header_and_data_bytes,
     get_strict_version_from_header_bytes,
+    inplace_or_copy,
+    path_t,
     raise_timezone_error,
+    read_binary_uint8,
 )
 
 if TYPE_CHECKING:
     from imucal import CalibrationInfo  # noqa: F401
-
-T = TypeVar("T")
 
 
 class Dataset:  # noqa: too-many-public-methods
@@ -184,13 +183,13 @@ class Dataset:  # noqa: too-many-public-methods
 
     @classmethod
     def from_bin_file(
-        cls: Type[T],
+        cls,
         path: path_t,
         *,
         legacy_support: str = "error",
-        force_version: Optional[StrictVersion] = None,
+        force_version: Optional[Version] = None,
         tz: Optional[str] = None,
-    ) -> T:
+    ) -> Self:
         """Create a new Dataset from a valid .bin file.
 
         Parameters
@@ -234,7 +233,7 @@ class Dataset:  # noqa: too-many-public-methods
         s.path = path
         return s
 
-    def calibrate_imu(self: T, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> T:
+    def calibrate_imu(self, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> Self:
         """Apply a calibration to the Acc and Gyro datastreams.
 
         The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
@@ -285,7 +284,7 @@ class Dataset:  # noqa: too-many-public-methods
         """
         assert gyro.sensor_type == "gyro"
         if self._check_calibration(gyro, "gyro", factory=True) is True:
-            gyro.data /= 2 ** 16 / self.info.gyro_range_dps / 2
+            gyro.data /= 2**16 / self.info.gyro_range_dps / 2
             gyro.is_factory_calibrated = True
         return gyro
 
@@ -306,7 +305,7 @@ class Dataset:  # noqa: too-many-public-methods
         """
         assert acc.sensor_type == "acc"
         if self._check_calibration(acc, "acc", factory=True) is True:
-            acc.data /= 2 ** 16 / self.info.acc_range_g / 2 / GRAV
+            acc.data /= 2**16 / self.info.acc_range_g / 2 / GRAV
             acc.is_factory_calibrated = True
         return acc
 
@@ -347,7 +346,7 @@ class Dataset:  # noqa: too-many-public-methods
         """
         assert temperature.sensor_type == "temperature"
         if self._check_calibration(temperature, "temperature", factory=True) is True:
-            temperature.data = temperature.data * (2 ** -9) + 23
+            temperature.data = temperature.data * (2**-9) + 23
             temperature.is_factory_calibrated = True
         return temperature
 
@@ -381,7 +380,7 @@ class Dataset:  # noqa: too-many-public-methods
         datastream_does_not_exist_warning(name, "calibration")
         return False
 
-    def downsample(self: T, factor: int, inplace: bool = False) -> T:
+    def downsample(self, factor: int, inplace: bool = False) -> Self:
         """Downsample all datastreams by a factor.
 
         This applies `scipy.signal.decimate` to all datastreams and the counter of the dataset.
@@ -411,12 +410,12 @@ class Dataset:  # noqa: too-many-public-methods
         return s
 
     def cut(
-        self: T,
+        self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
         inplace: bool = False,
-    ) -> T:
+    ) -> Self:
         """Cut all datastreams of the dataset.
 
         This is equivalent to applying the following slicing to all datastreams and the counter: array[start:stop:step]
@@ -448,12 +447,12 @@ class Dataset:  # noqa: too-many-public-methods
         return s
 
     def cut_counter_val(
-        self: T,
+        self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         step: Optional[int] = None,
         inplace: bool = False,
-    ) -> T:
+    ) -> Self:
         """Cut the dataset based on values in the counter and not the index.
 
         Instead of just cutting the datastream based on its index, it is cut based on the counter value.
@@ -496,8 +495,8 @@ class Dataset:  # noqa: too-many-public-methods
         return self.cut(start, stop, step, inplace=inplace)
 
     def cut_to_syncregion(
-        self: Type[T], start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
-    ) -> T:
+        self, start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+    ) -> Self:
         """Cut the dataset to the region indicated by the first and last sync package received from master.
 
         This cuts the dataset to the values indicated by `info.sync_index_start` and `info.sync_index_stop`.
@@ -614,10 +613,8 @@ class Dataset:  # noqa: too-many-public-methods
             "utc_datetime": "date",
             "local_datetime": "date ({})".format(self.info.timezone),
         }
-        if index and index not in index_names.keys():
-            raise ValueError(
-                "Supplied value for index ({}) is not allowed. Allowed values: {}".format(index, index_names.keys())
-            )
+        if index and index not in index_names:
+            raise ValueError(f"Supplied value for index ({index}) is not allowed. Allowed values: {index_names.keys()}")
 
         index_name = index_names[index]
 
@@ -790,7 +787,7 @@ class Dataset:  # noqa: too-many-public-methods
 
 
 def parse_binary(
-    path: path_t, legacy_support: str = "error", force_version: Optional[StrictVersion] = None, tz: Optional[str] = None
+    path: path_t, legacy_support: str = "error", force_version: Optional[Version] = None, tz: Optional[str] = None
 ) -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
@@ -854,9 +851,9 @@ def parse_binary(
 
     counter, sensor_data = split_into_sensor_data(data, session_header)
 
-    if session_header.strict_version_firmware >= StrictVersion("0.13.0") and len(counter) != session_header.n_samples:
+    if session_header.strict_version_firmware >= Version("0.13.0") and len(counter) != session_header.n_samples:
         warnings.warn(
-            "The number of samples in the dataset does not match the number indicated by the header."
+            "The number of samples in the dataset does not match the number indicated by the header. "
             "This might indicate a corrupted file",
             LegacyWarning,
         )
@@ -887,9 +884,8 @@ def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np
         expected_cols = idx
         all_cols = data.shape[-1] - len_counter
         raise InvalidInputFileError(
-            "The input file has an invalid format. {} data columns expected based on the header, but {} exist.".format(
-                expected_cols, all_cols
-            )
+            f"The input file has an invalid format. {expected_cols} data columns expected based on the header, "
+            f"but {all_cols} exist."
         )
 
     counter = convert_little_endian(np.atleast_2d(data[:, -len_counter:]).T, dtype=counter_dtype)

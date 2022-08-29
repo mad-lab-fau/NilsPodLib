@@ -4,12 +4,12 @@ import copy
 import datetime
 import struct
 import warnings
-from distutils.version import StrictVersion
 from pathlib import Path
-from typing import TypeVar, Tuple, Any, Optional
+from typing import Any, Optional, Tuple, TypeVar
 
 import numpy as np
 import pytz
+from packaging.version import Version
 
 from nilspodlib.exceptions import CorruptedPackageWarning
 
@@ -103,9 +103,9 @@ def get_sample_size_from_header_bytes(header_bytes: np.ndarray) -> int:
     return int(header_bytes[1])
 
 
-def get_strict_version_from_header_bytes(header_bytes: np.ndarray) -> StrictVersion:
+def get_strict_version_from_header_bytes(header_bytes: np.ndarray) -> Version:
     """Extract the version number from a byte header."""
-    return StrictVersion("{}.{}.{}".format(*(int(x) for x in header_bytes[-3:])))
+    return Version("{}.{}.{}".format(*(int(x) for x in header_bytes[-3:])))
 
 
 def inplace_or_copy(obj: T, inplace: bool) -> T:

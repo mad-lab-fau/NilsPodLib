@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-
 from imucal import FerrarisCalibrationInfo
+
 from nilspodlib.consts import GRAV
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import RepeatedCalibrationError
@@ -11,7 +11,7 @@ factory_calibrate_sensors = [
     ("acc", 1.0 / 2048 * GRAV),
     ("gyro", 1.0 / 16.384),
     ("baro", 1013.26),
-    ("temperature", 23 + 1 / (2 ** 9)),
+    ("temperature", 23 + 1 / (2**9)),
 ]
 factory_calibrate_sensors_dict = dict(factory_calibrate_sensors)
 

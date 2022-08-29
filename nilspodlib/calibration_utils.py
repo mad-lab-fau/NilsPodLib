@@ -3,7 +3,7 @@
 import datetime
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Union, Callable
+from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
 from nilspodlib.utils import path_t
 
