@@ -14,6 +14,8 @@ Helper Functions
    :template: function.rst
 
     find_conversion_function
+    convert_18_0
+    load_18_0
     convert_12_0
     load_12_0
     convert_11_2

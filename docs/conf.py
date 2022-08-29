@@ -42,7 +42,6 @@ release = info["version"]
 copyright = "2018 - {}, MaD-Lab FAU, Digital Health and Gait-Analysis Group".format(datetime.now().year)
 
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -127,11 +126,11 @@ intersphinx_mapping = {
     **intersphinx_module_mapping,
 }
 
-# Sphinx Gallary
+# Sphinx Gallery
 sphinx_gallery_conf = {
     "examples_dirs": ["../examples"],
     "gallery_dirs": ["./auto_examples"],
-    "reference_url": {"nilspodlib": None, **{k: v[0] for k, v in intersphinx_module_mapping.items()}},
+    "reference_url": {"nilspodlib": None},
     # 'default_thumb_file': 'fig/logo.png',
     "backreferences_dir": "modules/generated/backreferences",
     "doc_module": ("nilspodlib",),
