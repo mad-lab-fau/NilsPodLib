@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [3.3.0] - 29.08.2022
+
+### Added
+
+- added `force_version` parameter to `Session` to force specific firmware versions for dev firmwares. 
+
 # [3.2.2] - 20.05.2021
 
 ### Changed
