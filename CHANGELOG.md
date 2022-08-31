@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 31.08.2022
+
+### Changed
+
+- Synchronisation related error messages have been improved massively and now provide tips on how to debug and resolve
+  common problems
+- All sync related issues now raise a `SynchronisationError` instead of other generic errors.
+  Note, that this breaks the workaround detailed [here](https://github.com/mad-lab-fau/NilsPodLib/issues/15) for one of
+  the common issues. Instead of catching a `ValueError`, you should now catch a `SynchronisationError`.
+- All Validation related errors now throw a `SessionValidationError`.
+  
+
+
 ## [3.4.1] - 30.08.2022
 
 ### Bugfixes
