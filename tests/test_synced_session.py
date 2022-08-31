@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import pytz
 
-from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
+from nilspodlib.exceptions import SessionValidationError, SynchronisationError, SynchronisationWarning
 from nilspodlib.session import SyncedSession
 
 
@@ -24,13 +24,13 @@ def test_validate_sync_channel(dataset_synced):
     ds2 = dataset_synced["slave1"][0]
 
     setattr(ds1.info, "sync_channel", getattr(ds2.info, "sync_channel") + 1)
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2])
 
     assert "sync_group" in str(e.value)
 
     ds1.info.sync_address = ds2.info.sync_address + "a"
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2])
 
     assert "sync_group" in str(e.value)
@@ -43,7 +43,7 @@ def test_start_end_validation(dataset_synced):
     ds1.info.utc_start = ds2.info.utc_start - 10000
     ds1.info.utc_stop = ds2.info.utc_stop - 5000
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2])
 
     assert "overlapping time period" in str(e.value)
@@ -66,7 +66,7 @@ def test_two_master_validation(dataset_synced, roles, err):
     ds2.info.sync_role = roles[1]
     ds3.info.sync_role = roles[2]
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2, ds3])
 
     assert err in str(e.value)
@@ -78,7 +78,7 @@ def test_validate_sampling_rate(dataset_synced):
 
     ds1.info.sampling_rate_hz = ds2.info.sampling_rate_hz + 5
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2])
 
     assert "same sampling rate" in str(e.value)
@@ -89,7 +89,7 @@ def test_disable_validation(dataset_synced):
     ds2 = dataset_synced["slave1"][0]
 
     ds1.info.sync_address = ds2.info.sync_address + "a"
-    with pytest.raises(ValueError):
+    with pytest.raises(SessionValidationError):
         SyncedSession([ds1, ds2])
 
     SyncedSession.VALIDATE_ON_INIT = False

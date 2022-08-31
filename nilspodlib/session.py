@@ -11,13 +11,29 @@ from typing_extensions import Self
 
 from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
-from nilspodlib.exceptions import SynchronisationError, SynchronisationWarning
+from nilspodlib.exceptions import SessionValidationError, SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
 from nilspodlib.utils import convert_to_local_time, inplace_or_copy, path_t, validate_existing_overlap
 
 if TYPE_CHECKING:
     import pandas as pd  # noqa: F401
     from imucal import CalibrationInfo  # noqa: F401
+
+
+_SYNC_DEBUGGING_TIPS = (
+    "Manually plot all counters, if you can spot potential issues. "
+    "You should see exactly one large jump in the counter value close to the reported `sync_index_start` from the "
+    "header.\n"
+    "If you see multiple jumps, the clock of one of the sensors might be broken, or data was not stored/transferred "
+    "correctly. "
+    "In the latter case, try to re-download the session from the sensor. "
+    "If the issue persists, you might be out of luck (unless... keep reading ;) ).\n"
+    "If only the last couple of counter values seem broken, you might have run into a known (but unsolved bug) with "
+    "the NilsPod Firmware. "
+    "In this case, cut the last affected samples and retry the synchronisation:\n\n"
+    ">>> session = session.cut(stop=-n_affected_samples)\n"
+    ">>> session = session.align_to_syncregion()"
+)
 
 
 class Session(_MultiDataset):
@@ -303,7 +319,7 @@ class SyncedSession(Session):
 
     @property
     def session_local_datetime_stop(self) -> datetime.datetime:
-        """Stop time of the session in the specified specified timezone of the session."""
+        """Stop time of the session in the specified timezone of the session."""
         return convert_to_local_time(self.session_utc_datetime_stop, self.master.info.timezone)
 
     def __init__(self, datasets: Iterable[Dataset]):
@@ -341,16 +357,28 @@ class SyncedSession(Session):
 
         """
         if not self._validate_sync_groups():
-            raise ValueError("The provided datasets are not part of the same sync_group")
+            raise SessionValidationError("The provided datasets are not part of the same sync_group.", type(self))
         master_valid, slaves_valid = self._validate_sync_role()
         if not master_valid:
-            raise ValueError("SyncedSessions require exactly 1 master.")
+            raise SessionValidationError("SyncedSessions require exactly 1 master.", type(self))
         if not slaves_valid:
-            raise ValueError("One of the provided sessions is not correctly set to either slave or master")
+            raise SessionValidationError(
+                "One of the provided sessions is not correctly set to either slave or master.", type(self)
+            )
         if not self._validate_sampling_rate():
-            raise ValueError("All provided sessions need to have the same sampling rate")
+            raise SessionValidationError("All provided sessions need to have the same sampling rate.", type(self))
         if not self._validate_overlapping_record_time():
-            raise ValueError("The provided datasets do not have any overlapping time period.")
+            raise SessionValidationError(
+                "The provided datasets do not have any overlapping time period (based on the header). , "
+                "Double check, that the datasets/files you selected actually belong to the same recording. "
+                "If they do, and you are still seeing this error, the clock of one of the sensors was set "
+                "incorrectly.\n"
+                "This is not a deal-breaker and the session can likely still be synced correctly. "
+                "Load the session without validation (see below) and attempt the synchronisation. "
+                "Double-check the results! "
+                "If everything else worked correctly, this should still work.",
+                type(self),
+            )
 
     def _validate_sync_groups(self) -> bool:
         """Check that all _headers belong to the same sync group."""
@@ -376,7 +404,7 @@ class SyncedSession(Session):
         stop_times = np.array(self.info.utc_stop)
         return validate_existing_overlap(start_times, stop_times)
 
-    def align_to_syncregion(
+    def align_to_syncregion(  # noqa: MC0001
         self,
         cut_start: bool = False,
         cut_end: bool = False,
@@ -459,8 +487,23 @@ class SyncedSession(Session):
 
         start_idx = [d.counter[0] for d in s.datasets]
         stop_idx = [d.counter[-1] for d in s.datasets]
-        if not validate_existing_overlap(np.array(start_idx), np.array(stop_idx)):
-            raise ValueError("The provided datasets do not have a overlapping regions!")
+        try:
+            existing_overlap = validate_existing_overlap(np.array(start_idx), np.array(stop_idx))
+        except ValueError as e:
+            raise SynchronisationError(
+                "For one or more datasets, the last counter value after aligning the sync regions appears to occur "
+                "before the start value. "
+                "This might happen because the last samples were not stored correctly on the NilsPod. "
+                "This a known bug. "
+                "Learn more how to debug/resolve that below\n\n" + _SYNC_DEBUGGING_TIPS
+            ) from e
+        if existing_overlap is False:
+            raise SynchronisationError(
+                "The provided datasets do not have a overlapping regions based on the counter! "
+                "This is concerning and likely means that you tried to sync datasets, that actually "
+                "don't belong to the same recording or one of the sessions is severely corrupted.\n\n"
+                + _SYNC_DEBUGGING_TIPS
+            )
 
         s = super(SyncedSession, s).cut_counter_val(np.max(start_idx), inplace=True)
         stop_idx = [len(d.counter) for d in s.datasets]
@@ -525,7 +568,7 @@ class SyncedSession(Session):
         nilspodlib.dataset.Dataset.data_as_df
 
         """
-        import pandas as pd  # noqa: F811
+        import pandas as pd  # noqa: import-outside-toplevel
 
         dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
