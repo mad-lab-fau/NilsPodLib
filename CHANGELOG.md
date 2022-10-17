@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 17.10.2022
+
+- Removed upper version bounds to avoid version conflicts during installation
+
 ## [3.5.0] - 31.08.2022
 
 ### Changed
@@ -14,8 +18,6 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Note, that this breaks the workaround detailed [here](https://github.com/mad-lab-fau/NilsPodLib/issues/15) for one of
   the common issues. Instead of catching a `ValueError`, you should now catch a `SynchronisationError`.
 - All Validation related errors now throw a `SessionValidationError`.
-  
-
 
 ## [3.4.1] - 30.08.2022
 
