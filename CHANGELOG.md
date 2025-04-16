@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0] - 16.04.2025
+Removed support for Python 3.8
 ### Bugfixes
 - Made `NilsPodLib` compatible with `numpy >= 2.0`
 - Fixed testcase bugs that did not raise a `ValueError` when files with incorrect suffix were loaded.

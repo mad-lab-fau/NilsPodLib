@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,13 +26,14 @@ jobs:
         pip install poetry
         poetry config virtualenvs.in-project true
         poetry install
+    - name: Linting
+      run: |
+        poetry run poe ci_check
     - name: Testing
       run: |
         poetry run poe test
-    - name: Linting
-      run: |
-        poetry run poe check
     - name: "Upload coverage to Codecov"
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v5
       with:
         fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
