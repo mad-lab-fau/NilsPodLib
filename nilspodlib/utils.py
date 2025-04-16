@@ -93,7 +93,7 @@ def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
         data_bytes = np.fromfile(f, dtype=np.dtype("B"))
 
     header = bytearray(header)
-    header_bytes = np.asarray(struct.unpack(str(header_size) + "b", header[0:header_size]), dtype=np.uint8)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + "B", header[0:header_size]), dtype=np.uint8)
 
     return header_bytes, data_bytes
 

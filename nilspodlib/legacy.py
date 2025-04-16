@@ -244,7 +244,7 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
 def _convert_analog_uint8_to_uint16_18_0(data_bytes, header_bytes):
     """Convert the data format of analog channels of uint8 to uint16."""
-    old_sample_size = header_bytes[1]
+    old_sample_size = int(header_bytes[1])
     temp_enabled = header_bytes[2] & 0x80
 
     if len(data_bytes) % old_sample_size:

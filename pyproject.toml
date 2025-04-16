@@ -27,7 +27,7 @@ scipy = ">=1.5.2"
 imucal = ">=2.0.0"
 typing-extensions = ">=4.3.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 coverage = "^6.4.4"
 recommonmark = "^0.6.0"
 memory_profiler = "^0.57.0"
