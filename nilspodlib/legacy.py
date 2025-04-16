@@ -1,6 +1,7 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
-from typing import Callable, Optional, Tuple, Union
+from pathlib import Path
+from typing import Callable, Optional, Union
 
 import numpy as np
 from packaging.version import Version
@@ -39,7 +40,7 @@ def find_conversion_function(
             if return_name:
                 return n + k
             return globals()[n + k]
-    raise VersionError("No suitable conversion function found for {}".format(version))
+    raise VersionError(f"No suitable conversion function found for {version}")
 
 
 def convert_18_0(in_path: path_t, out_path: path_t) -> None:
@@ -56,15 +57,16 @@ def convert_18_0(in_path: path_t, out_path: path_t) -> None:
         path to converted 0.17.255 file
 
     """
+    out_path = Path(out_path)
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_18_0(header, data_bytes)
 
-    with open(out_path, "wb+") as f:
+    with out_path.open(mode="wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
 
 
-def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
@@ -85,8 +87,8 @@ def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
     # 255.x.x indicates a dev version
     if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
-            "This converter is meant for files recorded with Firmware version after {} and before {}"
-            " not {}".format(min_v, max_v, version)
+            f"This converter is meant for files recorded with Firmware version after {min_v} and before {max_v}"
+            f" not {version}"
         )
 
     analog_enabled = header[2] & 0x10
@@ -120,15 +122,16 @@ def convert_12_0(in_path: path_t, out_path: path_t) -> None:
         path to converted 0.17.255 file
 
     """
+    out_path = Path(out_path)
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_12_0(header, data_bytes)
 
-    with open(out_path, "wb+") as f:
+    with out_path.open(mode="wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
 
 
-def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
@@ -151,8 +154,8 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
     if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
-            "This converter is meant for files recorded with Firmware version after {} and before {}"
-            " not {}".format(min_v, max_v, version)
+            f"This converter is meant for files recorded with Firmware version after {min_v} and before {max_v}"
+            f" not {version}"
         )
 
     header = _shift_bytes_12_0(header)
@@ -185,15 +188,16 @@ def convert_11_2(in_path: path_t, out_path: path_t) -> None:
         path to converted 0.17.255 file
 
     """
+    out_path = Path(out_path)
     header, data_bytes = get_header_and_data_bytes(in_path)
     header, data_bytes = load_11_2(header, data_bytes)
 
-    with open(out_path, "wb+") as f:
+    with out_path.open(mode="wb+") as f:
         f.write(bytearray(header))
         f.write(bytearray(data_bytes))
 
 
-def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
@@ -217,8 +221,8 @@ def load_11_2(header: np.ndarray, data_bytes: np.ndarray) -> Tuple[np.ndarray, n
 
     if not min_v <= version < max_v and version.major != 255:
         raise VersionError(
-            "This converter is meant for files recorded with Firmware version after {} and before {}"
-            " not {}".format(min_v, max_v, version)
+            f"This converter is meant for files recorded with Firmware version after {min_v} and before {max_v}"
+            f" not {version}"
         )
 
     packet_size = get_sample_size_from_header_bytes(header)
@@ -321,7 +325,7 @@ def _shift_bytes_12_0(header_bytes):
     return header_bytes
 
 
-def _split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> Tuple[int, int]:
+def _split_sampling_rate_byte_11_2(sampling_rate_byte: int) -> tuple[int, int]:
     """Separate sampling rate into its own byte."""
     return sampling_rate_byte & 0x0F, sampling_rate_byte & 0xF0
 
@@ -338,19 +342,19 @@ def legacy_support_check(version: Version, as_warning: bool = False):
 
     """
     if version < Version("0.11.2"):
-        msg = "You are using a version ({}) previous to 0.11.2. This version is not supported!".format(version)
+        msg = f"You are using a version ({version}) previous to 0.11.2. This version is not supported!"
     elif version >= Version("0.17.255"):
         return
     else:
         try:
             converter = find_conversion_function(version, in_memory=False, return_name=True)
             msg = (
-                "You are using a version ({}) which is only supported by legacy support."
-                " Use `{}` to update the binary format to a newer version"
-                ' or use `legacy_support="resolve"` when loading the file'.format(version, converter)
+                f"You are using a version ({version}) which is only supported by legacy support."
+                f" Use `{converter}` to update the binary format to a newer version"
+                ' or use `legacy_support="resolve"` when loading the file'
             )
         except VersionError:
-            msg = "You are using a version completely unknown version: {}".format(version)
+            msg = f"You are using a version completely unknown version: {version}"
 
     if as_warning is True:
         warnings.warn(msg, LegacyWarning)

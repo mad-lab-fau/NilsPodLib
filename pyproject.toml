@@ -36,13 +36,13 @@ toml = "^0.10.2"
 black = "^22.6.0"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
-prospector = "^1.7.7"
 Sphinx = "^5.1.1"
 numpydoc = "^1.4.0"
 sphinx-gallery = "^0.11.1"
 pydata-sphinx-theme = "^0.9.0"
 isort = "^5.10.1"
 poethepoet = "^0.16.0"
+ruff = "^0.11.5"
 
 [tool.black]
 line-length = 120
@@ -73,12 +73,12 @@ skip_gitignore = true
 
 [tool.poe.tasks]
 _format_black = "black ."
-_format_isort = "isort ."
-format = ["_format_black", "_format_isort"]
-lint = { cmd = "prospector", help = "Lint all files with Prospector." }
+_format_ruff = "ruff check . --fix-only"
+format = ["_format_black", "_format_ruff"]
+lint = { cmd = "ruff check nilspodlib --fix", help = "Lint all files with ruff." }
+_lint_ci = "ruff check src --output-format=github"
 _check_black = "black . --check"
-_check_isort = "isort . --check"
-check = { sequence = ["_check_black", "_check_isort", "lint"], help = "Check all potential format and linting issues.", ignore_fail = false }
+ci_check = { sequence = ["_check_black", "_lint_ci"], help = "Check all potential format and linting issues." }
 test = { cmd = "pytest --cov=nilspodlib --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
 docs = { "script" = "_tasks:task_docs()",  help = "Build the html docs using Sphinx." }
 bump_version = { "script" = "_tasks:task_update_version()" }
