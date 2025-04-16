@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from imucal import CalibrationInfo
 
 
-class Dataset:  # noqa: too-many-public-methods
+class Dataset:
     """Class representing a logged session of a single NilsPod.
 
     .. warning:: Some operations on the dataset should not be performed after each other, as they can lead to unexpected
@@ -223,7 +223,7 @@ class Dataset:  # noqa: too-many-public-methods
         """
         path = Path(path)
         if path.suffix != ".bin":
-            raise ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
+            raise ValueError(f'Invalid file type! Only ".bin" files are supported not {path}')
 
         sensor_data, counter, info = parse_binary(
             path, legacy_support=legacy_support, force_version=force_version, tz=tz
@@ -398,7 +398,7 @@ class Dataset:  # noqa: too-many-public-methods
             datastream objects is created
 
         """
-        from scipy.signal import resample  # noqa: import-outside-toplevel
+        from scipy.signal import resample
 
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:

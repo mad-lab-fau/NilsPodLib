@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 16.04.2025
+### Bugfixes
+- Made `NilsPodLib` compatible with `numpy >= 2.0`
+- Fixed testcase bugs that did not raise a `ValueError` when files with incorrect suffix were loaded.
+
 ## [3.6.0] - 17.10.2022
 
 - Removed upper version bounds to avoid version conflicts during installation
