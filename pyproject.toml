@@ -76,7 +76,7 @@ _format_black = "black ."
 _format_ruff = "ruff check . --fix-only"
 format = ["_format_black", "_format_ruff"]
 lint = { cmd = "ruff check nilspodlib --fix", help = "Lint all files with ruff." }
-_lint_ci = "ruff check src --output-format=github"
+_lint_ci = "ruff check nilspodlib --output-format=github"
 _check_black = "black . --check"
 ci_check = { sequence = ["_check_black", "_lint_ci"], help = "Check all potential format and linting issues." }
 test = { cmd = "pytest --cov=nilspodlib --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
