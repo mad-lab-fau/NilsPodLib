@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Fundamental Datastream class, which holds any type of sensor_type data and handles basic interactions with it."""
 
 import copy
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -42,7 +42,7 @@ class Datastream:
     sampling_rate_hz: float
     sensor_type: Optional[str]
     calibrated_unit: Optional[str]
-    columns: List[str]
+    columns: list[str]
 
     def __init__(
         self,
@@ -82,8 +82,9 @@ class Datastream:
 
     def __repr__(self):
         """Provide a meaningful str-representation of a Datastream."""
-        return "Datastream(sensor_type={}, sampling_rate_hz={}, is_calibrated={}, data={}".format(
-            self.sensor_type, self.sampling_rate_hz, self.is_calibrated, self.data
+        return (
+            f"Datastream(sensor_type={self.sensor_type}, sampling_rate_hz={self.sampling_rate_hz}, "
+            f"is_calibrated={self.is_calibrated}, data={self.data}"
         )
 
     @property
@@ -104,9 +105,8 @@ class Datastream:
 
     def _get_default_columns(self):
         """Get the default column headers for the data contained in the datastream."""
-        if self.sensor_type:
-            if SENSOR_LEGENDS.get(self.sensor_type, None):
-                return list(SENSOR_LEGENDS[self.sensor_type])
+        if self.sensor_type and SENSOR_LEGENDS.get(self.sensor_type, None):
+            return list(SENSOR_LEGENDS[self.sensor_type])
         return list(range(self.data.shape[-1]))
 
     def __len__(self):
@@ -191,7 +191,7 @@ class Datastream:
         DataFrame
 
         """
-        import pandas as pd  # noqa: F811
+        import pandas as pd
 
         columns = self.columns
         if include_units is True:

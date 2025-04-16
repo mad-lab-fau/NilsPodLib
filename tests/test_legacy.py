@@ -141,7 +141,7 @@ def test_split_sampling_rate(in_byte, out):
 )
 def test_full_conversion(session, converter, request):
     path = request.getfixturevalue(session)[0]
-    with tempfile.NamedTemporaryFile() as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".bin") as tmp:
         converter(path, tmp.name)
         ds = Dataset.from_bin_file(tmp.name)
 
@@ -244,7 +244,7 @@ def test_legacy_error(session, converter, request):
 
     # test converted session:
     path = session[0]
-    with tempfile.NamedTemporaryFile() as tmp:
+    with tempfile.NamedTemporaryFile(suffix=".bin") as tmp:
         converter(path, tmp.name)
         Dataset.from_bin_file(tmp.name)
 

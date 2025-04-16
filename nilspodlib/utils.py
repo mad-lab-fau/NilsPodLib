@@ -5,7 +5,7 @@ import datetime
 import struct
 import warnings
 from pathlib import Path
-from typing import Any, Optional, Tuple, TypeVar
+from typing import Any, Optional, TypeVar
 
 import numpy as np
 import pytz
@@ -60,13 +60,11 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
     page_size = 2048
     if abs(len(data_bytes) - expected_length) > page_size // packet_size:
         warnings.warn(
-            "The provided binary file contains more or less than {0} packages than indicated by the header"
-            " ({1} vs. {2}). This can be caused by a bug affecting all synchronised sessions recorded with"
-            " firmware versions before 0.14.0. \n"
-            "The full file will be read to avoid data loss, but this might add up to {0} corrupted packages"
-            " at the end of the datastream.".format(
-                page_size // packet_size, expected_samples, len(data_bytes) // packet_size
-            ),
+            f"The provided binary file contains more or less than {page_size // packet_size} packages than "
+            f"indicated by the header ({expected_samples} vs. {len(data_bytes) // packet_size}). This can be caused by "
+            f"a bug affecting all synchronised sessions recorded with firmware versions before 0.14.0. \n"
+            f"The full file will be read to avoid data loss, but this might add up to {page_size // packet_size} "
+            f"corrupted packages at the end of the datastream.",
             CorruptedPackageWarning,
         )
         expected_length = (len(data_bytes) // packet_size) * packet_size
@@ -84,16 +82,16 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
     return data
 
 
-def get_header_and_data_bytes(path: path_t) -> Tuple[np.ndarray, np.ndarray]:
+def get_header_and_data_bytes(path: path_t) -> tuple[np.ndarray, np.ndarray]:
     """Separate a binary file into its header and data part."""
-    with open(path, "rb") as f:
+    with path.open(mode="rb") as f:
         header = f.read(1)
         header_size = header[0]
         header += f.read(header_size - 1)
         data_bytes = np.fromfile(f, dtype=np.dtype("B"))
 
     header = bytearray(header)
-    header_bytes = np.asarray(struct.unpack(str(header_size) + "b", header[0:header_size]), dtype=np.uint8)
+    header_bytes = np.asarray(struct.unpack(str(header_size) + "B", header[0:header_size]), dtype=np.uint8)
 
     return header_bytes, data_bytes
 

@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """Dataset represents a measurement session of a single sensor_type."""
 import datetime
 import warnings
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -37,10 +37,10 @@ from nilspodlib.utils import (
 )
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo  # noqa: F401
+    from imucal import CalibrationInfo
 
 
-class Dataset:  # noqa: too-many-public-methods
+class Dataset:
     """Class representing a logged session of a single NilsPod.
 
     .. warning:: Some operations on the dataset should not be performed after each other, as they can lead to unexpected
@@ -115,7 +115,7 @@ class Dataset:  # noqa: too-many-public-methods
         return len(self.counter)
 
     @property
-    def active_sensors(self) -> Tuple[str]:
+    def active_sensors(self) -> tuple[str]:
         """Get the enabled sensors in the dataset."""
         return tuple(self.info.enabled_sensors)
 
@@ -146,7 +146,7 @@ class Dataset:  # noqa: too-many-public-methods
         """Counter in seconds since first sample."""
         return (self.counter - self.counter[0]) / self.info.sampling_rate_hz
 
-    def __init__(self, sensor_data: Dict[str, np.ndarray], counter: np.ndarray, info: Header):
+    def __init__(self, sensor_data: dict[str, np.ndarray], counter: np.ndarray, info: Header):
         """Get new Dataset instance.
 
         .. note::
@@ -223,7 +223,7 @@ class Dataset:  # noqa: too-many-public-methods
         """
         path = Path(path)
         if path.suffix != ".bin":
-            ValueError('Invalid file type! Only ".bin" files are supported not {}'.format(path))
+            raise ValueError(f'Invalid file type! Only ".bin" files are supported not {path}')
 
         sensor_data, counter, info = parse_binary(
             path, legacy_support=legacy_support, force_version=force_version, tz=tz
@@ -370,10 +370,7 @@ class Dataset:  # noqa: too-many-public-methods
 
         """
         if ds is not None:
-            if factory is True:
-                check_val = ds.is_factory_calibrated
-            else:
-                check_val = ds.is_calibrated
+            check_val = ds.is_factory_calibrated if factory is True else ds.is_calibrated
             if check_val is True:
                 raise RepeatedCalibrationError(name, factory)
             return True
@@ -401,7 +398,7 @@ class Dataset:  # noqa: too-many-public-methods
             datastream objects is created
 
         """
-        from scipy.signal import resample  # noqa: import-outside-toplevel
+        from scipy.signal import resample
 
         s = inplace_or_copy(self, inplace)
         for key, val in s.datastreams:
@@ -486,11 +483,11 @@ class Dataset:  # noqa: too-many-public-methods
         """
         if start:
             if start < self.counter[0]:
-                raise ValueError("{} out of bounds for counter starting at {}".format(start, self.counter))
+                raise ValueError(f"{start} out of bounds for counter starting at {self.counter}")
             start = np.searchsorted(self.counter, start)
         if stop:
             if stop > self.counter[-1]:
-                raise ValueError("{} out of bounds for counter ending at {}".format(start, self.counter))
+                raise ValueError(f"{start} out of bounds for counter ending at {self.counter}")
             stop = np.searchsorted(self.counter, stop)
         return self.cut(start, stop, step, inplace=inplace)
 
@@ -555,8 +552,8 @@ class Dataset:  # noqa: too-many-public-methods
             return inplace_or_copy(self, inplace)
         if warn_thres is not None and end is not True and self._check_sync_packages(warn_thres) is False:
             warnings.warn(
-                "The last sync package occured more than {} s before the end of the measurement."
-                "The last region of the data should not be trusted.".format(warn_thres),
+                f"The last sync package occured more than {warn_thres} s before the end of the measurement."
+                "The last region of the data should not be trusted.",
                 SynchronisationWarning,
             )
         end = self.info.sync_index_stop if end is True else None
@@ -611,7 +608,7 @@ class Dataset:  # noqa: too-many-public-methods
             "time": "t",
             "utc": "utc",
             "utc_datetime": "date",
-            "local_datetime": "date ({})".format(self.info.timezone),
+            "local_datetime": f"date ({self.info.timezone})",
         }
         if index and index not in index_names:
             raise ValueError(f"Supplied value for index ({index}) is not allowed. Allowed values: {index_names.keys()}")
@@ -680,7 +677,7 @@ class Dataset:  # noqa: too-many-public-methods
         recursive: bool = True,
         filter_cal_type: Optional[str] = None,
         ignore_file_not_found: Optional[bool] = False,
-    ) -> List[Path]:
+    ) -> list[Path]:
         """Find all calibration infos that belong to a given sensor_type.
 
         As this only checks the filenames, this might return a false positive depending on your folder structure and
@@ -721,7 +718,7 @@ class Dataset:  # noqa: too-many-public-methods
         recursive: bool = True,
         filter_cal_type: Optional[str] = None,
         before_after: Optional[str] = None,
-        warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
+        warn_thres: datetime.timedelta = datetime.timedelta(days=30),
         ignore_file_not_found: Optional[bool] = False,
     ) -> Path:
         """Find the closest calibration info to the start of the measurement.
@@ -788,7 +785,7 @@ class Dataset:  # noqa: too-many-public-methods
 
 def parse_binary(
     path: path_t, legacy_support: str = "error", force_version: Optional[Version] = None, tz: Optional[str] = None
-) -> Tuple[Dict[str, np.ndarray], np.ndarray, Header]:
+) -> tuple[dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
     Parameters
@@ -861,7 +858,7 @@ def parse_binary(
     return sensor_data, counter, session_header
 
 
-def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
+def split_into_sensor_data(data: np.ndarray, session_header: Header) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Split/Parse the binary data into the different sensors and the counter."""
     sensor_data = {}
 
@@ -880,7 +877,7 @@ def split_into_sensor_data(data: np.ndarray, session_header: Header) -> Tuple[np
     len_counter, _, counter_dtype = SENSOR_SAMPLE_LENGTH["counter"]
 
     # Sanity Check:
-    if not idx + len_counter == data.shape[-1]:
+    if idx + len_counter != data.shape[-1]:
         expected_cols = idx
         all_cols = data.shape[-1] - len_counter
         raise InvalidInputFileError(

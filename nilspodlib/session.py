@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 """Session groups multiple Datasets from sensors recorded at the same time."""
 import datetime
 import warnings
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import numpy as np
 from packaging.version import Version
@@ -16,8 +16,8 @@ from nilspodlib.header import _ProxyHeader
 from nilspodlib.utils import convert_to_local_time, inplace_or_copy, path_t, validate_existing_overlap
 
 if TYPE_CHECKING:
-    import pandas as pd  # noqa: F401
-    from imucal import CalibrationInfo  # noqa: F401
+    import pandas as pd
+    from imucal import CalibrationInfo
 
 
 _SYNC_DEBUGGING_TIPS = (
@@ -63,7 +63,7 @@ class Session(_MultiDataset):
 
     """
 
-    datasets: Tuple[Dataset]
+    datasets: tuple[Dataset]
 
     @property
     def info(self):
@@ -165,7 +165,7 @@ class Session(_MultiDataset):
         """
         ds = list(Path(base_path).glob(filter_pattern))
         if not ds:
-            raise ValueError('No files matching "{}" where found in {}'.format(filter_pattern, base_path))
+            raise ValueError(f'No files matching "{filter_pattern}" where found in {base_path}')
         return cls.from_file_paths(ds, legacy_support=legacy_support, force_version=force_version, tz=tz)
 
     def get_dataset_by_id(self, sensor_id: str) -> Dataset:
@@ -275,7 +275,7 @@ class SyncedSession(Session):
         return next(d for d in self.datasets if d.info.sync_role == "master")
 
     @property
-    def slaves(self) -> Tuple[Dataset]:
+    def slaves(self) -> tuple[Dataset]:
         """Get the datasets belonging to all the sync-clients sensors."""
         return tuple(d for d in self.datasets if d.info.sync_role == "slave")
 
@@ -384,9 +384,9 @@ class SyncedSession(Session):
         """Check that all _headers belong to the same sync group."""
         sync_channel = set(self.info.sync_channel)
         sync_address = set(self.info.sync_address)
-        return all((len(i) == 1 for i in [sync_channel, sync_address]))
+        return all(len(i) == 1 for i in [sync_channel, sync_address])
 
-    def _validate_sync_role(self) -> Tuple[bool, bool]:
+    def _validate_sync_role(self) -> tuple[bool, bool]:
         """Check that there is only 1 master and all other sensors were configured as slaves."""
         roles = self.info.sync_role
         master_valid = len([i for i in roles if i == "master"]) == 1
@@ -404,7 +404,7 @@ class SyncedSession(Session):
         stop_times = np.array(self.info.utc_stop)
         return validate_existing_overlap(start_times, stop_times)
 
-    def align_to_syncregion(  # noqa: MC0001
+    def align_to_syncregion(
         self,
         cut_start: bool = False,
         cut_end: bool = False,
@@ -521,7 +521,7 @@ class SyncedSession(Session):
         index: Optional[str] = None,
         include_units: Optional[bool] = False,
         concat_df: Optional[bool] = False,
-    ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         Parameters
@@ -582,7 +582,7 @@ class SyncedSession(Session):
         index: Optional[str] = None,
         include_units: Optional[bool] = False,
         concat_df: Optional[bool] = False,
-    ) -> Union[Tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Header class(es), which are used to read and access basic information from a recorded session."""
 
 import datetime
@@ -7,7 +6,7 @@ import json
 import pprint
 import warnings
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
 import pytz
@@ -23,7 +22,7 @@ class _HeaderFields:
     For documentation see the `Header` object.
     """
 
-    enabled_sensors: Tuple[str]
+    enabled_sensors: tuple[str]
 
     motion_interrupt_enabled: bool
     dock_mode_enabled: bool
@@ -51,12 +50,12 @@ class _HeaderFields:
     version_hardware: str
     mac_address: str
 
-    custom_meta_data: Tuple[float]
+    custom_meta_data: tuple[float]
 
     n_samples: int
 
     # Note this must correspond to the order they appear in the datapackage when activated
-    _SENSOR_FLAGS = OrderedDict(
+    _SENSOR_FLAGS: ClassVar[dict[tuple[str, tuple[int, ...]]]] = OrderedDict(
         [
             ("gyro", (0x02, 0x00)),
             ("acc", (0x01, 0x00)),
@@ -69,19 +68,29 @@ class _HeaderFields:
         ]
     )
 
-    _OPERATION_MODES = {
+    _OPERATION_MODES: ClassVar[dict[str, int]] = {
         "motion_interrupt_enabled": 0x80,
         "dock_mode_enabled": 0x40,
     }
 
-    _SAMPLING_RATES = {1: 1024.0, 2: 512.0, 4: 256.0, 5: 204.8, 10: 102.4, 20: 51.2, 40: 25.6, 80: 12.8, 160: 6.4}
+    _SAMPLING_RATES: ClassVar[dict[int, float]] = {
+        1: 1024.0,
+        2: 512.0,
+        4: 256.0,
+        5: 204.8,
+        10: 102.4,
+        20: 51.2,
+        40: 25.6,
+        80: 12.8,
+        160: 6.4,
+    }
 
-    _SESSION_TERMINATION = {"no memory": 0x10, "BLE": 0x20, "dock": 0x40, "low battery": 0x80}
+    _SESSION_TERMINATION: ClassVar[dict[str, int]] = {"no memory": 0x10, "BLE": 0x20, "dock": 0x40, "low battery": 0x80}
 
-    _SYNC_ROLE = {0: "disabled", 1: "slave", 2: "master"}
+    _SYNC_ROLE: ClassVar[dict[int, str]] = {0: "disabled", 1: "slave", 2: "master"}
 
     @property
-    def _header_fields(self) -> List[str]:
+    def _header_fields(self) -> list[str]:
         """List all header fields.
 
         This is a little hacky and relies on that the header fields are the only attributes that are type annotated.
@@ -89,8 +98,8 @@ class _HeaderFields:
         return list(_HeaderFields.__annotations__.keys())
 
     @property
-    def _all_header_fields(self) -> List[str]:
-        """ """
+    def _all_header_fields(self) -> list[str]:
+        """All Header fields."""
         additional_fields = [
             "duration_s",
             "utc_datetime_start",
@@ -139,12 +148,12 @@ class _HeaderFields:
     @property
     def is_synchronised(self) -> bool:
         """If a recording was synchronised or not."""
-        return not self.sync_role == "disabled"
+        return self.sync_role != "disabled"
 
     @property
     def has_position_info(self) -> bool:
         """If any information about the sensor position is provided."""
-        return not self.sensor_position == "undefined"
+        return self.sensor_position != "undefined"
 
     @property
     def sensor_id(self) -> str:
@@ -277,7 +286,7 @@ class Header(_HeaderFields):
                 setattr(self, k, v)
             else:
                 # Should this be a error?
-                warnings.warn("Unexpected Argument {} for Header".format(k))
+                warnings.warn(f"Unexpected Argument {k} for Header")
 
     @classmethod
     def from_bin_array(cls, bin_array: np.ndarray, tz: Optional[str] = None) -> "Header":
@@ -308,7 +317,7 @@ class Header(_HeaderFields):
         return json.dumps(header_dict)
 
     @classmethod
-    def parse_header_package(cls, bin_array: np.ndarray) -> Dict[str, Union[str, int, float, bool, tuple]]:
+    def parse_header_package(cls, bin_array: np.ndarray) -> dict[str, Union[str, int, float, bool, tuple]]:
         """Extract all values from a binary header package."""
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation
@@ -356,12 +365,12 @@ class Header(_HeaderFields):
         header_dict["sync_index_start"] = int(convert_little_endian(bin_array[26:30]))
         header_dict["sync_index_stop"] = int(convert_little_endian(bin_array[30:34]))
 
-        header_dict["mac_address"] = ":".join(["{:02x}".format(int(x)) for x in bin_array[34:40]][::-1])
+        header_dict["mac_address"] = ":".join([f"{int(x):02x}" for x in bin_array[34:40]][::-1])
 
-        header_dict["sync_address"] = "".join(["{:02x}".format(int(x)) for x in bin_array[40:45]][::-1])
+        header_dict["sync_address"] = "".join([f"{int(x):02x}" for x in bin_array[40:45]][::-1])
         header_dict["sync_channel"] = int(bin_array[45])
 
-        header_dict["version_hardware"] = "".join((str(x) for x in bin_array[46:48]))
+        header_dict["version_hardware"] = "".join(str(x) for x in bin_array[46:48])
 
         header_dict["version_firmware"] = "v{}.{}.{}".format(*(int(x) for x in bin_array[-3:]))
 
@@ -377,21 +386,19 @@ class _ProxyHeader(_HeaderFields):
     This concept only allows read only access. However, usually their is no need to modify a header after creation.
     """
 
-    _headers: Tuple[Header]
+    _headers: tuple[Header]
 
-    def __init__(self, headers: Tuple[Header]):
+    def __init__(self, headers: tuple[Header]):
         self._headers = headers
 
-    def __getattribute__(self, name: str) -> Tuple[Any]:
+    def __getattribute__(self, name: str) -> tuple[Any]:
         if name in ("_headers", "_all_header_fields", "_header_fields", "_ipython_display_"):
             return super().__getattribute__(name)
         if callable(getattr(self._headers[0], name)) is True:
             if name.startswith("__"):
                 return super().__getattribute__(name)
             raise ValueError(
-                "_ProxyHeader only allows access to attributes of the info objects. {} is a callable method.".format(
-                    name
-                )
+                f"_ProxyHeader only allows access to attributes of the info objects. {name} is a callable method."
             )
 
         return tuple(getattr(d, name) for d in self._headers)
@@ -405,7 +412,7 @@ class _ProxyHeader(_HeaderFields):
         return itertools.chain(super().__dir__(), self._headers[0].__dir__())
 
     def _ipython_display_(self):
-        """ """
+        """Display for IPython."""
         import pandas as pd  # noqa: import-outside-toplevel
         from IPython import display  # noqa: import-outside-toplevel
 

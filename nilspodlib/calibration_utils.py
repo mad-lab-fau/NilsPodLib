@@ -3,12 +3,12 @@
 import datetime
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, List, Optional, Union
+from typing import TYPE_CHECKING, Callable, Optional, Union
 
 from nilspodlib.utils import path_t
 
 if TYPE_CHECKING:
-    from imucal import CalibrationInfo  # noqa: F401
+    from imucal import CalibrationInfo
 
 
 def save_calibration(
@@ -56,11 +56,9 @@ def save_calibration(
     """
     if not re.fullmatch(r"\w{4}", sensor_id):
         raise ValueError(
-            "The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {}".format(
-                sensor_id
-            )
+            f"The sensor_id is expected to be a 4 symbols string only containing numbers or letters, not {sensor_id}"
         )
-    from imucal.management import save_calibration_info  # noqa: F401
+    from imucal.management import save_calibration_info
 
     return save_calibration_info(
         cal_info=calibration, sensor_id=sensor_id, cal_time=cal_time, folder=folder, folder_structure=folder_structure
@@ -74,7 +72,7 @@ def find_calibrations_for_sensor(
     filter_cal_type: Optional[str] = None,
     custom_validator: Optional[Callable[["CalibrationInfo"], bool]] = None,
     ignore_file_not_found: Optional[bool] = False,
-) -> List[Path]:
+) -> list[Path]:
     """Find possible calibration files based on the filename.
 
     As this only checks the filenames, this might return false positives depending on your folder structure and naming.
@@ -110,7 +108,7 @@ def find_calibrations_for_sensor(
     if not folder:
         folder = _check_ref_cal_folder()
 
-    from imucal.management import find_calibration_info_for_sensor  # noqa: F401
+    from imucal.management import find_calibration_info_for_sensor
 
     return find_calibration_info_for_sensor(
         sensor_id=sensor_id,
@@ -130,7 +128,7 @@ def find_closest_calibration_to_date(
     filter_cal_type: Optional[str] = None,
     custom_validator: Optional[Callable[["CalibrationInfo"], bool]] = None,
     before_after: Optional[str] = None,
-    warn_thres: datetime.timedelta = datetime.timedelta(days=30),  # noqa E252
+    warn_thres: datetime.timedelta = datetime.timedelta(days=30),
     ignore_file_not_found: Optional[bool] = False,
 ) -> Optional[Path]:
     """Find the calibration file for a sensor_type, that is closes to a given date.
@@ -185,7 +183,7 @@ def find_closest_calibration_to_date(
     if not folder:
         folder = _check_ref_cal_folder()
 
-    from imucal.management import find_closest_calibration_info_to_date  # noqa: F401
+    from imucal.management import find_closest_calibration_info_to_date
 
     return find_closest_calibration_info_to_date(
         sensor_id=sensor_id,
@@ -202,20 +200,20 @@ def find_closest_calibration_to_date(
 
 def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "CalibrationInfo":
     """Load a calibration from path or check if the provided object is already a valid calibration."""
-    from imucal import CalibrationInfo  # noqa: import-outside-toplevel
+    from imucal import CalibrationInfo
 
     if isinstance(calibration, (Path, str)):
-        from imucal.management import load_calibration_info  # noqa: F401
+        from imucal.management import load_calibration_info
 
         calibration = load_calibration_info(calibration)
     if not isinstance(calibration, CalibrationInfo):
-        raise ValueError("No valid CalibrationInfo object provided")
+        raise TypeError("No valid CalibrationInfo object provided")
     return calibration
 
 
 def _check_ref_cal_folder() -> Path:
     try:
-        from NilsPodRefCal import CAL_PATH  # noqa: import-outside-toplevel
+        from NilsPodRefCal import CAL_PATH
     except ImportError as e:
         raise ImportError(
             "The module NilsPodRefCal is not installed. If you want support for default calibrations, "

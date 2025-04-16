@@ -21,11 +21,11 @@ SENSOR_LEGENDS = {
     "acc": tuple("acc_" + x for x in "xyz"),
     "gyro": tuple("gyr_" + x for x in "xyz"),
     "mag": tuple("mag_" + x for x in "xyz"),
-    "baro": tuple(["baro"]),
+    "baro": ("baro",),
     "analog": tuple("analog_" + str(x) for x in range(3)),
-    "ecg": tuple(["ecg"]),
-    "ppg": tuple(["ppg"]),
-    "temperature": tuple(["temp"]),
+    "ecg": ("ecg",),
+    "ppg": ("ppg",),
+    "temperature": ("temp",),
 }
 
 #: The value of gravity

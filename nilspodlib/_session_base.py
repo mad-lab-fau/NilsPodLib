@@ -1,7 +1,8 @@
 """Internal bases for sessions to make it easier to call dataset methods on the session object."""
 
+from collections.abc import Iterable, Sequence
 from functools import wraps
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 from typing_extensions import Self
@@ -10,9 +11,9 @@ from nilspodlib.dataset import Dataset
 from nilspodlib.utils import inplace_or_copy, path_t, remove_docstring_indent
 
 if TYPE_CHECKING:
-    import pandas as pd  # noqa: F401
+    import pandas as pd
 
-    from nilspodlib.datastream import Datastream  # noqa: F401
+    from nilspodlib.datastream import Datastream
 
 
 class CascadingDatasetField:
@@ -31,7 +32,7 @@ class CascadingDatasetField:
         return tuple(getattr(d, self.name) for d in instance.datasets)
 
 
-def call_dataset(autogen_doc=True):  # noqa: D202
+def call_dataset(autogen_doc=True):
     """Forward all method calls to all datasets of a session.
 
     This function respects the inplace feature and will create a copy of the session object if required.
@@ -62,9 +63,9 @@ def call_dataset(autogen_doc=True):  # noqa: D202
                 _cascading_access.__doc__ += "\n\n"
             else:
                 _cascading_access.__doc__ = (
-                    "Apply `Dataset.{0}` to all datasets of the session.\n\n"
-                    "See :py:meth:`nilspodlib.dataset.Dataset.{0}` for more details. "
-                    "The docstring of this method is included below:\n\n".format(method.__name__)
+                    f"Apply `Dataset.{method.__name__}` to all datasets of the session.\n\n"
+                    f"See :py:meth:`nilspodlib.dataset.Dataset.{method.__name__}` for more details. "
+                    "The docstring of this method is included below:\n\n"
                 )
             _cascading_access.__doc__ += remove_docstring_indent(getattr(Dataset, method.__name__).__doc__)
         return _cascading_access
@@ -86,32 +87,32 @@ class _MultiDataset:
     """
 
     path: path_t = CascadingDatasetField()
-    acc: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    gyro: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    mag: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    baro: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    analog: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    ecg: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    ppg: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    temperature: Tuple[Optional["Datastream"]] = CascadingDatasetField()
-    counter: Tuple[np.ndarray] = CascadingDatasetField()
+    acc: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    gyro: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    mag: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    baro: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    analog: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    ecg: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    ppg: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    temperature: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    counter: tuple[np.ndarray] = CascadingDatasetField()
 
-    size: Tuple[int] = CascadingDatasetField()
-    datastreams: Tuple[Iterable["Datastream"]] = CascadingDatasetField()
+    size: tuple[int] = CascadingDatasetField()
+    datastreams: tuple[Iterable["Datastream"]] = CascadingDatasetField()
 
-    ACTIVE_SENSORS: Tuple[Tuple[str]] = CascadingDatasetField()
+    ACTIVE_SENSORS: tuple[tuple[str]] = CascadingDatasetField()
 
     # This needs to be implemented by the session
-    datasets: Tuple[Dataset]
+    datasets: tuple[Dataset]
 
     @call_dataset()
-    def cut_to_syncregion(  # noqa: D105
+    def cut_to_syncregion(
         self, start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
     ) -> Self:
         pass
 
     @call_dataset()
-    def cut(  # noqa: D105
+    def cut(
         self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
@@ -121,7 +122,7 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def cut_counter_val(  # noqa: D105
+    def cut_counter_val(
         self,
         start: Optional[int] = None,
         stop: Optional[int] = None,
@@ -131,24 +132,24 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def downsample(self, factor: int, inplace: bool = False) -> Self:  # noqa: D105
+    def downsample(self, factor: int, inplace: bool = False) -> Self:
         pass
 
     @call_dataset()
-    def data_as_df(  # noqa: D105
+    def data_as_df(
         self,
         datastreams: Optional[Sequence[str]] = None,
         index: Optional[str] = None,
         include_units: Optional[bool] = True,
-    ) -> Tuple["pd.DataFrame"]:
+    ) -> tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: Optional[str] = None) -> Tuple["pd.DataFrame"]:  # noqa: D105
+    def imu_data_as_df(self, index: Optional[str] = None) -> tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
-    def find_closest_calibration(  # noqa: D105
+    def find_closest_calibration(
         self,
         folder: Optional[path_t] = None,
         recursive: bool = True,
@@ -159,7 +160,7 @@ class _MultiDataset:
         pass
 
     @call_dataset()
-    def find_calibrations(  # noqa: D105
+    def find_calibrations(
         self,
         folder: Optional[path_t] = None,
         recursive: bool = True,

@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """A python package to parse logged NilsPod Binary files.
 
 @author: Arne Küderle, Nils Roth
 """
-from .dataset import Dataset  # noqa: F401
-from .session import Session, SyncedSession  # noqa: F401
+from .dataset import Dataset
+from .session import Session, SyncedSession
 
 __all__ = ["Dataset", "Session", "SyncedSession"]
-__version__ = "3.6.0"
+__version__ = "4.0.0"
