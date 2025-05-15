@@ -27,33 +27,35 @@ pip install git+https://mad-srv.informatik.uni-erlangen.de/MadLab/portabilestool
 
 With v2.0.0 the name of the library was updated from `NilsPodLib` to `nilspodlib` to comply with the recommended naming
 style for Python packages.
-Therefore, you need to update your import path, when updating to the new version!
+Therefore, you need to update your import path when updating to the new version!
 
 ## For developer
 
-Install Python >=3.8 and [poetry](https://python-poetry.org).
+Install Python >=3.9 and [uv](https://docs.astral.sh/uv/getting-started/installation/).
 Then run the commands below to get the latest source and install the dependencies:
 
 ```bash
 git clone https://github.com/mad-lab-fau/NilsPodLib.git
 cd nilspodlib
-poetry install
+uv sync --dev
 ```
 
 To run any of the tools required for the development workflow, use the poe commands:
 
-```
+```bash
+poe 
+
 CONFIGURED TASKS
-  format         
-  lint           Lint all files with Prospector.
-  check          Check all potential format and linting issues.
-  test           Run Pytest with coverage.
-  docs           Build the html docs using Sphinx.
-  bump_version   
+  format          Format all files with black.
+  lint            Lint all files with ruff.
+  check           Check all potential format and linting issues.
+  test            Run Pytest with coverage.
+  docs            Build the html docs using Sphinx.
+  version         Bump version in all relevant places.
 ```
 
 by calling
 
 ```bash
-poetry run poe <command name>
+poe <command name>
 ````
