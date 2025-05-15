@@ -2,8 +2,9 @@
 
 import datetime
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 from nilspodlib.utils import path_t
 
@@ -67,11 +68,11 @@ def save_calibration(
 
 def find_calibrations_for_sensor(
     sensor_id: str,
-    folder: Optional[path_t] = None,
+    folder: path_t | None = None,
     recursive: bool = True,
-    filter_cal_type: Optional[str] = None,
-    custom_validator: Optional[Callable[["CalibrationInfo"], bool]] = None,
-    ignore_file_not_found: Optional[bool] = False,
+    filter_cal_type: str | None = None,
+    custom_validator: Callable[["CalibrationInfo"], bool] | None = None,
+    ignore_file_not_found: bool | None = False,
 ) -> list[Path]:
     """Find possible calibration files based on the filename.
 
@@ -123,14 +124,14 @@ def find_calibrations_for_sensor(
 def find_closest_calibration_to_date(
     sensor_id: str,
     cal_time: datetime.datetime,
-    folder: Optional[path_t] = None,
+    folder: path_t | None = None,
     recursive: bool = True,
-    filter_cal_type: Optional[str] = None,
-    custom_validator: Optional[Callable[["CalibrationInfo"], bool]] = None,
-    before_after: Optional[str] = None,
+    filter_cal_type: str | None = None,
+    custom_validator: Callable[["CalibrationInfo"], bool] | None = None,
+    before_after: str | None = None,
     warn_thres: datetime.timedelta = datetime.timedelta(days=30),
-    ignore_file_not_found: Optional[bool] = False,
-) -> Optional[Path]:
+    ignore_file_not_found: bool | None = False,
+) -> Path | None:
     """Find the calibration file for a sensor_type, that is closes to a given date.
 
     As this only checks the filenames, this might return a false positive depending on your folder structure and naming.
@@ -202,7 +203,7 @@ def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "C
     """Load a calibration from path or check if the provided object is already a valid calibration."""
     from imucal import CalibrationInfo
 
-    if isinstance(calibration, (Path, str)):
+    if isinstance(calibration, Path | str):
         from imucal.management import load_calibration_info
 
         calibration = load_calibration_info(calibration)

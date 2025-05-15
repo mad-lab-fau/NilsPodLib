@@ -18,7 +18,7 @@ from nilspodlib.calibration_utils import (
 # TODO: Try to remove tests that are already in imucal
 
 
-@pytest.fixture()
+@pytest.fixture
 def dummy_cal_dict():
     sample_data = {
         "K_a": np.identity(3),
@@ -32,7 +32,7 @@ def dummy_cal_dict():
     return sample_data
 
 
-@pytest.fixture()
+@pytest.fixture
 def dummy_cal(dummy_cal_dict):
     return FerrarisCalibrationInfo(**dummy_cal_dict)
 
@@ -57,7 +57,7 @@ class CustomFerraris(FerrarisCalibrationInfo):
     custom_field: str = "default_custom_value"
 
 
-@pytest.fixture()
+@pytest.fixture
 def dummy_cal_folder(dummy_cal):
     with tempfile.TemporaryDirectory() as f:
         for sid in ["tes1", "tes2", "tes3"]:
@@ -67,7 +67,7 @@ def dummy_cal_folder(dummy_cal):
         yield f
 
 
-@pytest.fixture()
+@pytest.fixture
 def dummy_cal_folder_recursive(dummy_cal_dict):
     with tempfile.TemporaryDirectory() as f:
         for s in [FerrarisCalibrationInfo, TurntableCalibrationInfo, CustomFerraris]:

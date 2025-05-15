@@ -20,7 +20,7 @@ def test_full_init():
     assert ds.columns == ["a", "b", "c"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_ds():
     data = np.ones((100, 3))
     ds = Datastream(data, 100.0, list("abc"))

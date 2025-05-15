@@ -16,7 +16,7 @@ factory_calibrate_sensors = [
 factory_calibrate_sensors_dict = dict(factory_calibrate_sensors)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_calibration():
     expected = dict()
     expected["K_a"] = np.identity(3) * 2
@@ -34,7 +34,7 @@ def simple_calibration():
 # TODO: Test errors if wrong calibrations are used.
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_header():
     return Header(sampling_rate_hz=102.4, acc_range_g=16, gyro_range_dps=2000)
 
@@ -50,7 +50,7 @@ def test_factory_cal(simple_header, sensor, calval):
     assert getattr(dataset, sensor).is_calibrated is False
 
 
-@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors))[0])
+@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors, strict=False))[0])
 def test_repeated_cal_error_factory_cal(simple_header, sensor):
     """Test that we can not apply factory calibration twice.
 

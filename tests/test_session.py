@@ -9,7 +9,7 @@ from nilspodlib.header import _HeaderFields
 from nilspodlib.session import Session
 
 
-@pytest.fixture()
+@pytest.fixture
 def basic_session(dataset_synced):
     return Session([dataset_synced["master"][0], dataset_synced["slave1"][0]])
 
@@ -54,7 +54,7 @@ def test_init_from_folder_empty(dataset_synced):
 def test_info_access(name, basic_session):
     session = basic_session
 
-    assert getattr(session.info, name) == tuple((getattr(d.info, name) for d in session.datasets))
+    assert getattr(session.info, name) == tuple(getattr(d.info, name) for d in session.datasets)
 
 
 def test_info_write(basic_session):

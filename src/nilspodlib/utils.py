@@ -5,7 +5,7 @@ import datetime
 import struct
 import warnings
 from pathlib import Path
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 import pytz
@@ -122,7 +122,7 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
         If any of the intervals are invalid, because their end values is before their start value.
 
     """
-    if not all(i < j for i, j in zip(start_vals, end_vals)):
+    if not all(i < j for i, j in zip(start_vals, end_vals, strict=False)):
         raise ValueError("The start values need to be smaller then their respective end values!")
     return np.max(start_vals) < np.min(end_vals)
 
@@ -152,7 +152,7 @@ def raise_timezone_error(timezone):
         )
 
 
-def convert_to_local_time(utc_datetime: datetime.datetime, timezone: Optional[str]) -> datetime.datetime:
+def convert_to_local_time(utc_datetime: datetime.datetime, timezone: str | None) -> datetime.datetime:
     """Convert a utc datetime object to a different timezone."""
     raise_timezone_error(timezone)
     return utc_datetime.astimezone(pytz.timezone(timezone))

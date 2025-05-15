@@ -33,61 +33,61 @@ def does_not_raise():
     yield
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_11_2():
     path = TEST_LEGACY_DATA_11 / "NilsPodX-8433_20190412_172203.bin"
     header, data_bytes = get_header_and_data_bytes(path)
     return path, header, data_bytes
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_11_2_json_header():
     return json.load((TEST_LEGACY_DATA_11 / "NilsPodX-8433_20190412_172203_header.json").open("r"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_11_2_csv():
     df = pd.read_csv(TEST_LEGACY_DATA_11 / "NilsPodX-8433_20190412_172203_data.csv")
     return df.set_index("t")
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_12_0():
     path = TEST_LEGACY_DATA_12 / "NilsPodX-7FAD_20190430_0933.bin"
     header, data_bytes = get_header_and_data_bytes(path)
     return path, header, data_bytes
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_12_0_json_header():
     return json.load((TEST_LEGACY_DATA_12 / "NilsPodX-7FAD_20190430_0933_header.json").open("r"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_12_0_csv():
     df = pd.read_csv(TEST_LEGACY_DATA_12 / "NilsPodX-7FAD_20190430_0933_data.csv")
     return df.set_index("t")
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_16_2():
     path = TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625.bin"
     header, data_bytes = get_header_and_data_bytes(path)
     return path, header, data_bytes
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_16_2_json_header():
     return json.load((TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625_header.json").open("r"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_16_2_csv():
     df = pd.read_csv(TEST_LEGACY_DATA_16_2 / "NilsPodX-6F13_20210109_121625_data.csv")
     return df.set_index("t")
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_session_18_0():
     path = TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824.bin"
     header, data_bytes = get_header_and_data_bytes(path)

@@ -107,16 +107,16 @@ class _MultiDataset:
 
     @call_dataset()
     def cut_to_syncregion(
-        self, start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+        self, start: bool = True, end: bool = False, warn_thres: int | None = 30, inplace: bool = False
     ) -> Self:
         pass
 
     @call_dataset()
     def cut(
         self,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        step: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
         inplace: bool = False,
     ) -> Self:
         pass
@@ -124,9 +124,9 @@ class _MultiDataset:
     @call_dataset()
     def cut_counter_val(
         self,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        step: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
         inplace: bool = False,
     ) -> Self:
         pass
@@ -138,33 +138,33 @@ class _MultiDataset:
     @call_dataset()
     def data_as_df(
         self,
-        datastreams: Optional[Sequence[str]] = None,
-        index: Optional[str] = None,
-        include_units: Optional[bool] = True,
+        datastreams: Sequence[str] | None = None,
+        index: str | None = None,
+        include_units: bool | None = True,
     ) -> tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: Optional[str] = None) -> tuple["pd.DataFrame"]:
+    def imu_data_as_df(self, index: str | None = None) -> tuple["pd.DataFrame"]:
         pass
 
     @call_dataset()
     def find_closest_calibration(
         self,
-        folder: Optional[path_t] = None,
+        folder: path_t | None = None,
         recursive: bool = True,
-        filter_cal_type: Optional[str] = None,
-        before_after: Optional[str] = None,
-        ignore_file_not_found: Optional[bool] = False,
+        filter_cal_type: str | None = None,
+        before_after: str | None = None,
+        ignore_file_not_found: bool | None = False,
     ):
         pass
 
     @call_dataset()
     def find_calibrations(
         self,
-        folder: Optional[path_t] = None,
+        folder: path_t | None = None,
         recursive: bool = True,
-        filter_cal_type: Optional[str] = None,
-        ignore_file_not_found: Optional[bool] = False,
+        filter_cal_type: str | None = None,
+        ignore_file_not_found: bool | None = False,
     ):
         pass
