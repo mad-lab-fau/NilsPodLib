@@ -20,23 +20,23 @@ def _dataset_master_simple():
     return Dataset.from_bin_file(path=path, tz="Europe/Berlin"), path
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset_master_simple():
     return _dataset_master_simple()
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset_master_simple_json_header():
     return json.load((TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824_header.json").open("r"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset_master_data_csv():
     df = pd.read_csv(TEST_SESSION_DATA / "NilsPodX-6F13_20210109_162824_data.csv")
     return df.set_index("t")
 
 
-@pytest.fixture()
+@pytest.fixture
 def dataset_synced():
     master = TEST_SYNCED_DATA / "NilsPodX-7FAD_20190430_0933.bin"
     slave1 = TEST_SYNCED_DATA / "NilsPodX-922A_20190430_0933.bin"

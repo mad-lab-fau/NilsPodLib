@@ -1,7 +1,7 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
 import warnings
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, Union
 
 import numpy as np
 from packaging.version import Version
@@ -25,8 +25,8 @@ MIN_NON_LEGACY_VERSION = Version("0.18.0")
 
 
 def find_conversion_function(
-    version: Version, in_memory: Optional[bool] = True, return_name: Optional[bool] = False
-) -> Union[Callable, str]:
+    version: Version, in_memory: bool | None = True, return_name: bool | None = False
+) -> Callable | str:
     """Find a method that is able to convert a recording from one version to the other.
 
     This will either return one of the `load_{}` functions, if `in_memory` is True or the `convert_{}` variant if False.

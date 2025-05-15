@@ -3,7 +3,7 @@ import datetime
 import warnings
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 from packaging.version import Version
@@ -92,8 +92,8 @@ class Session(_MultiDataset):
         cls,
         paths: Iterable[path_t],
         legacy_support: str = "error",
-        force_version: Optional[Version] = None,
-        tz: Optional[str] = None,
+        force_version: Version | None = None,
+        tz: str | None = None,
     ) -> Self:
         """Create a new session from a list of files pointing to valid .bin files.
 
@@ -132,8 +132,8 @@ class Session(_MultiDataset):
         base_path: path_t,
         filter_pattern: str = "*.bin",
         legacy_support: str = "error",
-        force_version: Optional[Version] = None,
-        tz: Optional[str] = None,
+        force_version: Version | None = None,
+        tz: str | None = None,
     ) -> Self:
         """Create a new session from a folder path containing valid .bin files.
 
@@ -198,7 +198,9 @@ class Session(_MultiDataset):
 
         """
         s = inplace_or_copy(self, inplace)
-        s.datasets = [d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
+        s.datasets = [
+            d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations, strict=False)
+        ]
         return s
 
 
@@ -409,7 +411,7 @@ class SyncedSession(Session):
         cut_start: bool = False,
         cut_end: bool = False,
         inplace: bool = False,
-        warn_thres: Optional[int] = 30,
+        warn_thres: int | None = 30,
     ) -> Self:
         """Align all datasets based on regions where they were synchronised to the master.
 
@@ -517,10 +519,10 @@ class SyncedSession(Session):
 
     def data_as_df(  # noqa: arguments-differ
         self,
-        datastreams: Optional[Sequence[str]] = None,
-        index: Optional[str] = None,
-        include_units: Optional[bool] = False,
-        concat_df: Optional[bool] = False,
+        datastreams: Sequence[str] | None = None,
+        index: str | None = None,
+        include_units: bool | None = False,
+        concat_df: bool | None = False,
     ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
@@ -579,9 +581,9 @@ class SyncedSession(Session):
 
     def imu_data_as_df(  # noqa: arguments-differ
         self,
-        index: Optional[str] = None,
-        include_units: Optional[bool] = False,
-        concat_df: Optional[bool] = False,
+        index: str | None = None,
+        include_units: bool | None = False,
+        concat_df: bool | None = False,
     ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 

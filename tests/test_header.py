@@ -16,7 +16,7 @@ def test_json_roundtrip_simple():
     paras = dict(sampling_rate_hz=100, enabled_sensors=("acc",), sync_role="master", custom_meta_data=(1, 2, 3, 4))
     header = Header(**paras)
     new_header = Header.from_json(header.to_json())
-    for k in paras.keys():
+    for k in paras:
         assert getattr(header, k) == getattr(new_header, k)
 
 

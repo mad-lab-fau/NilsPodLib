@@ -39,7 +39,7 @@ project = info["name"]
 author = ", ".join(info["authors"])
 release = info["version"]
 
-copyright = "2018 - {}, MaD-Lab FAU, Digital Health and Gait-Analysis Group".format(datetime.now().year)
+copyright = f"2018 - {datetime.now().year}, MaD-Lab FAU, Digital Health and Gait-Analysis Group"
 
 
 # -- General configuration ---------------------------------------------------
@@ -72,7 +72,7 @@ if os.environ.get("NO_MATHJAX"):
     mathjax_path = ""
 else:
     extensions.append("sphinx.ext.mathjax")
-    mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/" "tex-chtml.js"
+    mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
 
 autodoc_default_options = {"members": True, "inherited-members": True, "special_members": True}
 # autodoc_typehints = 'description'  # Does not work as expected. Maybe try at future date again
@@ -122,7 +122,7 @@ intersphinx_module_mapping = {
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
 }
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/{.major}".format(sys.version_info), None),
+    "python": (f"https://docs.python.org/{sys.version_info.major}", None),
     **intersphinx_module_mapping,
 }
 
@@ -147,8 +147,7 @@ def get_nested_attr(obj, attr):
     new_obj = getattr(obj, attrs[0])
     if len(attrs) == 1:
         return new_obj
-    else:
-        return get_nested_attr(new_obj, attrs[1])
+    return get_nested_attr(new_obj, attrs[1])
 
 
 def linkcode_resolve(domain, info):
@@ -170,8 +169,8 @@ def linkcode_resolve(domain, info):
         pass
     if filename:
         if code_line:
-            return "{}/{}#L{}".format(URL, filename, code_line)
-        return "{}/{}".format(URL, filename)
+            return f"{URL}/{filename}#L{code_line}"
+        return f"{URL}/{filename}"
 
 
 def skip_properties(app, what, name, obj, skip, options):
