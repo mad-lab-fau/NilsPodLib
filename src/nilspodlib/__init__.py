@@ -6,4 +6,4 @@ from .dataset import Dataset
 from .session import Session, SyncedSession
 
 __all__ = ["Dataset", "Session", "SyncedSession"]
-__version__ = "4.0.0"
+__version__ = "4.1.0"
