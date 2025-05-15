@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Sessions
 =========
@@ -16,11 +15,11 @@ FILEPATH = Path("../tests/test_data/synced_sample_session/")
 # A session consists of multiple datasets. By default this is also the way to create one
 datasets = [Dataset.from_bin_file(d) for d in FILEPATH.glob("*.bin")]
 session = Session(datasets)
-print("This session has {} datasets".format(len(session.datasets)))
+print(f"This session has {len(session.datasets)} datasets")
 
 # However, in many cases it is easier to use one of the Session constructors:
 session = Session.from_folder_path(FILEPATH, filter_pattern="*.bin")
-print("This session has {} datasets".format(len(session.datasets)))
+print(f"This session has {len(session.datasets)} datasets")
 
 # Like Datasets contain convenience methods to act on all Datastreams, Sessions provide methods that work on all
 # datasets
@@ -28,7 +27,7 @@ print("This session has {} datasets".format(len(session.datasets)))
 downsampled_session = session.downsample(factor=2)
 for ds in downsampled_session.datasets:
     for name, d in ds.datastreams:
-        print("{} of {} has the length {}".format(name, ds.info.sensor_id, len(d.data)))
+        print(f"{name} of {ds.info.sensor_id} has the length {len(d.data)}")
 
 # Further you can use the Proxy Attribute `info` to access the header infos of all sensors at the same time
 print("The included sensors are:", session.info.sensor_id)
@@ -59,4 +58,4 @@ cut_session = session.cut_to_syncregion()
 
 for d in cut_session.slaves:
     if np.array_equal(d.counter, cut_session.master.counter) is True:
-        print("{} has the same counter than master ({})".format(d.info.sensor_id, cut_session.master.info.sensor_id))
+        print(f"{d.info.sensor_id} has the same counter than master ({cut_session.master.info.sensor_id})")

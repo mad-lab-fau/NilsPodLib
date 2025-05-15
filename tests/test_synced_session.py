@@ -9,7 +9,7 @@ from nilspodlib.exceptions import SessionValidationError, SynchronisationError, 
 from nilspodlib.session import SyncedSession
 
 
-@pytest.fixture()
+@pytest.fixture
 def basic_synced_session(dataset_synced):
     return SyncedSession([v[0] for v in dataset_synced.values()])
 
@@ -23,7 +23,7 @@ def test_validate_sync_channel(dataset_synced):
     ds1 = dataset_synced["master"][0]
     ds2 = dataset_synced["slave1"][0]
 
-    setattr(ds1.info, "sync_channel", getattr(ds2.info, "sync_channel") + 1)
+    setattr(ds1.info, "sync_channel", ds2.info.sync_channel + 1)
     with pytest.raises(SessionValidationError) as e:
         SyncedSession([ds1, ds2])
 
@@ -311,7 +311,7 @@ def test_session_utc_datetime(basic_synced_session):
     assert duration == 46.845703125
 
 
-@pytest.mark.parametrize("start_idx", list(range(0, 2)))
+@pytest.mark.parametrize("start_idx", list(range(2)))
 def test_align_sync_region_with_imidiate_sync(basic_synced_session, start_idx):
     """Test edgecases where the sync happens in the first two samples."""
     s = basic_synced_session

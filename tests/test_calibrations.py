@@ -16,7 +16,7 @@ factory_calibrate_sensors = [
 factory_calibrate_sensors_dict = dict(factory_calibrate_sensors)
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_calibration():
     expected = dict()
     expected["K_a"] = np.identity(3) * 2
@@ -34,7 +34,7 @@ def simple_calibration():
 # TODO: Test errors if wrong calibrations are used.
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_header():
     return Header(sampling_rate_hz=102.4, acc_range_g=16, gyro_range_dps=2000)
 

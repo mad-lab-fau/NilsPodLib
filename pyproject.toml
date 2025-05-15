@@ -1,52 +1,74 @@
-[tool.poetry]
+[project]
 name = "nilspodlib"
 version = "4.0.0"
 description = "A Python library to load and convert sensor data recorded by a NilsPod by Portablies."
 authors = [
-    "Arne Küderle <arne.kuederle@fau.de>",
-    "Nils Roth <nils.roth@fau.de>",
-    "Robert Richer <robert.richer@fau.de"
+    { name = "Arne Küderle", email = "arne.kuederle@fau.de" },
+    { name = "Nils Roth", email = "nils.roth@fau.de" },
+    { name = "Robert Richer", email = "robert.richer@fau.de" },
 ]
+requires-python = ">=3.8,<4.0"
 readme = "README.md"
-homepage = "https://github.com/mad-lab-fau/NilsPodLib"
-repository = "https://github.com/mad-lab-fau/NilsPodLib"
-documentation = "https://nilspodlib.readthedocs.io/en/latest/"
 license = "MIT"
-keywords = ["sensors", "scientific", "IMU", "accelerometer"]
+keywords = [
+    "sensors",
+    "scientific",
+    "IMU",
+    "accelerometer",
+]
 classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Physics"
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "numpy>=1.19.2",
+    "pandas>=1.1.3",
+    "scipy>=1.5.2",
+    "imucal>=2.0.0",
+    "typing-extensions>=4.3.0",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-numpy = ">=1.19.2"
-pandas = ">=1.1.3"
-scipy = ">=1.5.2"
-imucal = ">=2.0.0"
-typing-extensions = ">=4.3.0"
+[project.urls]
+Homepage = "https://github.com/mad-lab-fau/NilsPodLib"
+Repository = "https://github.com/mad-lab-fau/NilsPodLib"
+Documentation = "https://nilspodlib.readthedocs.io/en/latest/"
 
-[tool.poetry.group.dev.dependencies]
-coverage = "^6.4.4"
-recommonmark = "^0.6.0"
-memory_profiler = "^0.57.0"
-matplotlib = "^3.5.3"
-toml = "^0.10.2"
-black = "^22.6.0"
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
-Sphinx = "^5.1.1"
-numpydoc = "^1.4.0"
-sphinx-gallery = "^0.11.1"
-pydata-sphinx-theme = "^0.9.0"
-isort = "^5.10.1"
-poethepoet = "^0.16.0"
-ruff = "^0.11.5"
+[tool.hatch.build.targets.sdist]
+include = ["src/nilspodlib"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/nilspodlib"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/nilspodlib" = "nilspodlib"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "coverage>=6.4.4,<7",
+    "recommonmark>=0.6.0,<0.7",
+    "memory_profiler>=0.57.0,<0.58",
+    "matplotlib>=3.5.3,<4",
+    "toml>=0.10.2,<0.11",
+    "black>=22.6.0,<23",
+    "pytest>=7.1.2,<8",
+    "pytest-cov>=3.0.0,<4",
+    "Sphinx>=5.1.1,<6",
+    "numpydoc>=1.4.0,<2",
+    "sphinx-gallery>=0.11.1,<0.12",
+    "pydata-sphinx-theme>=0.9.0,<0.10",
+    "isort>=5.10.1,<6",
+    "poethepoet>=0.16.0,<0.17",
+    "ruff>=0.11.5,<0.12",
+]
 
 [tool.black]
 line-length = 120
-target-version = ['py38']
+target-version = ['py310']
 exclude = '''
 (
   /(
@@ -75,15 +97,10 @@ skip_gitignore = true
 _format_black = "black ."
 _format_ruff = "ruff check . --fix-only"
 format = ["_format_black", "_format_ruff"]
-lint = { cmd = "ruff check nilspodlib --fix", help = "Lint all files with ruff." }
-_lint_ci = "ruff check nilspodlib --output-format=github"
+lint = { cmd = "ruff check src --fix", help = "Lint all files with ruff." }
+_lint_ci = "ruff check src --output-format=github"
 _check_black = "black . --check"
 ci_check = { sequence = ["_check_black", "_lint_ci"], help = "Check all potential format and linting issues." }
-test = { cmd = "pytest --cov=nilspodlib --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
+test = { cmd = "pytest --cov=src --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
 docs = { "script" = "_tasks:task_docs()",  help = "Build the html docs using Sphinx." }
 bump_version = { "script" = "_tasks:task_update_version()" }
-
-[build-system]
-requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.masonry.api"
-
