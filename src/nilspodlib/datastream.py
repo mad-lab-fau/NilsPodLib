@@ -2,7 +2,6 @@
 
 import copy
 from collections.abc import Iterable
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -40,17 +39,17 @@ class Datastream:
     is_calibrated: bool = False
     is_factory_calibrated: bool = False
     sampling_rate_hz: float
-    sensor_type: Optional[str]
-    calibrated_unit: Optional[str]
+    sensor_type: str | None
+    calibrated_unit: str | None
     columns: list[str]
 
     def __init__(
         self,
         data: np.ndarray,
         sampling_rate: float = 1.0,
-        columns: Optional[Iterable] = None,
-        calibrated_unit: Optional[str] = None,
-        sensor_type: Optional[str] = None,
+        columns: Iterable | None = None,
+        calibrated_unit: str | None = None,
+        sensor_type: str | None = None,
     ):
         """Get new datastream instance.
 
@@ -132,9 +131,9 @@ class Datastream:
 
     def cut(
         self,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        step: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
         inplace: bool = False,
     ) -> Self:
         """Cut the datastream.

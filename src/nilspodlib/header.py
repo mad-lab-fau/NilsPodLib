@@ -6,7 +6,7 @@ import json
 import pprint
 import warnings
 from collections import OrderedDict
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
 import numpy as np
 import pytz
@@ -44,7 +44,7 @@ class _HeaderFields:
     utc_start: int
     utc_stop: int
 
-    timezone: Optional[str]
+    timezone: str | None
 
     version_firmware: str
     version_hardware: str
@@ -289,7 +289,7 @@ class Header(_HeaderFields):
                 warnings.warn(f"Unexpected Argument {k} for Header")
 
     @classmethod
-    def from_bin_array(cls, bin_array: np.ndarray, tz: Optional[str] = None) -> "Header":
+    def from_bin_array(cls, bin_array: np.ndarray, tz: str | None = None) -> "Header":
         """Create a new Header instance from an array of bytes."""
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict, timezone=tz)
@@ -317,7 +317,7 @@ class Header(_HeaderFields):
         return json.dumps(header_dict)
 
     @classmethod
-    def parse_header_package(cls, bin_array: np.ndarray) -> dict[str, Union[str, int, float, bool, tuple]]:
+    def parse_header_package(cls, bin_array: np.ndarray) -> dict[str, str | int | float | bool | tuple]:
         """Extract all values from a binary header package."""
         # Note that because the info packet already has the first byte (info size) removed, all byte numbers are
         # shifted compared to the documentation

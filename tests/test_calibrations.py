@@ -50,7 +50,7 @@ def test_factory_cal(simple_header, sensor, calval):
     assert getattr(dataset, sensor).is_calibrated is False
 
 
-@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors))[0])
+@pytest.mark.parametrize("sensor", list(zip(*factory_calibrate_sensors, strict=False))[0])
 def test_repeated_cal_error_factory_cal(simple_header, sensor):
     """Test that we can not apply factory calibration twice.
 

@@ -187,8 +187,8 @@ class Dataset:
         path: path_t,
         *,
         legacy_support: str = "error",
-        force_version: Optional[Version] = None,
-        tz: Optional[str] = None,
+        force_version: Version | None = None,
+        tz: str | None = None,
     ) -> Self:
         """Create a new Dataset from a valid .bin file.
 
@@ -351,7 +351,7 @@ class Dataset:
         return temperature
 
     @staticmethod
-    def _check_calibration(ds: Optional[Datastream], name: str, factory: bool = False):
+    def _check_calibration(ds: Datastream | None, name: str, factory: bool = False):
         """Check if a specific datastream is already marked as calibrated, or if the datastream does not exist.
 
         In case the datastream is already calibrated a `RepeatedCalibrationError` is raised.
@@ -408,9 +408,9 @@ class Dataset:
 
     def cut(
         self,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        step: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
         inplace: bool = False,
     ) -> Self:
         """Cut all datastreams of the dataset.
@@ -445,9 +445,9 @@ class Dataset:
 
     def cut_counter_val(
         self,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        step: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
+        step: int | None = None,
         inplace: bool = False,
     ) -> Self:
         """Cut the dataset based on values in the counter and not the index.
@@ -492,7 +492,7 @@ class Dataset:
         return self.cut(start, stop, step, inplace=inplace)
 
     def cut_to_syncregion(
-        self, start: bool = True, end: bool = False, warn_thres: Optional[int] = 30, inplace: bool = False
+        self, start: bool = True, end: bool = False, warn_thres: int | None = 30, inplace: bool = False
     ) -> Self:
         """Cut the dataset to the region indicated by the first and last sync package received from master.
 
@@ -562,9 +562,9 @@ class Dataset:
 
     def data_as_df(
         self,
-        datastreams: Optional[Sequence[str]] = None,
-        index: Optional[str] = None,
-        include_units: Optional[bool] = False,
+        datastreams: Sequence[str] | None = None,
+        index: str | None = None,
+        include_units: bool | None = False,
     ) -> pd.DataFrame:
         """Export the datastreams of the dataset in a single pandas DataFrame.
 
@@ -630,7 +630,7 @@ class Dataset:
         df.index.name = index_name
         return df
 
-    def imu_data_as_df(self, index: Optional[str] = None, include_units: Optional[bool] = False) -> pd.DataFrame:
+    def imu_data_as_df(self, index: str | None = None, include_units: bool | None = False) -> pd.DataFrame:
         """Export the acc and gyro datastreams of the dataset in a single pandas DataFrame.
 
         See Also
@@ -673,10 +673,10 @@ class Dataset:
 
     def find_calibrations(
         self,
-        folder: Optional[path_t] = None,
+        folder: path_t | None = None,
         recursive: bool = True,
-        filter_cal_type: Optional[str] = None,
-        ignore_file_not_found: Optional[bool] = False,
+        filter_cal_type: str | None = None,
+        ignore_file_not_found: bool | None = False,
     ) -> list[Path]:
         """Find all calibration infos that belong to a given sensor_type.
 
@@ -714,12 +714,12 @@ class Dataset:
 
     def find_closest_calibration(
         self,
-        folder: Optional[path_t] = None,
+        folder: path_t | None = None,
         recursive: bool = True,
-        filter_cal_type: Optional[str] = None,
-        before_after: Optional[str] = None,
+        filter_cal_type: str | None = None,
+        before_after: str | None = None,
         warn_thres: datetime.timedelta = datetime.timedelta(days=30),
-        ignore_file_not_found: Optional[bool] = False,
+        ignore_file_not_found: bool | None = False,
     ) -> Path:
         """Find the closest calibration info to the start of the measurement.
 
@@ -784,7 +784,7 @@ class Dataset:
 
 
 def parse_binary(
-    path: path_t, legacy_support: str = "error", force_version: Optional[Version] = None, tz: Optional[str] = None
+    path: path_t, legacy_support: str = "error", force_version: Version | None = None, tz: str | None = None
 ) -> tuple[dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 
