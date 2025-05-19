@@ -50,7 +50,7 @@ def update_version(version: Sequence[str]):
             .split(" ", 1)[1:][0]
         )
 
-        update_version_strings(HERE.joinpath("src/biopsykit/__init__.py"), new_version)
+        update_version_strings(HERE.joinpath("src/nilspodlib/__init__.py"), new_version)
 
 
 def task_update_version():
