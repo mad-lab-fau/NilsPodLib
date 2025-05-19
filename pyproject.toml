@@ -98,4 +98,4 @@ _check_format = "ruff format . --check"
 ci_check = { sequence = ["_check_format", "_lint_ci"], help = "Check all potential format and linting issues." }
 test = { cmd = "pytest --cov=src --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
 docs = { "script" = "_tasks:task_docs()",  help = "Build the html docs using Sphinx." }
-version = { cmd = "uvx bump-my-version" }
+version = { "script" = "_tasks:task_update_version" }
