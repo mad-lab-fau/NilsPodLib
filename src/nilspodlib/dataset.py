@@ -1,4 +1,5 @@
 """Dataset represents a measurement session of a single sensor_type."""
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence

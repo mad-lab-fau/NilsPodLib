@@ -54,7 +54,6 @@ dev = [
     "memory_profiler>=0.57.0,<0.58",
     "matplotlib>=3.5.3,<4",
     "toml>=0.10.2,<0.11",
-    "black>=22.6.0,<23",
     "pytest>=7.1.2,<8",
     "pytest-cov>=3.0.0,<4",
     "Sphinx>=5.1.1,<6",
@@ -87,20 +86,16 @@ exclude = '''
 )
 '''
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 120
-skip_gitignore = true
-
 [tool.poe.tasks]
-_format_black = "black ."
-_format_ruff = "ruff check . --fix-only"
-format = ["_format_black", "_format_ruff"]
+_format = "ruff format ."
+_auto_fix = "ruff check . --fix-only --show-fixes --exit-zero"
+_auto_fix_unsafe = "ruff check . --fix-only --show-fixes --exit-zero --unsafe-fixes"
+format = ["_auto_fix", "_format"]
+format_unsafe = ["_auto_fix_unsafe", "_format"]
 lint = { cmd = "ruff check src --fix", help = "Lint all files with ruff." }
 _lint_ci = "ruff check src --output-format=github"
-_check_black = "black . --check"
-ci_check = { sequence = ["_check_black", "_lint_ci"], help = "Check all potential format and linting issues." }
+_check_format = "ruff format . --check"
+ci_check = { sequence = ["_check_format", "_lint_ci"], help = "Check all potential format and linting issues." }
 test = { cmd = "pytest --cov=src --cov-report=term-missing --cov-report=xml", help = "Run Pytest with coverage." }
 docs = { "script" = "_tasks:task_docs()",  help = "Build the html docs using Sphinx." }
 version = { cmd = "uvx bump-my-version" }

@@ -1,4 +1,5 @@
 """Session groups multiple Datasets from sensors recorded at the same time."""
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence

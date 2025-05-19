@@ -4,6 +4,7 @@ Sessions
 
 A simple example showing how to work with Sensor Sessions.
 """
+
 from pathlib import Path
 
 import numpy as np

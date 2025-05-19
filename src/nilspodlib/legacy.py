@@ -1,4 +1,5 @@
 """Legacy support helper to convert older NilsPod files into new versions."""
+
 import warnings
 from collections.abc import Callable
 from pathlib import Path

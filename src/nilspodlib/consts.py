@@ -1,4 +1,5 @@
 """Basic constants/names used throughout the lib."""
+
 import numpy as np
 
 #: Byte information of each sensor_type in one sample.
