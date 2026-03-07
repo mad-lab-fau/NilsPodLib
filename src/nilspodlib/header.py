@@ -1,5 +1,7 @@
 """Header class(es), which are used to read and access basic information from a recorded session."""
 
+from __future__ import annotations
+
 import datetime
 import itertools
 import json
@@ -289,13 +291,13 @@ class Header(_HeaderFields):
                 warnings.warn(f"Unexpected Argument {k} for Header")
 
     @classmethod
-    def from_bin_array(cls, bin_array: np.ndarray, tz: str | None = None) -> "Header":
+    def from_bin_array(cls, bin_array: np.ndarray, tz: str | None = None) -> Header:
         """Create a new Header instance from an array of bytes."""
         header_dict = cls.parse_header_package(bin_array)
         return cls(**header_dict, timezone=tz)
 
     @classmethod
-    def from_json(cls, json_string: str) -> "Header":
+    def from_json(cls, json_string: str) -> Header:
         """Create a new Header from a json export of the header.
 
         This is only tested with the direct output of the `to_json` method and should only be used to reimport a Header

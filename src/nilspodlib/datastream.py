@@ -1,5 +1,7 @@
 """Fundamental Datastream class, which holds any type of sensor_type data and handles basic interactions with it."""
 
+from __future__ import annotations
+
 import copy
 from collections.abc import Iterable
 

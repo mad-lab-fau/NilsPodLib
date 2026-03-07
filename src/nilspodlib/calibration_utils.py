@@ -1,5 +1,7 @@
 """A set of utilities to save and find calibrations for NilsPod sensors."""
 
+from __future__ import annotations
+
 import datetime
 import re
 from collections.abc import Callable
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def save_calibration(
-    calibration: "CalibrationInfo",
+    calibration: CalibrationInfo,
     sensor_id: str,
     cal_time: datetime.datetime,
     folder: path_t,
@@ -71,7 +73,7 @@ def find_calibrations_for_sensor(
     folder: path_t | None = None,
     recursive: bool = True,
     filter_cal_type: str | None = None,
-    custom_validator: Callable[["CalibrationInfo"], bool] | None = None,
+    custom_validator: Callable[[CalibrationInfo], bool] | None = None,
     ignore_file_not_found: bool | None = False,
 ) -> list[Path]:
     """Find possible calibration files based on the filename.
@@ -127,7 +129,7 @@ def find_closest_calibration_to_date(
     folder: path_t | None = None,
     recursive: bool = True,
     filter_cal_type: str | None = None,
-    custom_validator: Callable[["CalibrationInfo"], bool] | None = None,
+    custom_validator: Callable[[CalibrationInfo], bool] | None = None,
     before_after: str | None = None,
     warn_thres: datetime.timedelta = datetime.timedelta(days=30),
     ignore_file_not_found: bool | None = False,
@@ -199,11 +201,11 @@ def find_closest_calibration_to_date(
     )
 
 
-def load_and_check_cal_info(calibration: Union["CalibrationInfo", path_t]) -> "CalibrationInfo":
+def load_and_check_cal_info(calibration: Union[CalibrationInfo, path_t]) -> CalibrationInfo:
     """Load a calibration from path or check if the provided object is already a valid calibration."""
     from imucal import CalibrationInfo
 
-    if isinstance(calibration, Path | str):
+    if isinstance(calibration, (Path, str)):
         from imucal.management import load_calibration_info
 
         calibration = load_calibration_info(calibration)

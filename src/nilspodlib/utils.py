@@ -1,5 +1,7 @@
 """Set of helper functions used throughout the library."""
 
+from __future__ import annotations
+
 import copy
 import datetime
 import struct
@@ -122,7 +124,9 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
         If any of the intervals are invalid, because their end values is before their start value.
 
     """
-    if not all(i < j for i, j in zip(start_vals, end_vals, strict=False)):
+    if len(start_vals) != len(end_vals):
+        raise ValueError("The start and end values need to have the same length!")
+    if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError("The start values need to be smaller then their respective end values!")
     return np.max(start_vals) < np.min(end_vals)
 

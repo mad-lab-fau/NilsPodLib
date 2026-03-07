@@ -1,5 +1,7 @@
 """Session groups multiple Datasets from sensors recorded at the same time."""
 
+from __future__ import annotations
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence
@@ -180,7 +182,7 @@ class Session(_MultiDataset):
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
-    def calibrate_imu(self, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> Self:
+    def calibrate_imu(self, calibrations: Iterable[Union[CalibrationInfo, path_t]], inplace: bool = False) -> Self:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -199,9 +201,10 @@ class Session(_MultiDataset):
 
         """
         s = inplace_or_copy(self, inplace)
-        s.datasets = [
-            d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations, strict=False)
-        ]
+        calibrations = list(calibrations)
+        if len(s.datasets) != len(calibrations):
+            raise ValueError("The number of calibrations must match the number of datasets in the session.")
+        s.datasets = [d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
         return s
 
 
@@ -524,7 +527,7 @@ class SyncedSession(Session):
         index: str | None = None,
         include_units: bool | None = False,
         concat_df: bool | None = False,
-    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple[pd.DataFrame], pd.DataFrame]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         Parameters
@@ -585,7 +588,7 @@ class SyncedSession(Session):
         index: str | None = None,
         include_units: bool | None = False,
         concat_df: bool | None = False,
-    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple[pd.DataFrame], pd.DataFrame]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also

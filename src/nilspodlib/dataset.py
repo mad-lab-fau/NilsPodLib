@@ -1,5 +1,7 @@
 """Dataset represents a measurement session of a single sensor_type."""
 
+from __future__ import annotations
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence
@@ -99,14 +101,14 @@ class Dataset:
     """
 
     path: path_t
-    acc: Optional["Datastream"] = None
-    gyro: Optional["Datastream"] = None
-    mag: Optional["Datastream"] = None
-    baro: Optional["Datastream"] = None
-    analog: Optional["Datastream"] = None
-    ecg: Optional["Datastream"] = None
-    ppg: Optional["Datastream"] = None
-    temperature: Optional["Datastream"] = None
+    acc: Optional[Datastream] = None
+    gyro: Optional[Datastream] = None
+    mag: Optional[Datastream] = None
+    baro: Optional[Datastream] = None
+    analog: Optional[Datastream] = None
+    ecg: Optional[Datastream] = None
+    ppg: Optional[Datastream] = None
+    temperature: Optional[Datastream] = None
     counter: np.ndarray
     info: Header
 
@@ -234,7 +236,7 @@ class Dataset:
         s.path = path
         return s
 
-    def calibrate_imu(self, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> Self:
+    def calibrate_imu(self, calibration: Union[CalibrationInfo, path_t], inplace: bool = False) -> Self:
         """Apply a calibration to the Acc and Gyro datastreams.
 
         The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
