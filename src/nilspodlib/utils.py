@@ -1,5 +1,7 @@
 """Set of helper functions used throughout the library."""
 
+from __future__ import annotations
+
 import copy
 import datetime
 import struct
@@ -13,7 +15,7 @@ from packaging.version import Version
 
 from nilspodlib.exceptions import CorruptedPackageWarning
 
-path_t = TypeVar("path_t", str, Path)  # noqa: invalid-name
+PathT = TypeVar("PathT", str, Path)
 T = TypeVar("T")
 
 
@@ -82,7 +84,7 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
     return data
 
 
-def get_header_and_data_bytes(path: path_t) -> tuple[np.ndarray, np.ndarray]:
+def get_header_and_data_bytes(path: PathT) -> tuple[np.ndarray, np.ndarray]:
     """Separate a binary file into its header and data part."""
     with path.open(mode="rb") as f:
         header = f.read(1)
@@ -122,7 +124,9 @@ def validate_existing_overlap(start_vals: np.ndarray, end_vals: np.ndarray) -> b
         If any of the intervals are invalid, because their end values is before their start value.
 
     """
-    if not all(i < j for i, j in zip(start_vals, end_vals, strict=False)):
+    if len(start_vals) != len(end_vals):
+        raise ValueError("The start and end values need to have the same length!")
+    if not all(i < j for i, j in zip(start_vals, end_vals)):
         raise ValueError("The start values need to be smaller then their respective end values!")
     return np.max(start_vals) < np.min(end_vals)
 

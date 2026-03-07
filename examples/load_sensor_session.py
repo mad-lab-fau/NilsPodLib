@@ -11,7 +11,23 @@ import numpy as np
 
 from nilspodlib import Dataset, Session, SyncedSession
 
-FILEPATH = Path("../tests/test_data/synced_sample_session/")
+
+def _repo_root() -> Path:
+    search_roots = [Path.cwd()]
+    if "__file__" in globals():
+        search_roots.insert(0, Path(__file__).resolve().parent)
+
+    for root in search_roots:
+        for parent in (root, *root.parents):
+            if (parent / "pyproject.toml").exists():
+                return parent
+    raise FileNotFoundError("Could not locate the repository root from the example path.")
+
+
+# %%
+# Create and load a session
+# -------------------------
+FILEPATH = _repo_root() / "tests/test_data/synced_sample_session"
 
 # A session consists of multiple datasets. By default this is also the way to create one
 datasets = [Dataset.from_bin_file(d) for d in FILEPATH.glob("*.bin")]
@@ -22,6 +38,10 @@ print(f"This session has {len(session.datasets)} datasets")
 session = Session.from_folder_path(FILEPATH, filter_pattern="*.bin")
 print(f"This session has {len(session.datasets)} datasets")
 
+
+# %%
+# Apply operations to all datasets
+# --------------------------------
 # Like Datasets contain convenience methods to act on all Datastreams, Sessions provide methods that work on all
 # datasets
 
@@ -35,6 +55,10 @@ print("The included sensors are:", session.info.sensor_id)
 print("The samplingrates are:", session.info.sampling_rate_hz)
 print("The enabled sensor are:", session.info.enabled_sensors)
 
+
+# %%
+# Work with synchronized sessions
+# -------------------------------
 # The library differentiates between synchronised and not synchronised session.
 # If your session is synchronised your should use a SyncedSession
 

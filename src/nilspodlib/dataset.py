@@ -1,5 +1,7 @@
 """Dataset represents a measurement session of a single sensor_type."""
 
+from __future__ import annotations
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence
@@ -28,11 +30,11 @@ from nilspodlib.exceptions import (
 from nilspodlib.header import Header
 from nilspodlib.legacy import find_conversion_function, legacy_support_check
 from nilspodlib.utils import (
+    PathT,
     convert_little_endian,
     get_header_and_data_bytes,
     get_strict_version_from_header_bytes,
     inplace_or_copy,
-    path_t,
     raise_timezone_error,
     read_binary_uint8,
 )
@@ -98,15 +100,15 @@ class Dataset:
 
     """
 
-    path: path_t
-    acc: Optional["Datastream"] = None
-    gyro: Optional["Datastream"] = None
-    mag: Optional["Datastream"] = None
-    baro: Optional["Datastream"] = None
-    analog: Optional["Datastream"] = None
-    ecg: Optional["Datastream"] = None
-    ppg: Optional["Datastream"] = None
-    temperature: Optional["Datastream"] = None
+    path: PathT
+    acc: Optional[Datastream] = None
+    gyro: Optional[Datastream] = None
+    mag: Optional[Datastream] = None
+    baro: Optional[Datastream] = None
+    analog: Optional[Datastream] = None
+    ecg: Optional[Datastream] = None
+    ppg: Optional[Datastream] = None
+    temperature: Optional[Datastream] = None
     counter: np.ndarray
     info: Header
 
@@ -185,7 +187,7 @@ class Dataset:
     @classmethod
     def from_bin_file(
         cls,
-        path: path_t,
+        path: PathT,
         *,
         legacy_support: str = "error",
         force_version: Version | None = None,
@@ -234,7 +236,7 @@ class Dataset:
         s.path = path
         return s
 
-    def calibrate_imu(self, calibration: Union["CalibrationInfo", path_t], inplace: bool = False) -> Self:
+    def calibrate_imu(self, calibration: Union[CalibrationInfo, PathT], inplace: bool = False) -> Self:
         """Apply a calibration to the Acc and Gyro datastreams.
 
         The final units of the datastreams will depend on the used calibration values, but must likely they will be "g"
@@ -674,7 +676,7 @@ class Dataset:
 
     def find_calibrations(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         ignore_file_not_found: bool | None = False,
@@ -715,7 +717,7 @@ class Dataset:
 
     def find_closest_calibration(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         before_after: str | None = None,
@@ -785,7 +787,7 @@ class Dataset:
 
 
 def parse_binary(
-    path: path_t, legacy_support: str = "error", force_version: Version | None = None, tz: str | None = None
+    path: PathT, legacy_support: str = "error", force_version: Version | None = None, tz: str | None = None
 ) -> tuple[dict[str, np.ndarray], np.ndarray, Header]:
     """Parse a binary NilsPod session file and read the header and the data.
 

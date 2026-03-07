@@ -4,7 +4,6 @@
 [![codecov](https://codecov.io/gh/mad-lab-fau/NilsPodLib/branch/master/graph/badge.svg?token=2CXLVYMHJF)](https://codecov.io/gh/mad-lab-fau/NilsPodLib)
 ![Test and Lint](https://github.com/mad-lab-fau/NilsPodLib/workflows/Test%20and%20Lint/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/nilspodlib/badge/?version=latest)](https://nilspodlib.readthedocs.io/en/latest/?badge=latest)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/nilspodlib)
 
 A python package to parse logged NilsPod binary files.
@@ -46,7 +45,7 @@ To run any of the tools required for the development workflow, use the poe comma
 poe 
 
 CONFIGURED TASKS
-  format          Format all files with black.
+  format          Format all files with ruff.
   lint            Lint all files with ruff.
   check           Check all potential format and linting issues.
   test            Run Pytest with coverage.

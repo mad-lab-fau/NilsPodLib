@@ -11,7 +11,23 @@ import matplotlib.pyplot as plt
 
 from nilspodlib import Dataset
 
-FILEPATH = Path("../tests/test_data/synced_sample_session/NilsPodX-7FAD_20190430_0933.bin")
+
+def _repo_root() -> Path:
+    search_roots = [Path.cwd()]
+    if "__file__" in globals():
+        search_roots.insert(0, Path(__file__).resolve().parent)
+
+    for root in search_roots:
+        for parent in (root, *root.parents):
+            if (parent / "pyproject.toml").exists():
+                return parent
+    raise FileNotFoundError("Could not locate the repository root from the example path.")
+
+
+# %%
+# Load the dataset
+# ----------------
+FILEPATH = _repo_root() / "tests/test_data/synced_sample_session/NilsPodX-7FAD_20190430_0933.bin"
 
 # Create a Dataset Object from the bin file
 dataset = Dataset.from_bin_file(FILEPATH)
@@ -23,6 +39,10 @@ print("Start Date (UTC):", dataset.info.utc_datetime_start)
 print("Stop Date (UTC):", dataset.info.utc_datetime_stop)
 print("Enabled Sensors:", dataset.info.enabled_sensors)
 
+
+# %%
+# Work with individual datastreams
+# --------------------------------
 # You can access the individual sensor data directly from the dataset object using the names provided
 # in dataset.info.enabled_sensors
 datastream_acc = dataset.acc
@@ -42,6 +62,10 @@ plt.show()
 downsampled_datastream = datastream_acc.downsample(factor=2)
 print("The new datastream has a length of", len(downsampled_datastream.data))
 
+
+# %%
+# Apply operations to the full dataset
+# ------------------------------------
 # However, for many operations it makes more sense to apply them to the Dataset instead of the Datastream.
 # This will apply the operations to all Datastream and return a new Dataset object
 
@@ -57,6 +81,10 @@ print("The old and the new are identical:", id(dataset) == id(downsampled_datase
 
 # At this point you would usually apply a calibration to the IMU data (see other examples)
 
+
+# %%
+# Export the data as dataframe
+# ----------------------------
 # After calibration and initial operations on all datastreams, the easiest way to interface with further processing
 # pipelines is a conversion into a pandas DataFrame
 

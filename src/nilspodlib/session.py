@@ -1,5 +1,7 @@
 """Session groups multiple Datasets from sensors recorded at the same time."""
 
+from __future__ import annotations
+
 import datetime
 import warnings
 from collections.abc import Iterable, Sequence
@@ -14,7 +16,7 @@ from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import SessionValidationError, SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
-from nilspodlib.utils import convert_to_local_time, inplace_or_copy, path_t, validate_existing_overlap
+from nilspodlib.utils import PathT, convert_to_local_time, inplace_or_copy, validate_existing_overlap
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -91,7 +93,7 @@ class Session(_MultiDataset):
     @classmethod
     def from_file_paths(
         cls,
-        paths: Iterable[path_t],
+        paths: Iterable[PathT],
         legacy_support: str = "error",
         force_version: Version | None = None,
         tz: str | None = None,
@@ -130,7 +132,7 @@ class Session(_MultiDataset):
     @classmethod
     def from_folder_path(
         cls,
-        base_path: path_t,
+        base_path: PathT,
         filter_pattern: str = "*.bin",
         legacy_support: str = "error",
         force_version: Version | None = None,
@@ -180,7 +182,7 @@ class Session(_MultiDataset):
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
-    def calibrate_imu(self, calibrations: Iterable[Union["CalibrationInfo", path_t]], inplace: bool = False) -> Self:
+    def calibrate_imu(self, calibrations: Iterable[Union[CalibrationInfo, PathT]], inplace: bool = False) -> Self:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.
@@ -199,9 +201,10 @@ class Session(_MultiDataset):
 
         """
         s = inplace_or_copy(self, inplace)
-        s.datasets = [
-            d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations, strict=False)
-        ]
+        calibrations = list(calibrations)
+        if len(s.datasets) != len(calibrations):
+            raise ValueError("The number of calibrations must match the number of datasets in the session.")
+        s.datasets = [d.calibrate_imu(c, inplace=True) if c else d for d, c in zip(s.datasets, calibrations)]
         return s
 
 
@@ -518,13 +521,13 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def data_as_df(  # noqa: arguments-differ
+    def data_as_df(
         self,
         datastreams: Sequence[str] | None = None,
         index: str | None = None,
         include_units: bool | None = False,
         concat_df: bool | None = False,
-    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple[pd.DataFrame], pd.DataFrame]:
         """Export all datasets of the session in a list of (or a single) pandas DataFrame.
 
         Parameters
@@ -571,7 +574,7 @@ class SyncedSession(Session):
         nilspodlib.dataset.Dataset.data_as_df
 
         """
-        import pandas as pd  # noqa: import-outside-toplevel
+        import pandas as pd
 
         dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
@@ -580,12 +583,12 @@ class SyncedSession(Session):
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
 
-    def imu_data_as_df(  # noqa: arguments-differ
+    def imu_data_as_df(
         self,
         index: str | None = None,
         include_units: bool | None = False,
         concat_df: bool | None = False,
-    ) -> Union[tuple["pd.DataFrame"], "pd.DataFrame"]:
+    ) -> Union[tuple[pd.DataFrame], pd.DataFrame]:
         """Export the acc and gyro datastreams of all datasets in list of (or a single) pandas DataFrame.
 
         See Also

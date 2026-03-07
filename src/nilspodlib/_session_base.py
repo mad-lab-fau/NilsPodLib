@@ -1,5 +1,7 @@
 """Internal bases for sessions to make it easier to call dataset methods on the session object."""
 
+from __future__ import annotations
+
 from collections.abc import Iterable, Sequence
 from functools import wraps
 from typing import TYPE_CHECKING, Optional
@@ -8,7 +10,7 @@ import numpy as np
 from typing_extensions import Self
 
 from nilspodlib.dataset import Dataset
-from nilspodlib.utils import inplace_or_copy, path_t, remove_docstring_indent
+from nilspodlib.utils import PathT, inplace_or_copy, remove_docstring_indent
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -86,19 +88,19 @@ class _MultiDataset:
 
     """
 
-    path: path_t = CascadingDatasetField()
-    acc: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    gyro: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    mag: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    baro: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    analog: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    ecg: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    ppg: tuple[Optional["Datastream"]] = CascadingDatasetField()
-    temperature: tuple[Optional["Datastream"]] = CascadingDatasetField()
+    path: PathT = CascadingDatasetField()
+    acc: tuple[Optional[Datastream]] = CascadingDatasetField()
+    gyro: tuple[Optional[Datastream]] = CascadingDatasetField()
+    mag: tuple[Optional[Datastream]] = CascadingDatasetField()
+    baro: tuple[Optional[Datastream]] = CascadingDatasetField()
+    analog: tuple[Optional[Datastream]] = CascadingDatasetField()
+    ecg: tuple[Optional[Datastream]] = CascadingDatasetField()
+    ppg: tuple[Optional[Datastream]] = CascadingDatasetField()
+    temperature: tuple[Optional[Datastream]] = CascadingDatasetField()
     counter: tuple[np.ndarray] = CascadingDatasetField()
 
     size: tuple[int] = CascadingDatasetField()
-    datastreams: tuple[Iterable["Datastream"]] = CascadingDatasetField()
+    datastreams: tuple[Iterable[Datastream]] = CascadingDatasetField()
 
     ACTIVE_SENSORS: tuple[tuple[str]] = CascadingDatasetField()
 
@@ -141,17 +143,17 @@ class _MultiDataset:
         datastreams: Sequence[str] | None = None,
         index: str | None = None,
         include_units: bool | None = True,
-    ) -> tuple["pd.DataFrame"]:
+    ) -> tuple[pd.DataFrame]:
         pass
 
     @call_dataset()
-    def imu_data_as_df(self, index: str | None = None) -> tuple["pd.DataFrame"]:
+    def imu_data_as_df(self, index: str | None = None) -> tuple[pd.DataFrame]:
         pass
 
     @call_dataset()
     def find_closest_calibration(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         before_after: str | None = None,
@@ -162,7 +164,7 @@ class _MultiDataset:
     @call_dataset()
     def find_calibrations(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         ignore_file_not_found: bool | None = False,

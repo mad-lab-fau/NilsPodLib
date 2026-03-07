@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) (+ the Migration Guide section), and 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Restored Python 3.9 compatibility by postponing annotation evaluation and removing 3.10-only runtime typing usage.
+- Added the missing runtime dependency on `pytz`.
+- Updated the example scripts to follow the Sphinx-Gallery style so they execute during docs builds and render clearer tables and plots in the documentation.
+
+### Internal Changes
+- Split CI so Ruff runs once while tests cover Python 3.9, 3.10, and 3.11.
+- Removed stale Black references from the development workflow and aligned Ruff to the Python 3.9 support target.
+- Fixed the local release helper to find `uv` outside of `PATH` and corrected the publish workflow Python setup.
+
 ## [4.1.1] - 19.05.2025
 ## Internal Changes
 - Migrated from `poetry` to `uv` for dependency management and packaging
@@ -145,5 +156,3 @@ This means, you need to update it as well.
   modify the calibration sessions, so that they work on the factory calibrated instead of the raw data.
   However, this is not recommended.
   Maybe you are better of just performing a new calibration.
-
-
