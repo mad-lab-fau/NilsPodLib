@@ -8,6 +8,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 - Restored Python 3.9 compatibility by postponing annotation evaluation and removing 3.10-only runtime typing usage.
 - Added the missing runtime dependency on `pytz`.
+- Updated the example scripts to follow the Sphinx-Gallery style so they execute during docs builds and render clearer tables and plots in the documentation.
 
 ### Internal Changes
 - Split CI so Ruff runs once while tests cover Python 3.9, 3.10, and 3.11.
@@ -155,4 +156,3 @@ This means, you need to update it as well.
   modify the calibration sessions, so that they work on the factory calibrated instead of the raw data.
   However, this is not recommended.
   Maybe you are better of just performing a new calibration.
-

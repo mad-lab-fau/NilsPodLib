@@ -1,62 +1,113 @@
 """
-Sessions
-=========
+Working with sensor sessions
+============================
 
-A simple example showing how to work with Sensor Sessions.
+This example shows how to load several recordings together, apply operations to
+every dataset in the session, and inspect the synchronized session view.
 """
 
 from pathlib import Path
 
-import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
-from nilspodlib import Dataset, Session, SyncedSession
+from nilspodlib import Session, SyncedSession
 
-FILEPATH = Path("../tests/test_data/synced_sample_session/")
 
-# A session consists of multiple datasets. By default this is also the way to create one
-datasets = [Dataset.from_bin_file(d) for d in FILEPATH.glob("*.bin")]
-session = Session(datasets)
-print(f"This session has {len(session.datasets)} datasets")
+def _repo_root() -> Path:
+    search_roots = [Path.cwd()]
+    if "__file__" in globals():
+        search_roots.insert(0, Path(__file__).resolve().parent)
 
-# However, in many cases it is easier to use one of the Session constructors:
-session = Session.from_folder_path(FILEPATH, filter_pattern="*.bin")
-print(f"This session has {len(session.datasets)} datasets")
+    for root in search_roots:
+        for parent in (root, *root.parents):
+            if (parent / "pyproject.toml").exists():
+                return parent
+    raise FileNotFoundError("Could not locate the repository root from the example path.")
 
-# Like Datasets contain convenience methods to act on all Datastreams, Sessions provide methods that work on all
-# datasets
 
+# %%
+# Load all recordings in a folder
+# -------------------------------
+DATA_DIR = _repo_root() / "tests/test_data/synced_sample_session"
+
+session = Session.from_folder_path(DATA_DIR, filter_pattern="*.bin")
+
+session_overview = pd.DataFrame(
+    [
+        {
+            "sensor_id": dataset.info.sensor_id,
+            "sampling_rate_hz": dataset.info.sampling_rate_hz,
+            "enabled_sensors": ", ".join(dataset.info.enabled_sensors),
+        }
+        for dataset in session.datasets
+    ]
+).set_index("sensor_id")
+
+session_overview
+
+
+# %%
+# Apply operations to every dataset at once
+# -----------------------------------------
 downsampled_session = session.downsample(factor=2)
-for ds in downsampled_session.datasets:
-    for name, d in ds.datastreams:
-        print(f"{name} of {ds.info.sensor_id} has the length {len(d.data)}")
 
-# Further you can use the Proxy Attribute `info` to access the header infos of all sensors at the same time
-print("The included sensors are:", session.info.sensor_id)
-print("The samplingrates are:", session.info.sampling_rate_hz)
-print("The enabled sensor are:", session.info.enabled_sensors)
+length_comparison = pd.DataFrame(
+    [
+        {
+            "sensor_id": original.info.sensor_id,
+            "original_acc_samples": len(original.acc.data),
+            "downsampled_acc_samples": len(downsampled.acc.data),
+        }
+        for original, downsampled in zip(session.datasets, downsampled_session.datasets)
+    ]
+).set_index("sensor_id")
 
-# The library differentiates between synchronised and not synchronised session.
-# If your session is synchronised your should use a SyncedSession
+length_comparison
 
-session = SyncedSession.from_folder_path(FILEPATH)
 
-# This will also validate that all datasets are compatible to be syncronised.
-# If you need to switch off this validation, you can disable it using:
-SyncedSession.VALIDATE_ON_INIT = False
-session = SyncedSession.from_folder_path(FILEPATH)
+# %%
+# Inspect the synchronized session
+# --------------------------------
+# If the recordings contain synchronization metadata, use
+# :class:`~nilspodlib.session.SyncedSession` to access master and slave devices.
+synced_session = SyncedSession.from_folder_path(DATA_DIR)
+cut_session = synced_session.cut_to_syncregion()
 
-# For synced sessions you can get the datasets of the master and the slaves separately
+aligned_datasets = [cut_session.master, *cut_session.slaves]
+alignment_overview = pd.DataFrame(
+    [
+        {
+            "sensor_id": dataset.info.sensor_id,
+            "role": "master" if dataset is cut_session.master else "slave",
+            "counter_start": int(dataset.counter[0]),
+            "counter_stop": int(dataset.counter[-1]),
+            "n_samples": len(dataset.acc.data),
+        }
+        for dataset in aligned_datasets
+    ]
+).set_index("sensor_id")
 
-print("The master of the session is", session.master.info.sensor_id)
-print("The slaves of the session are", [d.info.sensor_id for d in session.slaves])
+alignment_overview
 
-# To make use of the sync information, all datasets need to be aligned. This can be done using the `cut_to_syncregion`
-# method.
 
-cut_session = session.cut_to_syncregion()
+# %%
+# Visualize the aligned accelerometer norms
+# -----------------------------------------
+common_window = min(len(dataset.acc.data) for dataset in aligned_datasets)
+plot_window = min(common_window, 600)
 
-# After this all session are aligned and the dataset counter are identical
+fig, ax = plt.subplots(figsize=(8, 4))
+for dataset in aligned_datasets:
+    ax.plot(
+        range(plot_window),
+        dataset.acc.norm()[:plot_window],
+        label=dataset.info.sensor_id,
+        linewidth=1.5,
+    )
 
-for d in cut_session.slaves:
-    if np.array_equal(d.counter, cut_session.master.counter) is True:
-        print(f"{d.info.sensor_id} has the same counter than master ({cut_session.master.info.sensor_id})")
+ax.set_title("Accelerometer norm after cutting to the sync region")
+ax.set_xlabel("sample")
+ax.set_ylabel(f"norm [{cut_session.master.acc.unit}]")
+ax.legend(title="sensor_id")
+fig.tight_layout()
