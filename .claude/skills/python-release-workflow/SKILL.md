@@ -35,7 +35,7 @@ description: Use when releasing nilspodlib from this repo with uv+poe+GitHub Act
 
 3. **Release prep**
    - Finalize release notes in `CHANGELOG.md`
-   - Bump version: `uv run poe version <patch|minor|major>`
+   - Bump version: `uv run poe version --bump=<patch|minor|major>`
    - Verify touched files:
      - `pyproject.toml`
      - `src/nilspodlib/__init__.py`
@@ -73,7 +73,7 @@ uv sync --group dev
 uv run poe ci_check
 uv run pytest
 uv build
-uv run poe version patch
+uv run poe version --bump=patch
 git push
 REL_SHA=$(git rev-parse HEAD)
 gh run list --workflow "Test and Lint" --commit "$REL_SHA" --limit 5
