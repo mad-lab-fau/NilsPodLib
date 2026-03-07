@@ -10,7 +10,7 @@ import numpy as np
 from typing_extensions import Self
 
 from nilspodlib.dataset import Dataset
-from nilspodlib.utils import inplace_or_copy, path_t, remove_docstring_indent
+from nilspodlib.utils import PathT, inplace_or_copy, remove_docstring_indent
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -88,7 +88,7 @@ class _MultiDataset:
 
     """
 
-    path: path_t = CascadingDatasetField()
+    path: PathT = CascadingDatasetField()
     acc: tuple[Optional[Datastream]] = CascadingDatasetField()
     gyro: tuple[Optional[Datastream]] = CascadingDatasetField()
     mag: tuple[Optional[Datastream]] = CascadingDatasetField()
@@ -153,7 +153,7 @@ class _MultiDataset:
     @call_dataset()
     def find_closest_calibration(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         before_after: str | None = None,
@@ -164,7 +164,7 @@ class _MultiDataset:
     @call_dataset()
     def find_calibrations(
         self,
-        folder: path_t | None = None,
+        folder: PathT | None = None,
         recursive: bool = True,
         filter_cal_type: str | None = None,
         ignore_file_not_found: bool | None = False,

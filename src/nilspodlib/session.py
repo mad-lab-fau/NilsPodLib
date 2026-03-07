@@ -16,7 +16,7 @@ from nilspodlib._session_base import _MultiDataset
 from nilspodlib.dataset import Dataset
 from nilspodlib.exceptions import SessionValidationError, SynchronisationError, SynchronisationWarning
 from nilspodlib.header import _ProxyHeader
-from nilspodlib.utils import convert_to_local_time, inplace_or_copy, path_t, validate_existing_overlap
+from nilspodlib.utils import PathT, convert_to_local_time, inplace_or_copy, validate_existing_overlap
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -93,7 +93,7 @@ class Session(_MultiDataset):
     @classmethod
     def from_file_paths(
         cls,
-        paths: Iterable[path_t],
+        paths: Iterable[PathT],
         legacy_support: str = "error",
         force_version: Version | None = None,
         tz: str | None = None,
@@ -132,7 +132,7 @@ class Session(_MultiDataset):
     @classmethod
     def from_folder_path(
         cls,
-        base_path: path_t,
+        base_path: PathT,
         filter_pattern: str = "*.bin",
         legacy_support: str = "error",
         force_version: Version | None = None,
@@ -182,7 +182,7 @@ class Session(_MultiDataset):
         """
         return self.datasets[self.info.sensor_id.index(sensor_id)]
 
-    def calibrate_imu(self, calibrations: Iterable[Union[CalibrationInfo, path_t]], inplace: bool = False) -> Self:
+    def calibrate_imu(self, calibrations: Iterable[Union[CalibrationInfo, PathT]], inplace: bool = False) -> Self:
         """Calibrate the imus of all datasets by providing a list of calibration infos.
 
         If you do not want to calibrate a specific IMU, you can pass `None` for its position.

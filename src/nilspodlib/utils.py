@@ -15,7 +15,7 @@ from packaging.version import Version
 
 from nilspodlib.exceptions import CorruptedPackageWarning
 
-path_t = TypeVar("path_t", str, Path)  # noqa: invalid-name
+PathT = TypeVar("PathT", str, Path)
 T = TypeVar("T")
 
 
@@ -84,7 +84,7 @@ def read_binary_uint8(data_bytes: np.ndarray, packet_size: int, expected_samples
     return data
 
 
-def get_header_and_data_bytes(path: path_t) -> tuple[np.ndarray, np.ndarray]:
+def get_header_and_data_bytes(path: PathT) -> tuple[np.ndarray, np.ndarray]:
     """Separate a binary file into its header and data part."""
     with path.open(mode="rb") as f:
         header = f.read(1)

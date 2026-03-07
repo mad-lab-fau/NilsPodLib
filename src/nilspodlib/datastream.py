@@ -170,7 +170,7 @@ class Datastream:
             If True this methods modifies the current datastream object. If False, a copy of the datastream is returned.
 
         """
-        from scipy.signal import resample  # noqa: import-outside-toplevel
+        from scipy.signal import resample
 
         s = inplace_or_copy(self, inplace)
         s.data = resample(s.data, len(s.data) // factor, axis=0)

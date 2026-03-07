@@ -12,10 +12,10 @@ from packaging.version import Version
 from nilspodlib.consts import SENSOR_SAMPLE_LENGTH
 from nilspodlib.exceptions import CorruptedPackageWarning, LegacyWarning, VersionError
 from nilspodlib.utils import (
+    PathT,
     get_header_and_data_bytes,
     get_sample_size_from_header_bytes,
     get_strict_version_from_header_bytes,
-    path_t,
 )
 
 CONVERSION_DICT = {
@@ -46,7 +46,7 @@ def find_conversion_function(
     raise VersionError(f"No suitable conversion function found for {version}")
 
 
-def convert_18_0(in_path: path_t, out_path: path_t) -> None:
+def convert_18_0(in_path: PathT, out_path: PathT) -> None:
     """Convert a session recorded with a firmware version >0.13.255 and <0.17.255 to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
@@ -108,7 +108,7 @@ def load_18_0(header: np.ndarray, data_bytes: np.ndarray) -> tuple[np.ndarray, n
     return header, data_bytes.astype(np.uint8)
 
 
-def convert_12_0(in_path: path_t, out_path: path_t) -> None:
+def convert_12_0(in_path: PathT, out_path: PathT) -> None:
     """Convert a session recorded with a firmware version >0.11.255 and <0.13.255 to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
@@ -173,7 +173,7 @@ def load_12_0(header: np.ndarray, data_bytes: np.ndarray) -> tuple[np.ndarray, n
     return header, data_bytes
 
 
-def convert_11_2(in_path: path_t, out_path: path_t) -> None:
+def convert_11_2(in_path: PathT, out_path: PathT) -> None:
     """Convert a session recorded with a 0.11.<2 firmware to the most up-to-date format.
 
     This will update the firmware version to 0.17.255 to identify converted sessions.
