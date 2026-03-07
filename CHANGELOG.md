@@ -5,15 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [4.1.2] - 07.03.2026
 ### Fixed
 - Restored Python 3.9 compatibility by postponing annotation evaluation and removing 3.10-only runtime typing usage.
 - Added the missing runtime dependency on `pytz`.
 - Updated the example scripts to follow the Sphinx-Gallery style so they execute during docs builds and render clearer tables and plots in the documentation.
 
 ### Internal Changes
-- Split CI so Ruff runs once while tests cover Python 3.9, 3.10, and 3.11.
+- Split CI so Ruff runs once while tests cover Python 3.9, 3.10, 3.11, 3.12, and 3.13.
 - Removed stale Black references from the development workflow and aligned Ruff to the Python 3.9 support target.
-- Fixed the local release helper to find `uv` outside of `PATH` and corrected the publish workflow Python setup.
+- Corrected the publish workflow Python setup, refreshed the locked dependencies, and updated the development tooling stack.
 
 ## [4.1.1] - 19.05.2025
 ## Internal Changes

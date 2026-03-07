@@ -1,6 +1,6 @@
 [project]
 name = "nilspodlib"
-version = "4.1.1"
+version = "4.1.2"
 description = "A Python library to load and convert sensor data recorded by a NilsPod by Portablies."
 authors = [
     { name = "Arne Küderle", email = "arne.kuederle@fau.de" },
