@@ -415,8 +415,8 @@ class _ProxyHeader(_HeaderFields):
 
     def _ipython_display_(self):
         """Display for IPython."""
-        import pandas as pd  # noqa: import-outside-toplevel
-        from IPython import display  # noqa: import-outside-toplevel
+        import pandas as pd
+        from IPython import display
 
         header = {}
         for k in self._all_header_fields:

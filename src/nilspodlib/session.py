@@ -521,7 +521,7 @@ class SyncedSession(Session):
         s._fully_synced = True
         return s
 
-    def data_as_df(  # noqa: arguments-differ
+    def data_as_df(
         self,
         datastreams: Sequence[str] | None = None,
         index: str | None = None,
@@ -574,7 +574,7 @@ class SyncedSession(Session):
         nilspodlib.dataset.Dataset.data_as_df
 
         """
-        import pandas as pd  # noqa: import-outside-toplevel
+        import pandas as pd
 
         dfs = super().data_as_df(datastreams, index, include_units=include_units)
         if concat_df is True:
@@ -583,7 +583,7 @@ class SyncedSession(Session):
             dfs = pd.concat(dfs, axis=1, keys=self.info.sensor_id)
         return dfs
 
-    def imu_data_as_df(  # noqa: arguments-differ
+    def imu_data_as_df(
         self,
         index: str | None = None,
         include_units: bool | None = False,
